@@ -18,7 +18,7 @@ services:
 
       #  Dashboard Traefik (à ne pas laisser en prod)
       - "--api.dashboard=true"
-      - "--api.insecure=true"
+      # - "--api.insecure=true"
 
     ports:
       - "80:80" # HTTP
@@ -28,6 +28,18 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik_letsencrypt:/letsencrypt
+
+    labels:
+      # Router pour le dashboard accessible via traefik.educareschool.me
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.educareschool.me`)"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      - "traefik.http.routers.traefik-dashboard.tls.certresolver=myresolver"
+      # Appliquer le middleware Basic Auth
+      - "traefik.http.routers.traefik-dashboard.middlewares=auth-traefik"
+      # Définir le middleware Basic Auth avec ton user et le mot de passe hashé
+      - "traefik.http.middlewares.auth-traefik.basicauth.users=admin:$apr1$TJcecwW3$yBfk/npPDRL0LQHmWwuql1"
 
   ########################################## FRONTEND VUE (Dev) ##########################################
   frontend:
@@ -59,7 +71,7 @@ services:
       - "traefik.http.routers.frontend-http.rule=Host(`educareschool.me`)"
       - "traefik.http.routers.frontend-http.entrypoints=web"
       - "traefik.http.routers.frontend-http.middlewares=redirect-to-https"
-      
+
       # Middleware de redirection
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
 
@@ -90,9 +102,16 @@ services:
     # Labels Traefik => accès via api.educareschool.me pour le backend
     labels:
       - "traefik.enable=true"
+
+      # Router HTTPS pour le backend
       - "traefik.http.routers.nest.rule=Host(`api.educareschool.me`)"
       - "traefik.http.routers.nest.entrypoints=websecure"
       - "traefik.http.routers.nest.tls.certresolver=myresolver"
+
+      # Router HTTP pour le backend (redirection vers HTTPS)
+      - "traefik.http.routers.nest-http.rule=Host(`api.educareschool.me`)"
+      - "traefik.http.routers.nest-http.entrypoints=web"
+      - "traefik.http.routers.nest-http.middlewares=redirect-to-https"
 
   ########################################## POSTGRES #####################################################
   postgres:

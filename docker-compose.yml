@@ -51,6 +51,8 @@ services:
       - "traefik.http.routers.frontend.rule=Host(`educareschool.me`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+      - "traefik.http.services.frontend.loadbalancer.server.port=5173"
+
 
   ########################################## BACKEND NEST (Dev) ###########################################
   nest:

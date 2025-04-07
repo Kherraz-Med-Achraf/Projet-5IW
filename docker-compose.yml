@@ -1,14 +1,42 @@
 version: "3.9"
 
 services:
-  ########################################## FRONTEND VUE ##########################################
+  ########################################## TRAEFIK (Reverse Proxy) ##########################################
+  traefik:
+    image: traefik:v2.9
+    container_name: traefik
+    command:
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--providers.docker=true"
+
+      # (Let’s Encrypt) On active la résolution de certificats ACME
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=mkherraz1@myges.fr"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+
+      #  Dashboard Traefik (à ne pas laisser en prod)
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
+      - "8080:8080" # pour voir le dashboard
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_letsencrypt:/letsencrypt
+
+  ########################################## FRONTEND VUE (Dev) ##########################################
   frontend:
     container_name: vue-frontend-dev
     build:
       context: ./frontend
       dockerfile: Dockerfile.frontend
     ports:
-      - "5173:5173"
+      - "5173:5173" # On garde pour le dev en direct
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -17,14 +45,21 @@ services:
       - VITE_NEST_API_URL=http://localhost:3000
     command: ["npm", "run", "dev"]
 
-  ########################################## BACKEND NEST ###########################################
+    # Labels Traefik => accès via educareschool.me pour le frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`educareschool.me`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+
+  ########################################## BACKEND NEST (Dev) ###########################################
   nest:
     container_name: nest-backend-dev
     build:
       context: ./backend
-      dockerfile: Dockerfile.nest 
+      dockerfile: Dockerfile.nest
     ports:
-      - "3000:3000"
+      - "3000:3000" # On garde pour le dev
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -41,7 +76,14 @@ services:
 
     command: ["npm", "run", "start:dev"]
 
-  ########################################## POSTGRES ###############################################
+    # Labels Traefik => accès via api.educareschool.me pour le backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nest.rule=Host(`api.educareschool.me`)"
+      - "traefik.http.routers.nest.entrypoints=websecure"
+      - "traefik.http.routers.nest.tls.certresolver=myresolver"
+
+  ########################################## POSTGRES #####################################################
   postgres:
     image: postgres:15-alpine
     container_name: postgres-db-dev
@@ -56,3 +98,4 @@ services:
 
 volumes:
   postgres_data:
+  traefik_letsencrypt:

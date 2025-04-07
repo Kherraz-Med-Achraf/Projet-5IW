@@ -48,11 +48,20 @@ services:
     # Labels Traefik => accès via educareschool.me pour le frontend
     labels:
       - "traefik.enable=true"
+
+      # Router HTTPS (secure)
       - "traefik.http.routers.frontend.rule=Host(`educareschool.me`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
       - "traefik.http.services.frontend.loadbalancer.server.port=5173"
 
+      # Router HTTP (non-secure) qui redirige vers HTTPS
+      - "traefik.http.routers.frontend-http.rule=Host(`educareschool.me`)"
+      - "traefik.http.routers.frontend-http.entrypoints=web"
+      - "traefik.http.routers.frontend-http.middlewares=redirect-to-https"
+      
+      # Middleware de redirection
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
 
   ########################################## BACKEND NEST (Dev) ###########################################
   nest:

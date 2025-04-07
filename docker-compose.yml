@@ -39,7 +39,7 @@ services:
       # Appliquer le middleware Basic Auth
       - "traefik.http.routers.traefik-dashboard.middlewares=auth-traefik"
       # Définir le middleware Basic Auth avec ton user et le mot de passe hashé
-      - "traefik.http.middlewares.auth-traefik.basicauth.users=admin:$apr1$vKml6Wvz$G7Wchk2U2numP/43WdGZh."
+      - "traefik.http.middlewares.auth-traefik.basicauth.users=admin:$apr1$vKml6Wvz$G7Wchk2U2numP/43WdGZh"
 
   ########################################## FRONTEND VUE (Dev) ##########################################
   frontend:

@@ -1,130 +1,92 @@
 version: "3.9"
 
 services:
-  ########################################## TRAEFIK (Reverse Proxy) ##########################################
+  ########################################## TRAEFIK ##########################################
   traefik:
     image: traefik:v2.9
-    container_name: traefik
+    ports:
+      - "80:80"     # HTTP
+      - "443:443"   # HTTPS
+      - "8080:8080" # Dashboard
     command:
+      - "--api.dashboard=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--providers.docker=true"
-
-      # (Let’s Encrypt) On active la résolution de certificats ACME
       - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
       - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
       - "--certificatesresolvers.myresolver.acme.email=mkherraz1@myges.fr"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-
-      #  Dashboard Traefik (à ne pas laisser en prod)
-      - "--api.dashboard=true"
-      # - "--api.insecure=true"
-
-    ports:
-      - "80:80" # HTTP
-      - "443:443" # HTTPS
-      - "8080:8080" # pour voir le dashboard
-
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik_letsencrypt:/letsencrypt
-
+    deploy:
+      mode: global
     labels:
-      # Router pour le dashboard accessible via traefik.educareschool.me
       - "traefik.enable=true"
       - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.educareschool.me`)"
       - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
-      - "traefik.http.routers.traefik-dashboard.service=api@internal"
       - "traefik.http.routers.traefik-dashboard.tls.certresolver=myresolver"
-      # Appliquer le middleware Basic Auth
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
       - "traefik.http.routers.traefik-dashboard.middlewares=auth-traefik"
-      # Définir le middleware Basic Auth avec ton user et le mot de passe hashé
       - "traefik.http.middlewares.auth-traefik.basicauth.users=admin:$$apr1$$vKml6Wvz$$G7Wchk2U2numP/43WdGZh."
 
-  ########################################## FRONTEND VUE (Dev) ##########################################
+  ########################################## FRONTEND (Vue) ##########################################
   frontend:
-    container_name: vue-frontend-dev
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.frontend
-    ports:
-      - "5173:5173" # On garde pour le dev en direct
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    image: achraf97/projet5iw-frontend:prod
     environment:
-      - CHOKIDAR_USEPOLLING=true
-      - VITE_NEST_API_URL=http://localhost:3000
-    command: ["npm", "run", "dev"]
-
-    # Labels Traefik => accès via educareschool.me pour le frontend
+      - VITE_NEST_API_URL=http://nest:3000
     labels:
       - "traefik.enable=true"
-
-      # Router HTTPS (secure)
       - "traefik.http.routers.frontend.rule=Host(`educareschool.me`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
-      - "traefik.http.services.frontend.loadbalancer.server.port=5173"
-
-      # Router HTTP (non-secure) qui redirige vers HTTPS
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
       - "traefik.http.routers.frontend-http.rule=Host(`educareschool.me`)"
       - "traefik.http.routers.frontend-http.entrypoints=web"
       - "traefik.http.routers.frontend-http.middlewares=redirect-to-https"
-
-      # Middleware de redirection
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
 
-  ########################################## BACKEND NEST (Dev) ###########################################
+  ########################################## BACKEND (Nest) ##########################################
   nest:
-    container_name: nest-backend-dev
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.nest
-    ports:
-      - "3000:3000" # On garde pour le dev
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+    image: achraf97/projet5iw-nest:prod
     environment:
-      - CHOKIDAR_USEPOLLING=true
-      # Variables pour Postgres
       - POSTGRES_HOST=postgres
       - POSTGRES_USER=myuser
       - POSTGRES_PASSWORD=mypassword
       - POSTGRES_DB=mydb
-
-    depends_on:
-      - postgres
-
-    command: ["npm", "run", "start:dev"]
-
-    # Labels Traefik => accès via api.educareschool.me pour le backend
     labels:
       - "traefik.enable=true"
-
-      # Router HTTPS pour le backend
       - "traefik.http.routers.nest.rule=Host(`api.educareschool.me`)"
       - "traefik.http.routers.nest.entrypoints=websecure"
       - "traefik.http.routers.nest.tls.certresolver=myresolver"
-
-      # Router HTTP pour le backend (redirection vers HTTPS)
+      - "traefik.http.services.nest.loadbalancer.server.port=3000"
       - "traefik.http.routers.nest-http.rule=Host(`api.educareschool.me`)"
       - "traefik.http.routers.nest-http.entrypoints=web"
       - "traefik.http.routers.nest-http.middlewares=redirect-to-https"
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
 
-  ########################################## POSTGRES #####################################################
+  ########################################## POSTGRES ##########################################
   postgres:
     image: postgres:15-alpine
-    container_name: postgres-db-dev
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: mydb
-    ports:
-      - "5433:5432"
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
+      - POSTGRES_DB=mydb
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
 
 volumes:
   postgres_data:

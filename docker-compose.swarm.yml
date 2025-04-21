@@ -5,6 +5,12 @@ secrets:
   pg_password:
     external: true
 
+networks:
+  frontend-net:
+    driver: overlay
+  backend-net:
+    driver: overlay
+
 services:
   ########################################## TRAEFIK ##########################################
   traefik:
@@ -25,6 +31,9 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik_letsencrypt:/letsencrypt
+    networks:
+      - frontend-net
+      - backend-net
     deploy:
       mode: global
       update_config:
@@ -45,6 +54,8 @@ services:
     image: achraf97/projet5iw-frontend:prod
     environment:
       - VITE_NEST_API_URL=http://nest:3000
+    networks:
+      - frontend-net
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`educareschool.me`)"
@@ -73,6 +84,8 @@ services:
       - POSTGRES_DB=mydb
     secrets:
       - pg_password
+    networks:
+      - backend-net
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nest.rule=Host(`api.educareschool.me`)"
@@ -101,6 +114,8 @@ services:
       - POSTGRES_PASSWORD_FILE=/run/secrets/pg_password
     secrets:
       - pg_password
+    networks:
+      - backend-net
     volumes:
       - postgres_data:/var/lib/postgresql/data
     deploy:

@@ -1,5 +1,10 @@
 version: "3.9"
 
+
+secrets:
+  pg_password:
+    external: true
+
 services:
   ########################################## TRAEFIK ##########################################
   traefik:
@@ -57,8 +62,9 @@ services:
     environment:
       - POSTGRES_HOST=postgres
       - POSTGRES_USER=myuser
-      - POSTGRES_PASSWORD=mypassword
       - POSTGRES_DB=mydb
+    secrets:
+      - pg_password
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nest.rule=Host(`api.educareschool.me`)"
@@ -78,8 +84,11 @@ services:
     image: postgres:15-alpine
     environment:
       - POSTGRES_USER=myuser
-      - POSTGRES_PASSWORD=mypassword
       - POSTGRES_DB=mydb
+      # ici on indique au entrypoint Postgres de lire le mot de passe
+      - POSTGRES_PASSWORD_FILE=/run/secrets/pg_password
+    secrets:
+      - pg_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
     deploy:

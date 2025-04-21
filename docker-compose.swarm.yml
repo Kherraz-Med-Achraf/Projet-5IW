@@ -88,13 +88,26 @@ services:
       - backend-net
     labels:
       - "traefik.enable=true"
+      # Router HTTPS
       - "traefik.http.routers.nest.rule=Host(`api.educareschool.me`)"
       - "traefik.http.routers.nest.entrypoints=websecure"
       - "traefik.http.routers.nest.tls.certresolver=myresolver"
+      # Port du service
       - "traefik.http.services.nest.loadbalancer.server.port=3000"
+      # Health‑check Traefik sur le service
+      - "traefik.http.services.nest.loadbalancer.healthcheck.path=/"
+      - "traefik.http.services.nest.loadbalancer.healthcheck.interval=10s"
+      - "traefik.http.services.nest.loadbalancer.healthcheck.timeout=3s"
+      - "traefik.http.services.nest.loadbalancer.healthcheck.backendprotocol=http"
+      # Redirection HTTP vers HTTPS
       - "traefik.http.routers.nest-http.rule=Host(`api.educareschool.me`)"
       - "traefik.http.routers.nest-http.entrypoints=web"
       - "traefik.http.routers.nest-http.middlewares=redirect-to-https"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:3000/ || exit 1"]
+      interval: 10s    
+      timeout: 5s      
+      retries: 5       # 5 tentatives avant de déclarer unhealthy
     deploy:
       replicas: 2
       update_config:
@@ -118,6 +131,11 @@ services:
       - backend-net
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d mydb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     deploy:
       replicas: 1
       placement:

@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { APP_FILTER } from "@nestjs/core";
+import { SentryModule, SentryGlobalFilter } from "@sentry/nestjs/setup";
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -9,8 +11,7 @@ import * as fs from 'fs';
 
 @Module({
   imports: [
-    // Permet de charger les variables d'environnement (.env)
-    // et de les rendre disponibles via process.env
+    SentryModule.forRoot(), 
     ConfigModule.forRoot({
       isGlobal: true, 
     }),
@@ -23,11 +24,14 @@ import * as fs from 'fs';
       database: process.env.POSTGRES_DB || 'mydb',
       autoLoadEntities: true,
       synchronize: true, // à utiliser uniquement en dev
-      retryAttempts: 20,    // nombre maximal de tentatives
-      retryDelay: 3000,     // délai (ms) entre chaque tentative
+      retryAttempts: 30,
+      retryDelay: 5000,
     }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, {
+    provide: APP_FILTER,
+    useClass: SentryGlobalFilter,
+  }],
 })
 export class AppModule {}

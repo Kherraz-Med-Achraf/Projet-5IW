@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+  ########################################## FRONTEND VUE ##########################################
+  frontend:
+    container_name: vue-frontend-dev
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - VITE_NEST_API_URL=http://localhost:3000
+    command: ["npm", "run", "dev"]
+
+  ########################################## BACKEND NEST ###########################################
+  nest:
+    container_name: nest-backend-dev
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.nest 
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    env_file:
+      - ./backend/.env
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      # Variables pour Postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
+      - POSTGRES_DB=mydb
+
+    depends_on:
+      - postgres
+
+    command: ["npm", "run", "start:dev"]
+
+  ########################################## POSTGRES ###############################################
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres-db-dev
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

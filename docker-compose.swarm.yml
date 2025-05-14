@@ -1,6 +1,5 @@
 version: "3.9"
 
-
 secrets:
   pg_password:
     external: true
@@ -18,15 +17,15 @@ services:
   traefik:
     image: traefik:v2.9
     ports:
-      - "80:80"     # HTTP
-      - "443:443"   # HTTPS
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
     command:
       - "--api.dashboard=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--providers.docker=true"
       - "--providers.docker.swarmMode=true"
-      - "--providers.docker.exposedByDefault=false" 
+      - "--providers.docker.exposedByDefault=false"
       - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
       - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
       - "--certificatesresolvers.myresolver.acme.email=mkherraz1@myges.fr"
@@ -41,21 +40,21 @@ services:
       mode: global
       placement:
         constraints:
-          - node.role == manager  # Traefik doit être sur le manager pour interroger l’API Swarm
+          - node.role == manager # Traefik doit être sur le manager pour interroger l’API Swarm
       update_config:
-        parallelism: 1     # 1 conteneur à la fois
-        delay: 5s          # attente de 5 s entre chaque mise à jour
+        parallelism: 1 # 1 conteneur à la fois
+        delay: 5s # attente de 5 s entre chaque mise à jour
         failure_action: rollback
       labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.educareschool.me`)"
-      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
-      - "traefik.http.routers.traefik-dashboard.tls.certresolver=myresolver"
-      - "traefik.http.routers.traefik-dashboard.service=api@internal"
-      # port factice nécessaire pour le service interne api@internal
-      - "traefik.http.services.api.loadbalancer.server.port=9999"
-      - "traefik.http.routers.traefik-dashboard.middlewares=auth-traefik"
-      - "traefik.http.middlewares.auth-traefik.basicauth.users=admin:$$apr1$$vKml6Wvz$$G7Wchk2U2numP/43WdGZh."
+        - "traefik.enable=true"
+        - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.educareschool.me`)"
+        - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+        - "traefik.http.routers.traefik-dashboard.tls.certresolver=myresolver"
+        - "traefik.http.routers.traefik-dashboard.service=api@internal"
+        # port factice nécessaire pour le service interne api@internal
+        - "traefik.http.services.api.loadbalancer.server.port=9999"
+        - "traefik.http.routers.traefik-dashboard.middlewares=auth-traefik"
+        - "traefik.http.middlewares.auth-traefik.basicauth.users=admin:$$apr1$$vKml6Wvz$$G7Wchk2U2numP/43WdGZh."
 
   ########################################## FRONTEND (Vue) ##########################################
   frontend:
@@ -142,13 +141,16 @@ services:
         failure_action: rollback
   ############################################# Obeservabilité #############################################
   uptime-kuma:
-    image: louislam/uptime-kuma:1     
+    image: louislam/uptime-kuma:1
     networks:
       - frontend-net
     volumes:
       - kuma_data:/app/data
     deploy:
       mode: replicated
+      placement:
+        constraints:
+          - node.role == manager
       replicas: 1
       labels:
         - "traefik.enable=true"
@@ -164,7 +166,6 @@ services:
         - "traefik.http.services.kuma.loadbalancer.server.port=3001"
       restart_policy:
         condition: on-failure
-
 
 volumes:
   postgres_data:

@@ -7,7 +7,7 @@ import { AuthController } from './controllers/auth.controller'
 import { OtpController } from './controllers/otp.controller'
 import { EmailVerificationController } from './controllers/email-verification.controller'
 
-import { JwtStrategy } from './strategies/jwt.strategy'
+import { JwtStrategy } from './jwt.strategy'
 import { PrismaService } from '../prisma/prisma.service'
 import { MailModule } from '../mail/mail.module'
 

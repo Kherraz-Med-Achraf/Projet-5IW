@@ -37,4 +37,4 @@ export class AppModule {}
 //{
    // provide: APP_FILTER,
     //useClass: SentryGlobalFilter,
- // }
+  }

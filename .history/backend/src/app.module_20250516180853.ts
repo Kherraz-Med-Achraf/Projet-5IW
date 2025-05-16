@@ -12,7 +12,7 @@ import * as fs from 'fs';
 
 @Module({
   imports: [
-    //SentryModule.forRoot(), 
+    SentryModule.forRoot(), 
     ConfigModule.forRoot({
       isGlobal: true, 
     }),
@@ -31,10 +31,9 @@ import * as fs from 'fs';
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, {
+    provide: APP_FILTER,
+    useClass: SentryGlobalFilter,
+  }],
 })
 export class AppModule {}
-//{
-   // provide: APP_FILTER,
-    //useClass: SentryGlobalFilter,
- // }

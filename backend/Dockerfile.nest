@@ -1,19 +1,34 @@
-FROM node:18
-
+FROM node:20 AS install
 WORKDIR /app
 
-# Copier les fichiers de dépendances et le dossier prisma (contenant schema.prisma)
 COPY package*.json ./
 COPY prisma ./prisma
-
-# Installer les dépendances
 RUN npm install
-
-# Générer le client Prisma (celui-ci trouve maintenant le fichier prisma/schema.prisma)
 RUN npx prisma generate
 
-# Copier le reste du code
-COPY . .
+FROM install AS dev
 
+COPY . .
 EXPOSE 3000
 CMD ["npm", "run", "start:dev"]
+
+FROM install AS build
+COPY . .
+RUN npm run build
+
+FROM node:20-alpine AS production
+WORKDIR /app
+
+# On copie le code compilé et les modules produits
+COPY --from=build /app/dist ./dist
+COPY --from=install /app/node_modules ./node_modules
+
+# Variables et port
+ENV NODE_ENV=production
+EXPOSE 3000
+
+
+
+# Lancement direct du code compilé
+CMD ["node", "dist/main.js"]
+

@@ -1,6 +1,6 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { AuthService } from '../auth.service';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import * as speakeasy from 'speakeasy';
 import * as qrcode from 'qrcode';
 

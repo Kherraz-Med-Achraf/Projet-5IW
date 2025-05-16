@@ -34,7 +34,3 @@ import * as fs from 'fs';
   providers: [AppService],
 })
 export class AppModule {}
-//{
-   // provide: APP_FILTER,
-    //useClass: SentryGlobalFilter,
- // }

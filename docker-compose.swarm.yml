@@ -1,0 +1,173 @@
+version: "3.9"
+
+secrets:
+  pg_password:
+    external: true
+  sentry_dsn:
+    external: true
+
+networks:
+  frontend-net:
+    driver: overlay
+  backend-net:
+    driver: overlay
+
+services:
+  ########################################## TRAEFIK ##########################################
+  traefik:
+    image: traefik:v2.9
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
+    command:
+      - "--api.dashboard=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.exposedByDefault=false"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=mkherraz1@myges.fr"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_letsencrypt:/letsencrypt
+    networks:
+      - frontend-net
+      - backend-net
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager # Traefik doit être sur le manager pour interroger l’API Swarm
+      update_config:
+        parallelism: 1 # 1 conteneur à la fois
+        delay: 5s # attente de 5 s entre chaque mise à jour
+        failure_action: rollback
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.educareschool.me`)"
+        - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+        - "traefik.http.routers.traefik-dashboard.tls.certresolver=myresolver"
+        - "traefik.http.routers.traefik-dashboard.service=api@internal"
+        # port factice nécessaire pour le service interne api@internal
+        - "traefik.http.services.api.loadbalancer.server.port=9999"
+        - "traefik.http.routers.traefik-dashboard.middlewares=auth-traefik"
+        - "traefik.http.middlewares.auth-traefik.basicauth.users=admin:$$apr1$$vKml6Wvz$$G7Wchk2U2numP/43WdGZh."
+
+  ########################################## FRONTEND (Vue) ##########################################
+  frontend:
+    image: achraf97/projet5iw-frontend:prod
+    environment:
+      - VITE_NEST_API_URL=http://nest:3000
+    networks:
+      - frontend-net
+    deploy:
+      replicas: 3
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.frontend.rule=Host(`educareschool.me`)"
+        - "traefik.http.routers.frontend.entrypoints=websecure"
+        - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+        - "traefik.http.services.frontend.loadbalancer.server.port=80"
+        - "traefik.http.routers.frontend-http.rule=Host(`educareschool.me`)"
+        - "traefik.http.routers.frontend-http.entrypoints=web"
+        - "traefik.http.routers.frontend-http.middlewares=redirect-to-https"
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+
+  ########################################## BACKEND (Nest) ##########################################
+  nest:
+    image: achraf97/projet5iw-nest:prod
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USER=myuser
+      - POSTGRES_DB=mydb
+    secrets:
+      - pg_password
+      - sentry_dsn
+    networks:
+      - backend-net
+    deploy:
+      replicas: 2
+      labels:
+        - "traefik.enable=true"
+        # Router HTTPS
+        - "traefik.http.routers.nest.rule=Host(`api.educareschool.me`)"
+        - "traefik.http.routers.nest.entrypoints=websecure"
+        - "traefik.http.routers.nest.tls.certresolver=myresolver"
+        # Port du service
+        - "traefik.http.services.nest.loadbalancer.server.port=3000"
+        # Redirection HTTP vers HTTPS
+        - "traefik.http.routers.nest-http.rule=Host(`api.educareschool.me`)"
+        - "traefik.http.routers.nest-http.entrypoints=web"
+        - "traefik.http.routers.nest-http.middlewares=redirect-to-https"
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+
+  ########################################## POSTGRES ##########################################
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=myuser
+      - POSTGRES_DB=mydb
+      # ici on indique au entrypoint Postgres de lire le mot de passe
+      - POSTGRES_PASSWORD_FILE=/run/secrets/pg_password
+    secrets:
+      - pg_password
+    networks:
+      - backend-net
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+  ############################################# Obeservabilité #############################################
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    networks:
+      - frontend-net
+    volumes:
+      - kuma_data:/app/data
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+          - node.role == manager
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        # HTTP → HTTPS
+        - "traefik.http.routers.kuma-http.rule=Host(`kuma.educareschool.me`)"
+        - "traefik.http.routers.kuma-http.entrypoints=web"
+        - "traefik.http.routers.kuma-http.middlewares=redirect-to-https"
+        # HTTPS router
+        - "traefik.http.routers.kuma.rule=Host(`kuma.educareschool.me`)"
+        - "traefik.http.routers.kuma.entrypoints=websecure"
+        - "traefik.http.routers.kuma.tls.certresolver=myresolver"
+        # Dit à Traefik sur quel port du container il doit router
+        - "traefik.http.services.kuma.loadbalancer.server.port=3001"
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  postgres_data:
+  traefik_letsencrypt:
+  kuma_data:

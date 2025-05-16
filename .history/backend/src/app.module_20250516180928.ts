@@ -31,10 +31,6 @@ import * as fs from 'fs';
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, ],
 })
 export class AppModule {}
-//{
-   // provide: APP_FILTER,
-    //useClass: SentryGlobalFilter,
- // }

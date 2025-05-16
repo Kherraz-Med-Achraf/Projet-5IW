@@ -15,7 +15,7 @@ import {
   ResetPasswordDto,
 } from './dto/auth.dto'
 import { RegisterParentDto } from './dto/register-parent.dto'
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard'
+import { JwtAuthGuard } from '../common/guards/
 
 @Controller('auth')
 export class AuthController {

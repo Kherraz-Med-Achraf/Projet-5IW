@@ -22,5 +22,6 @@ jobs:
           script: |
             set -euo pipefail
             cd /home/github/projet5iw
+            git checkout main
             git pull origin main
             ./build-deploy.sh

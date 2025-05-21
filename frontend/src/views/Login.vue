@@ -1,97 +1,185 @@
 <template>
-  <div>
-    <h1>Connexion (front)</h1>
-    <form @submit.prevent="onSubmit">
-      <div>
-        <label>Email</label>
-        <input
-          v-model="email"
-          @blur="email = email.trim().toLowerCase()"
-          type="email"
-          required
-        />
-      </div>
-      <div>
-        <label>Mot de passe</label>
-        <input v-model="password" type="password" required />
-      </div>
-      <button type="submit" :disabled="auth.loading">Se connecter</button>
-    </form>
-    <p style="margin-top: 1rem;">
-      <router-link to="/forgot-password">Mot de passe oublié ?</router-link>
-    </p>
+  <div class="login">
+    <div class="login-top">
+      <h1 class="logo">APAJH</h1>
+      <h2>Veuillez entrer vos identifiants pour vous connecter.</h2>
+    </div>
+    <div class="login-container">
+      <form @submit.prevent="onSubmit">
+        <div class="form-group">
+          <label>Email</label>
+          <input
+            v-model="email"
+            @blur="email = email.trim().toLowerCase()"
+            type="email"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label>Mot de passe</label>
+          <input v-model="password" type="password" required />
+        </div>
+        <button type="submit" :disabled="auth.loading">Se connecter</button>
+      </form>
+      <p style="margin-top: 1rem">
+        <router-link to="/forgot-password">Mot de passe oublié ?</router-link>
+      </p>
 
-    <div v-if="showOtpModal" class="modal">
-      <div class="modal-content">
-        <h2>Entrez votre code OTP</h2>
-        <input v-model="otpCode" type="text" placeholder="Code OTP" />
-        <button @click="submitOtp" :disabled="auth.loading">Valider</button>
-        <button @click="closeOtpModal" :disabled="auth.loading">Annuler</button>
+      <div v-if="showOtpModal" class="modal">
+        <div class="modal-content">
+          <h2>Entrez votre code OTP</h2>
+          <input v-model="otpCode" type="text" placeholder="Code OTP" />
+          <button @click="submitOtp" :disabled="auth.loading">Valider</button>
+          <button @click="closeOtpModal" :disabled="auth.loading">
+            Annuler
+          </button>
+        </div>
       </div>
+    </div>
+    <div class="login-bottom">
+      <p>
+        Vous n'avez pas de compte ?
+        <router-link to="/register">Inscrivez-vous</router-link>
+      </p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
-import { useToast } from 'vue-toastification'
+import { ref } from "vue";
+import { useAuthStore } from "@/stores/auth";
+import { useRouter } from "vue-router";
+import { useToast } from "vue-toastification";
 
-const email = ref('')
-const password = ref('')
-const otpCode = ref('')
-const showOtpModal = ref(false)
-const auth = useAuthStore()
-const router = useRouter()
-const toast = useToast()
+const email = ref("");
+const password = ref("");
+const otpCode = ref("");
+const showOtpModal = ref(false);
+const auth = useAuthStore();
+const router = useRouter();
+const toast = useToast();
 
 async function onSubmit() {
-  auth.error = ''
-  const res = await auth.initiateLogin({ email: email.value, password: password.value })
-  console.log('[Login.vue] initiateLogin response →', res)
+  auth.error = "";
+  const res = await auth.initiateLogin({
+    email: email.value,
+    password: password.value,
+  });
+  console.log("[Login.vue] initiateLogin response →", res);
   if (res.tempToken && !res.access_token) {
-    auth.tempToken = res.tempToken
-    showOtpModal.value = true
-    toast.info('Veuillez saisir votre code OTP')
+    auth.tempToken = res.tempToken;
+    showOtpModal.value = true;
+    toast.info("Veuillez saisir votre code OTP");
   } else if (res.access_token) {
-    await auth.login({ email: email.value, password: password.value })
-    toast.success('Vous êtes connecté !')
-    router.push('/home')
+    await auth.login({ email: email.value, password: password.value });
+    toast.success("Vous êtes connecté !");
+    router.push("/home");
   } else {
-    toast.error(auth.error || 'La connexion a échoué.')
+    toast.error(auth.error || "La connexion a échoué.");
   }
 }
 
 async function submitOtp() {
   if (!otpCode.value) {
-    toast.error('Veuillez saisir votre code OTP')
-    return
+    toast.error("Veuillez saisir votre code OTP");
+    return;
   }
-  const res = await auth.verifyOtp({ tempToken: auth.tempToken!, otpCode: otpCode.value })
-  console.log('[Login.vue] verifyOtp response →', res)
+  const res = await auth.verifyOtp({
+    tempToken: auth.tempToken!,
+    otpCode: otpCode.value,
+  });
+  console.log("[Login.vue] verifyOtp response →", res);
   if (res.access_token) {
-    toast.success('Connexion réussie !')
-    showOtpModal.value = false
-    router.push('/home')
+    toast.success("Connexion réussie !");
+    showOtpModal.value = false;
+    router.push("/home");
   } else {
-    toast.error(auth.error || 'OTP invalide.')
+    toast.error(auth.error || "OTP invalide.");
   }
 }
 
 function closeOtpModal() {
-  showOtpModal.value = false
+  showOtpModal.value = false;
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+.login {
+  width: 100%;
+  height: 100vh;
+  background-color: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 25px;
+  &-top {
+    width: 100%;
+    text-align: center;
+    h1 {
+      font-family: "Archivo Black", sans-serif;
+      font-size: 54px;
+      color: #2a6eff;
+    }
+    h2 {
+      font-size: 1.1rem;
+      color: #111827;
+      margin-bottom: 25px;
+      font-weight: 500;
+    }
+  }
+  &-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 48px;
+    background-color: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        label {
+          font-size: 1rem;
+          color: #374151;
+          font-weight: 500;
+        }
+        input {
+          padding: 10px;
+          border: 1px solid #e5e7eb;
+          border-radius: 4px;
+          &:focus {
+            border-color: #2a6eff;
+            outline: none;
+          }
+        }
+      }
+      button {
+        padding: 10px;
+        background-color: #2a6eff;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        &:disabled {
+          background-color: #d1d5db;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+}
 .modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0,0,0,0.5);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;

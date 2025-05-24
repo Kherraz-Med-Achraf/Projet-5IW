@@ -54,8 +54,9 @@ const props = defineProps({
   width: 100%;
   max-width: 850px;
   height: fit-content;
-  margin: 0 auto;
-  border: 1px solid #e0e0e0;
+  margin: 32px auto;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   &-header {
     display: flex;
@@ -118,7 +119,7 @@ const props = defineProps({
     color: #757575;
     text-align: center;
     font-family: $main-font-family;
-    
+
     .step.active & {
       color: $stepper-color;
       font-weight: 600;

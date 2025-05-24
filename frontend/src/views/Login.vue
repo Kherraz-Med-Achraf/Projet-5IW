@@ -119,7 +119,7 @@ function closeOtpModal() {
     h1 {
       font-family: "Archivo Black", sans-serif;
       font-size: 54px;
-      color: #2a6eff;
+      color: $primary-color;
     }
     h2 {
       font-size: 1.1rem;
@@ -153,21 +153,25 @@ function closeOtpModal() {
           border: 1px solid #e5e7eb;
           border-radius: 4px;
           &:focus {
-            border-color: #2a6eff;
+            border-color: $primary-color;
             outline: none;
           }
         }
       }
       button {
         padding: 10px;
-        background-color: #2a6eff;
+        background-color: $primary-color;
         color: #fff;
         border: none;
         border-radius: 4px;
         cursor: pointer;
+        transition: background-color 0.3s;
         &:disabled {
           background-color: #d1d5db;
           cursor: not-allowed;
+        }
+        &:hover:not(:disabled) {
+          background-color: lighten($primary-color, 10%);
         }
       }
     }

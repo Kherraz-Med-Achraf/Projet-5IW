@@ -6,6 +6,7 @@ import ForgotPassword from "@/views/ForgotPassword.vue";
 import ResetPassword from "@/views/ResetPassword.vue";
 import OtpActivation from "@/views/OtpActivation.vue";
 import VerifyEmail from "@/views/VerifyEmail.vue";
+import Dev from "@/views/TheDev.vue";
 
 const routes = [
   {
@@ -21,6 +22,11 @@ const routes = [
     path: "/login",
     name: "Login",
     component: Login,
+  },
+  {
+    path: "/dev",
+    name: "Dev",
+    component: Dev,
   },
   {
     path: "/home",

@@ -67,7 +67,7 @@
     <button class="btn" @click="addEmergency">+ Ajouter un contact</button>
 
     <!-- ÉTAPE 2 -->
-    <h2 class="text-xl font-bold mt-10">Étape 2 : Informations de l’enfant</h2>
+    <!-- <h2 class="text-xl font-bold mt-10">Étape 2 : Informations de l’enfant</h2>
     <div
       v-for="(child, i) in form.children"
       :key="`ch-${i}`"
@@ -79,10 +79,10 @@
       <BaseInput v-model="child.condition" label="Pathologie (optionnel)" />
       <button class="absolute top-1 right-1" @click="removeChild(i)">✕</button>
     </div>
-    <button class="btn" @click="addChild">+ Ajouter un enfant</button>
+    <button class="btn" @click="addChild">+ Ajouter un enfant</button> -->
 
     <!-- ÉTAPE 3 -->
-    <h2 class="text-xl font-bold mt-10">Étape 3 : Création du compte</h2>
+    <!-- <h2 class="text-xl font-bold mt-10">Étape 3 : Création du compte</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <BaseInput v-model="form.email" label="Email" type="email" class="md:col-span-2" />
       <BaseInput v-model="form.password" label="Mot de passe" type="password" />
@@ -91,7 +91,7 @@
 
     <button class="btn-primary mt-8" @click="submit" :disabled="auth.loading">
       Créer le compte
-    </button>
+    </button> -->
   </div>
 </template>
 

@@ -32,6 +32,7 @@ model User {
   serviceManagerProfile ServiceManagerProfile?
   staffProfile          StaffProfile?
 
+  /** référents (many-to-many) **/
   referentOf            Child[]          @relation("ChildReferents")
 }
 

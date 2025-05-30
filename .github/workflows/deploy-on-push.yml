@@ -1,0 +1,27 @@
+name: Deploy on main push
+
+# Déclenche sur push & merge vers main
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: SSH to manager & run build-deploy.sh
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.MGR_HOST }}
+          username: ${{ secrets.MGR_SSH_USER }}
+          key: ${{ secrets.MGR_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /home/github/projet5iw
+            git checkout main
+            git pull origin main
+            ./build-deploy.sh

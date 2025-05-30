@@ -1,0 +1,92 @@
+// src/child/child.service.ts
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateChildDto } from './dto/create-child.dto';
+import { UpdateChildDto } from './dto/update-child.dto';
+
+@Injectable()
+export class ChildService {
+  constructor(public readonly prisma: PrismaService) {}
+
+  async createForParent(parentProfileId: number, dto: CreateChildDto) {
+    return this.prisma.child.create({
+      data: {
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        birthDate: new Date(dto.birthDate),
+        condition: dto.condition,
+        parent: { connect: { id: parentProfileId } },
+      },
+    });
+  }
+
+  async findAllForParent(parentProfileId: number) {
+    return this.prisma.child.findMany({
+      where: { parentProfileId },
+    });
+  }
+
+  async findOneForParent(parentProfileId: number, id: number) {
+    return this.prisma.child.findFirst({
+      where: { id, parentProfileId },
+    });
+  }
+
+  async updateForParent(parentProfileId: number, id: number, dto: UpdateChildDto) {
+    return this.prisma.$transaction(async tx => {
+      // 1) Update ChildProfile
+      const updateCount = await tx.child.updateMany({
+        where: { id, parentProfileId },
+        data: {
+          ...(dto.firstName && { firstName: dto.firstName }),
+          ...(dto.lastName  && { lastName: dto.lastName }),
+          ...(dto.birthDate && { birthDate: new Date(dto.birthDate) }),
+          ...(dto.condition !== undefined && { condition: dto.condition }),
+        },
+      });
+      if (updateCount.count === 0) {
+        throw new NotFoundException(`Enfant ${id} introuvable`);
+      }
+
+      // 2) Fetch updated profile
+      const child = await tx.child.findUnique({ where: { id } });
+      if (!child) {
+        throw new NotFoundException(`Enfant ${id} introuvable après mise à jour`);
+      }
+
+      // 3) Recalculate login based on new name
+      const base = `${child.firstName[0].toLowerCase()}${child.lastName.toLowerCase()}`;
+      let login = base;
+      let suffix = 1;
+      while (
+        await tx.user.findUnique({ where: { email: `${login}@kids.local` } })
+      ) {
+        login = `${base}_${suffix++}`;
+      }
+      await tx.user.updateMany({
+        where: { childProfileId: id },
+        data: { email: `${login}@kids.local` },
+      });
+
+      return child;
+    });
+  }
+
+  async removeForParent(parentProfileId: number, id: number) {
+    return this.prisma.$transaction(async tx => {
+      await tx.user.deleteMany({
+        where: { childProfileId: id },
+      });
+
+      // 2) Delete ChildProfile
+      const result = await tx.child.deleteMany({
+        where: { id, parentProfileId },
+      });
+      if (result.count === 0) {
+        throw new NotFoundException(`Enfant ${id} introuvable`);
+      }
+
+      return { id };
+    });
+  }
+}

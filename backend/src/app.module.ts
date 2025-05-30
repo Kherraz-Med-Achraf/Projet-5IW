@@ -1,10 +1,17 @@
 import { Module } from '@nestjs/common';
-import { APP_FILTER } from '@nestjs/core';
-import { SentryModule, SentryGlobalFilter } from '@sentry/nestjs/setup';
+import { APP_FILTER } from "@nestjs/core";
+//import { SentryModule, SentryGlobalFilter } from "@sentry/nestjs/setup";
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
+import { ChildModule } from './child/child.module';  
+import { ParentModule } from './parent/parent.module'; 
+import { SecretaryModule } from './secretary/secretary.module'; 
+import { DirectorModule } from './director/director.module';
+import { StaffModule } from './staff/staff.module';
+import { ServiceManagerModule } from './service-manager/service-manager.module';
 import * as fs from 'fs';
 import { HealthModule } from './health/health.module';
 
@@ -28,15 +35,20 @@ import { HealthModule } from './health/health.module';
       retryAttempts: 30,
       retryDelay: 5000,
     }),
+    AuthModule,
+    ChildModule,  
+    ParentModule,
+    SecretaryModule,
+    DirectorModule,
+    StaffModule,
+    ServiceManagerModule
     HealthModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: APP_FILTER,
-      useClass: SentryGlobalFilter,
-    },
-  ],
+  providers: [AppService],
 })
 export class AppModule {}
+//{
+//   provide: APP_FILTER,
+//   useClass: SentryGlobalFilter,
+//}

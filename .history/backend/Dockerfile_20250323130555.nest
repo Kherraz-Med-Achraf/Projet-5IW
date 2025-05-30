@@ -1,0 +1,19 @@
+FROM node:18
+
+WORKDIR /app
+
+# Copier les fichiers de dépendances et le dossier prisma (contenant schema.prisma)
+COPY package*.json ./
+COPY prisma ./prisma
+
+# Installer les dépendances
+RUN npm install
+
+# Générer le client Prisma (celui-ci trouve maintenant le fichier prisma/schema.prisma)
+RUN npx prisma generate
+
+# Copier le reste du code
+COPY . .
+
+EXPOSE 3000
+CMD ["npm", "run", "start:dev"]

@@ -1,0 +1,5 @@
+// src/utils/random-token.ts
+import * as crypto from 'crypto'
+export function randomToken(bytes = 32) {
+  return crypto.randomBytes(bytes).toString('hex')   // 64 car. hex
+}

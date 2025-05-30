@@ -1,9 +1,13 @@
 FROM node:20 AS install
 WORKDIR /app
+
 COPY package*.json ./
+COPY prisma ./prisma
 RUN npm install
+RUN npx prisma generate
 
 FROM install AS dev
+
 COPY . .
 EXPOSE 3000
 CMD ["npm", "run", "start:dev"]
@@ -23,5 +27,8 @@ COPY --from=install /app/node_modules ./node_modules
 ENV NODE_ENV=production
 EXPOSE 3000
 
+
+
 # Lancement direct du code compilé
 CMD ["node", "dist/main.js"]
+

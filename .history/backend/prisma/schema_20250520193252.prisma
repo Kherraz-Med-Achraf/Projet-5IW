@@ -1,0 +1,92 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                  String         @id @default(cuid())
+  email               String         @unique
+  emailVerified       Boolean        @default(false)
+  password            String
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  otpSecret           String?
+  passwordResets      PasswordReset[]
+  emailVerifications  EmailVerification[]
+  refreshToken        String?
+  role                Role           @default(USER)
+  passwordChangedAt   DateTime       @default(now())
+  forcePasswordReset  Boolean        @default(false)
+  failedLoginAttempts Int            @default(0)
+  lockUntil           DateTime?
+  parentProfile       ParentProfile? @relation(fields: [parentProfileId], references: [id], onDelete: Cascade)
+  parentProfileId     String?        @unique
+  childProfile        Child?         @relation(name: "ChildToUser", onDelete: Cascade)
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  token     String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+}
+
+model EmailVerification {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+  TEACHER
+  CHILD
+  PARENT
+}
+
+model ParentProfile {
+  id                  Int               @id @default(autoincrement())
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId              String            @unique
+  firstName           String
+  lastName            String
+  phone               String
+  address             String
+  legalResponsibility String
+  notificationPrefs   Json              @default("{}")
+  emergencyContacts   EmergencyContact[]
+  children            Child[]           @relation(onDelete: Cascade)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+}
+
+model Child {
+  id               Int             @id @default(autoincrement())
+  firstName        String
+  lastName         String
+  birthDate        DateTime
+  condition        String?
+  parent           ParentProfile   @relation(fields: [parentProfileId], references: [id], onDelete: Cascade)
+  parentProfileId  Int
+  user             User?           @relation(name: "ChildToUser", fields: [userId], references: [id], onDelete: Cascade)
+  userId           String?         @unique
+}
+
+model EmergencyContact {
+  id               Int             @id @default(autoincrement())
+  name             String
+  relation         String
+  phone            String
+  parent           ParentProfile   @relation(fields: [parentProfileId], references: [id], onDelete: Cascade)
+  parentProfileId  Int
+}

@@ -1,0 +1,107 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                  String         @id @default(cuid())
+  email               String         @unique
+  emailVerified       Boolean        @default(false)
+  password            String
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  otpSecret           String?
+  passwordResets      PasswordReset[]
+  emailVerifications  EmailVerification[]
+  refreshToken        String?
+  role                Role           @default(USER)
+  passwordChangedAt   DateTime       @default(now())
+  forcePasswordReset  Boolean        @default(false)
+  failedLoginAttempts Int            @default(0)
+  lockUntil           DateTime?
+
+  // Relation to ParentProfile (no attributes here)
+  parentProfile       ParentProfile? 
+  parentProfileId     String?        @unique
+
+  // Relation to Child (no attributes here)
+  childProfile        Child?         
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  token     String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+}
+
+model EmailVerification {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+  TEACHER
+  CHILD
+  PARENT
+}
+
+model ParentProfile {
+  id                  Int             @id @default(autoincrement())
+  // Relation defined here with cascade
+  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId              String          @unique
+
+  firstName           String
+  lastName            String
+  phone               String
+  address             String
+  legalResponsibility String
+  notificationPrefs   Json            @default("{}")
+  emergencyContacts   EmergencyContact[]
+
+  // Relation to Child defined without attributes; cascade is on Child side
+  children            Child[]
+
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+}
+
+model Child {
+  id               Int             @id @default(autoincrement())
+  firstName        String
+  lastName         String
+  birthDate        DateTime
+  condition        String?
+
+  // Relation defined here with cascade
+  parent           ParentProfile   @relation(fields: [parentProfileId], references: [id], onDelete: Cascade)
+  parentProfileId  Int
+
+  // Relation to User defined here with cascade
+  user             User?           @relation(name: "ChildToUser", fields: [userId], references: [id], onDelete: Cascade)
+  userId           String?         @unique
+}
+
+model EmergencyContact {
+  id               Int             @id @default(autoincrement())
+  name             String
+  relation         String
+  phone            String
+
+  // Relation defined here with cascade
+  parent           ParentProfile   @relation(fields: [parentProfileId], references: [id], onDelete: Cascade)
+  parentProfileId  Int
+}

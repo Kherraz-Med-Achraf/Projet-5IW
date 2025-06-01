@@ -1,0 +1,12 @@
+import { Controller, Get, Query } from '@nestjs/common';
+import { AuthService } from '../auth.service';
+
+@Controller('auth')
+export class EmailVerificationController {
+  constructor(private readonly auth: AuthService) {}
+
+  @Get('confirm-email')
+  confirmEmail(@Query('token') token: string) {
+    return this.auth.confirmEmail(token);
+  }
+}

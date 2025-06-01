@@ -65,6 +65,10 @@ services:
       - frontend-net
     deploy:
       replicas: 3
+      resources:
+        reservations:
+          cpus: "0.25"
+          memory: 256M
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.frontend.rule=Host(`educareschool.me`)"
@@ -96,6 +100,10 @@ services:
       - backend-net
     deploy:
       replicas: 2
+      resources:
+        reservations:
+          cpus: "0.25"
+          memory: 256M
       labels:
         - "traefik.enable=true"
         # Router HTTPS
@@ -109,12 +117,18 @@ services:
         - "traefik.http.routers.nest-http.entrypoints=web"
         - "traefik.http.routers.nest-http.middlewares=redirect-to-https"
       update_config:
-        order: start-first
         parallelism: 1
         delay: 10s
+        monitor: 30s
+        max_failure_ratio: 0.2
         failure_action: rollback
       restart_policy:
         condition: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep '[d]ist/main.js' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   ########################################## POSTGRES ##########################################
   postgres:
@@ -138,7 +152,16 @@ services:
       update_config:
         parallelism: 1
         delay: 10s
+        monitor: 30s # attend 30s après démarrage pour vérifier l’état
+        max_failure_ratio: 0 # tout échec = rollback
         failure_action: rollback
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   ############################################# Obeservabilité #############################################
   uptime-kuma:
     image: louislam/uptime-kuma:1

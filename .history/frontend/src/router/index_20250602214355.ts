@@ -15,7 +15,7 @@ const routes: Array<RouteRecordRaw> = [
     path: '/register',
     name: 'Register',
     component: Register,
-    meta: { requiresInvite: true }, // ← on protège /register par token
+    // plus besoin de requiresInvite ici
   },
   {
     path: '/login',
@@ -63,45 +63,28 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const auth = useAuthStore()
-  const {
-    requiresAuth,
-    requiresGuest,
-    requiredRole,
-    requiresInvite,
-  } = to.meta as {
+  const { requiresAuth, requiresGuest, requiredRole } = to.meta as {
     requiresAuth?: boolean
     requiresGuest?: boolean
     requiredRole?: string
-    requiresInvite?: boolean
   }
 
-  // 1) Si la page requiert un token d’invitation (ex. /register)
-  if (requiresInvite) {
-    const token = (to.query.token as string) || ''
-    // pas de token → on redirige vers Login
-    if (!token) {
-      return next({ name: 'Login' })
-    }
-    // sinon, on laisse passer pour que le composant Register valide lui-même le token
-    return next()
-  }
-
-  // 2) Routes pour « guests » (login, forgot-password, reset-password, verify-email)
+  // 1) Routes pour « guests » (login, forgot-password, reset-password, verify-email)
   if (requiresGuest && auth.isAuthenticated) {
     return next({ name: 'Home' })
   }
 
-  // 3) Routes nécessitant d’être authentifié (home, activate-otp, etc.)
+  // 2) Routes nécessitant d’être authentifié (home, activate-otp, etc.)
   if (requiresAuth && !auth.isAuthenticated) {
     return next({ name: 'Login' })
   }
 
-  // 4) Si un rôle précis est requis
+  // 3) Si un rôle précis est requis
   if (requiredRole && auth.user?.role !== requiredRole) {
     return next({ name: 'Home' })
   }
 
-  // 5) Sinon, on autorise la navigation
+  // 4) Aucun verrou levé : autoriser
   next()
 })
 

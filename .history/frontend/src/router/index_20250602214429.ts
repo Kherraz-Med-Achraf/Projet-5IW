@@ -15,7 +15,7 @@ const routes: Array<RouteRecordRaw> = [
     path: '/register',
     name: 'Register',
     component: Register,
-    meta: { requiresInvite: true }, 
+    meta: { requiresInvite: true }, // ← on protège /register par token
   },
   {
     path: '/login',

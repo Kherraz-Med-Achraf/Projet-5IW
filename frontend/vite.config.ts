@@ -12,12 +12,12 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
-   css: {
+  css: {
     preprocessorOptions: {
       scss: {
-        additionalData: `@import "@/assets/styles/_variables.scss";`
-      }
-    }
+        additionalData: `@import "@/assets/styles/_variables.scss";`,
+      },
+    },
   },
   server: {
     host: "0.0.0.0",

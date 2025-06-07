@@ -17,8 +17,9 @@
           :class="{
             active: currentStep === index + 1,
             completed: currentStep > index + 1,
+            disabled: !canAccessStep(index + 1),
           }"
-          @click="() => $emit('update:currentStep', index + 1)"
+          @click="() => handleStepClick(index + 1)"
         >
           <div class="step-number">
             <span v-if="currentStep > index + 1">✓</span>
@@ -32,6 +33,10 @@
 </template>
 
 <script setup>
+import { useRegisterStore } from "@/stores/register";
+
+const registerStore = useRegisterStore();
+
 const props = defineProps({
   currentStep: {
     type: Number,
@@ -47,6 +52,18 @@ const props = defineProps({
     ],
   },
 });
+
+const emit = defineEmits(["update:currentStep"]);
+
+const canAccessStep = (step) => {
+  return registerStore.canAccessStep(step);
+};
+
+const handleStepClick = (step) => {
+  if (canAccessStep(step)) {
+    emit("update:currentStep", step);
+  }
+};
 </script>
 
 <style lang="scss" scoped>
@@ -74,7 +91,7 @@ const props = defineProps({
     font-size: 32px;
     transition: color 0.3s ease;
     &.active {
-      color: $stepper-color;
+      color: #3b82f6;
     }
     &.completed {
       color: #4caf50;
@@ -92,6 +109,11 @@ const props = defineProps({
   border-right: none;
   padding: 16px 0;
   cursor: pointer;
+
+  &.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
   &-number {
     width: 40px;
     height: 40px;
@@ -104,7 +126,7 @@ const props = defineProps({
     font-weight: bold;
     transition: all 0.3s ease;
     .step.active & {
-      background-color: $stepper-color;
+      background-color: #3b82f6;
       color: white;
     }
 
@@ -118,10 +140,10 @@ const props = defineProps({
     font-size: 0.875rem;
     color: #757575;
     text-align: center;
-    font-family: $main-font-family;
+    font-family: inherit;
 
     .step.active & {
-      color: $stepper-color;
+      color: #3b82f6;
       font-weight: 600;
     }
 

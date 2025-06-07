@@ -39,7 +39,7 @@
     <div class="login-bottom">
       <p>
         Vous n'avez pas de compte ?
-        <router-link to="/register">Inscrivez-vous</router-link>
+        <router-link to="/register">Contactez l'administrateur</router-link>
       </p>
     </div>
   </div>
@@ -150,10 +150,10 @@ function closeOtpModal() {
         }
         input {
           padding: 10px;
-          border: 1px solid #e5e7eb;
+          border: 1px solid $border-color;
           border-radius: 4px;
           &:focus {
-            border-color: $primary-color;
+            border-color: $border-color-focus;
             outline: none;
           }
         }

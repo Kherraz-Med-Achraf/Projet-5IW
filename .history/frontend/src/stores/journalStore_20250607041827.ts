@@ -289,16 +289,12 @@ export const useJournalStore = defineStore('journal', {
     async submitJournal(journalId: number) {
       this.error = ''
       try {
-        // On n'envoie pas de Content-Type pour accepter un corps vide
-        const headers = this.getAuthHeaders()
-        const res     = await fetch(
-          `http://localhost:3000/journal/${journalId}/submit`,
-          { method: 'POST', headers }
-        )
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}))
-          throw new Error(err.message || res.statusText)
-        }
+        const headers = { ...this.getAuthHeaders(), 'Content-Type': 'application/json' }
+        const res     = await fetch(`http://localhost:3000/journal/${journalId}/submit`, {
+          method: 'POST',
+          headers,
+        })
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || res.statusText)
         return (await res.json()) as Journal
       } catch (e: any) {
         this.error = e.message

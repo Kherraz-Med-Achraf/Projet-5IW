@@ -182,13 +182,20 @@
           >
             Enregistrer (Brouillon)
           </button>
-          <button
-            v-if="!isSubmitted"
-            @click="showSubmitModal = true"
-            class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
-          >
-            Soumettre
-          </button>
+          + <button
++   v-if="!isSubmitted"
++   :disabled="!allMissionsFilled"
++   @click="showSubmitModal = true"
++   class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50"
++ >
++   Soumettre
++ </button>
++ <p
++   v-if="!isSubmitted && !allMissionsFilled"
++   class="text-red-600 text-sm mt-1"
++ >
++   Veuillez renseigner une progression pour <strong>toutes</strong> les missions avant de soumettre.
++ </p>
           <button
             v-if="isSubmitted && canReopen"
             @click="onReopen"
@@ -247,7 +254,13 @@
   const authStore    = useAuthStore()
   const route        = useRoute()
   const router       = useRouter()
-  
+  const allMissionsFilled = computed(() => {
+  if (!missions.value.length) return false
+  return missions.value.every(m => {
+    const v = form.progressionMissions[m.id]
+    return typeof v === 'string' && v.trim().length > 0
+  })
+})
   
   const childId = Number(route.params.childId)
   const yearId  = Number(route.params.yearId)

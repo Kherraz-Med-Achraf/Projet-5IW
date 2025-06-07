@@ -1,7 +1,8 @@
 // src/journal/journal.service.ts
+
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { JournalMensuel, JournalAttachment } from '@prisma/client';
+import { JournalMensuel, JournalAttachment, Prisma } from '@prisma/client';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 
@@ -10,49 +11,21 @@ export class JournalService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Récupère toutes les entrées de journal pour un mois donné (format 'YYYY-MM').
-   */
-  async findByMonth(monthStr: string): Promise<JournalMensuel[]> {
-    const [year, month] = monthStr.split('-').map(Number);
-    if (!year || !month || month < 1 || month > 12) {
-      throw new BadRequestException(`Paramètre month invalide: ${monthStr}`);
-    }
-
-    // Trouve l'année académique correspondant à ce mois
-    const referenceDate = new Date(year, month - 1, 1);
-    const academicYear = await this.prisma.academicYear.findFirst({
-      where: {
-        startDate: { lte: referenceDate },
-        endDate:   { gte: referenceDate },
-      },
-    });
-    if (!academicYear) {
-      throw new NotFoundException(`Aucune année académique trouvée pour ${monthStr}`);
-    }
-
-    return this.prisma.journalMensuel.findMany({
-      where: {
-        month,
-        academicYearId: academicYear.id,
-      },
-      orderBy: { month: 'asc' },
-      include: { attachments: true },
-    });
-  }
-
-  /**
    * Vérifie qu’un enfant appartient bien au parent donné.
+   * Retourne true si parentUserId est bien le parent de childId.
    */
   async verifyChildBelongsToParent(
     childId: number,
     parentUserId: string,
   ): Promise<boolean> {
+    // Récupère l’id du parentProfile lié à cet enfant
     const child = await this.prisma.child.findUnique({
       where: { id: childId },
       select: { parentProfileId: true },
     });
     if (!child) return false;
 
+    // Récupère le parentProfile pour parentUserId
     const parentProfile = await this.prisma.parentProfile.findUnique({
       where: { userId: parentUserId },
       select: { id: true },
@@ -93,7 +66,7 @@ export class JournalService {
   /**
    * Crée un journal (brouillon) pour un mois donné.
    */
-  async create(data: Parameters<PrismaService['journalMensuel']['create']>[0]['data']): Promise<JournalMensuel> {
+  async create(data: Prisma.JournalMensuelCreateInput): Promise<JournalMensuel> {
     return this.prisma.journalMensuel.create({ data });
   }
 
@@ -102,9 +75,11 @@ export class JournalService {
    */
   async update(
     journalId: number,
-    data: Parameters<PrismaService['journalMensuel']['update']>[0]['data'],
+    data: Prisma.JournalMensuelUpdateInput,
   ): Promise<JournalMensuel> {
-    const existing = await this.prisma.journalMensuel.findUnique({ where: { id: journalId } });
+    const existing = await this.prisma.journalMensuel.findUnique({
+      where: { id: journalId },
+    });
     if (!existing) {
       throw new NotFoundException(`Journal ${journalId} introuvable`);
     }
@@ -113,17 +88,28 @@ export class JournalService {
         `Le journal ${journalId} a déjà été soumis et ne peut plus être modifié`,
       );
     }
-    return this.prisma.journalMensuel.update({ where: { id: journalId }, data });
+    return this.prisma.journalMensuel.update({
+      where: { id: journalId },
+      data,
+    });
   }
 
   /**
    * Soumet définitivement un journal (passer isSubmitted à true + horodatage).
+   * Avant soumission, on vérifie que des missions annuelles existent pour cet enfant et cette année.
    */
   async submit(journalId: number): Promise<JournalMensuel> {
-    const existing = await this.prisma.journalMensuel.findUnique({ where: { id: journalId } });
-    if (!existing) throw new NotFoundException(`Journal ${journalId} introuvable`);
-    if (existing.isSubmitted) throw new ForbiddenException(`Le journal ${journalId} est déjà soumis`);
+    const existing = await this.prisma.journalMensuel.findUnique({
+      where: { id: journalId },
+    });
+    if (!existing) {
+      throw new NotFoundException(`Journal ${journalId} introuvable`);
+    }
+    if (existing.isSubmitted) {
+      throw new ForbiddenException(`Le journal ${journalId} est déjà soumis`);
+    }
 
+    // Vérifier que l’enfant a bien des missions pour cette année scolaire
     const missionCount = await this.prisma.mission.count({
       where: {
         childId: existing.childId,
@@ -144,48 +130,84 @@ export class JournalService {
 
   /**
    * Réouvre un journal soumis (réinitialiser isSubmitted à false).
+   * N’autoriser que le rôle ADMIN (voir RolesGuard).
    */
   async reopen(journalId: number): Promise<JournalMensuel> {
-    const existing = await this.prisma.journalMensuel.findUnique({ where: { id: journalId } });
-    if (!existing) throw new NotFoundException(`Journal ${journalId} introuvable`);
-    if (!existing.isSubmitted) throw new ForbiddenException(`Le journal ${journalId} n’est pas soumis`);
-    return this.prisma.journalMensuel.update({ where: { id: journalId }, data: { isSubmitted: false } });
+    const existing = await this.prisma.journalMensuel.findUnique({
+      where: { id: journalId },
+    });
+    if (!existing) {
+      throw new NotFoundException(`Journal ${journalId} introuvable`);
+    }
+    if (!existing.isSubmitted) {
+      throw new ForbiddenException(`Le journal ${journalId} n’est pas soumis`);
+    }
+    return this.prisma.journalMensuel.update({
+      where: { id: journalId },
+      data: { isSubmitted: false },
+    });
   }
 
   /**
    * Supprime un journal (et ses pièces jointes, en cascade).
    */
   async remove(journalId: number): Promise<JournalMensuel> {
-    const existing = await this.prisma.journalMensuel.findUnique({ where: { id: journalId } });
-    if (!existing) throw new NotFoundException(`Journal ${journalId} introuvable`);
+    const existing = await this.prisma.journalMensuel.findUnique({
+      where: { id: journalId },
+    });
+    if (!existing) {
+      throw new NotFoundException(`Journal ${journalId} introuvable`);
+    }
     return this.prisma.journalMensuel.delete({ where: { id: journalId } });
   }
 
   /**
-   * Ajoute une pièce jointe pour un journal.
+   * Ajoute une pièce jointe pour un journal (via multer/UploadFile dans le controller).
    */
   async addAttachment(
     journalId: number,
     filename: string,
     filepath: string,
   ): Promise<JournalAttachment> {
-    const existing = await this.prisma.journalMensuel.findUnique({ where: { id: journalId } });
-    if (!existing) throw new NotFoundException(`Journal ${journalId} introuvable`);
-    return this.prisma.journalAttachment.create({ data: { journal: { connect: { id: journalId } }, filename, filepath } });
+    const existing = await this.prisma.journalMensuel.findUnique({
+      where: { id: journalId },
+    });
+    if (!existing) {
+      throw new NotFoundException(`Journal ${journalId} introuvable`);
+    }
+    return this.prisma.journalAttachment.create({
+      data: {
+        journal: { connect: { id: journalId } },
+        filename,
+        filepath,
+      },
+    });
   }
 
   /**
    * Supprime une pièce jointe par son ID et efface le fichier sur le disque.
    */
   async removeAttachment(attachmentId: number): Promise<JournalAttachment> {
-    const existing = await this.prisma.journalAttachment.findUnique({ where: { id: attachmentId } });
-    if (!existing) throw new NotFoundException(`Pièce jointe ${attachmentId} introuvable`);
+    // 1) On récupère l’entrée pour obtenir le nom de fichier stocké
+    const existing = await this.prisma.journalAttachment.findUnique({
+      where: { id: attachmentId },
+    });
+    if (!existing) {
+      throw new NotFoundException(`Pièce jointe ${attachmentId} introuvable`);
+    }
+
+    // 2) On supprime physiquement le fichier du dossier uploads
     const filePathOnDisk = join(process.cwd(), 'uploads', existing.filename);
     try {
       await fs.unlink(filePathOnDisk);
     } catch (err) {
-      if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+      // Si le fichier n’existe déjà plus, on ignore l’erreur
+      if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+        throw err;
+      }
     }
+
+    // 3) Puis on supprime l’enregistrement en base
     return this.prisma.journalAttachment.delete({ where: { id: attachmentId } });
   }
 }

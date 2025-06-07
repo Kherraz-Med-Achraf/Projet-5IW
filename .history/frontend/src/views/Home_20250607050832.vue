@@ -118,41 +118,35 @@ onMounted(async () => {
 watch(
   () => auth.user,
   async (user) => {
-    if (user?.role !== 'STAFF') return        // seul le STAFF est concerné
+    if (user?.role !== 'STAFF') return            // pas un staff
+    await journalStore.fetchReferentChildren()    // enfants référents
+    console.log('Children refered:', journalStore.childrenRefered)
 
-    /* 1) enfants référents ------------------------------------------------ */
-    await journalStore.fetchReferentChildren()
-
-    /* 2) on ne vérifie qu’à partir du jour paramétré ---------------------- */
     const today = new Date()
-    if (today.getDate() < alertDay.value) return
+    if (today.getDate() < alertDay.value) {
+  console.log(`Pas encore le jour d’alerte (aujourd’hui ${today.getDate()}, alertDay ${alertDay.value})`)
+  return            // ← on ne vérifie qu’à partir du jour configuré
+}
+    console.log('Jour d’alerte atteint !')
 
-    /* 3) récupération des journaux du mois en cours ----------------------- */
-    const monthStr = today.toISOString().slice(0, 7)    // "YYYY-MM"
-    await journalStore.fetchEntries(monthStr)
+    const month = today.toISOString().slice(0, 7) // "YYYY-MM"
+    await journalStore.fetchEntries(month)
+    console.log('Entries:', journalStore.entries)
 
-    /* 4) on dresse la liste des childId qui SONT déjà soumis -------------- */
-    const submittedIds = new Set(
-      journalStore.entries
-        .filter(e => e.isSubmitted)          // on ne garde que les validés
-        .map(e => e.childId)                 // puis on récupère l’id de l’enfant
-    )
-
-    /* 5) il manque un journal si le childId n’est pas dans le Set ---------- */
     const missing = journalStore.childrenRefered
-      .filter(c => !submittedIds.has(c.id))
+      .filter(c => !journalStore.entries.some(e => e.childId === c.id))
 
-    /* 6) toast si besoin --------------------------------------------------- */
+    console.log('Missing journals:', missing)
     if (missing.length) {
-      const names = missing
-        .map(c => `${c.firstName} ${c.lastName}`)
-        .join(', ')
-      toast.warning(`Journaux manquants pour : ${names}`)
-    }
+     // On liste les enfants manquants
+     const names = missing
+       .map(c => `${c.firstName} ${c.lastName}`)
+       .join(', ')
+     toast.warning(`Journaux manquants pour : ${names}`)
+   }
   },
   { immediate: true }
 )
-
 
 /* ───── Actions UI ───── */
 function saveAlertDay() {

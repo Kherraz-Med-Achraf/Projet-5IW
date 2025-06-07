@@ -3,7 +3,7 @@ import {
     Controller,
     Get,
     Param,
-    Query,            // ← ajouté
+    Query,
     ParseIntPipe,
     Body,
     Post,
@@ -36,7 +36,6 @@ import {
   export class JournalController {
     constructor(private readonly service: JournalService) {}
   
-    /* ───── Journaux d’un enfant pour une année ───── */
     @Roles('STAFF', 'DIRECTOR', 'ADMIN', 'SERVICE_MANAGER', 'PARENT')
     @Get('child/:childId')
     async findByChildAndYear(
@@ -46,19 +45,13 @@ import {
     ) {
       if (user.role === 'PARENT') {
         const ok = await this.service.verifyChildBelongsToParent(childId, user.id);
-        if (!ok) throw new ForbiddenException('Vous n’êtes pas autorisé·e à consulter ce journal.');
+        if (!ok) {
+          throw new ForbiddenException('Vous n’êtes pas autorisé·e à consulter ce journal.');
+        }
       }
       return this.service.findByChildAndYear(childId, academicYearId);
     }
   
-    /* ───── GET /journal?month=YYYY-MM ───── */
-    @Roles('STAFF', 'DIRECTOR', 'ADMIN', 'SERVICE_MANAGER')
-    @Get()
-    async findByMonth(@Query('month') month: string) {
-      return this.service.findByMonth(month);
-    }
-  
-    /* ───── Création d’un brouillon ───── */
     @Roles('STAFF', 'ADMIN')
     @Post()
     async create(
@@ -66,18 +59,17 @@ import {
       @User() user: { id: string; role: string },
     ) {
       return this.service.create({
-        child:          { connect: { id: dto.childId } },
-        educator:       { connect: { id: user.id } },
-        academicYear:   { connect: { id: dto.academicYearId } },
-        month:          dto.month,
-        contenu:        dto.contenu ?? '',
+        child: { connect: { id: dto.childId } },
+        educator: { connect: { id: user.id } },
+        academicYear: { connect: { id: dto.academicYearId } },
+        month: dto.month,
+        contenu: dto.contenu ?? '',
         progressionMissions: dto.progressionMissions ?? {},
-        isDraft:        true,
-        isSubmitted:    false,
+        isDraft: true,
+        isSubmitted: false,
       });
     }
   
-    /* ───── Mise à jour d’un brouillon ───── */
     @Roles('STAFF', 'ADMIN')
     @Patch(':journalId')
     async update(
@@ -90,24 +82,21 @@ import {
       });
     }
   
-    /* ───── Soumission définitive ───── */
     @Roles('STAFF', 'DIRECTOR', 'ADMIN', 'SERVICE_MANAGER')
     @Post(':journalId/submit')
     async submit(@Param('journalId', ParseIntPipe) journalId: number) {
       return this.service.submit(journalId);
     }
   
-    /* ───── Réouverture par ADMIN ───── */
     @Roles('ADMIN')
     @Post(':journalId/reopen')
     async reopen(
       @Param('journalId', ParseIntPipe) journalId: number,
-      @Body() _dto: ReopenJournalDto,
+      @Body() dto: ReopenJournalDto,
     ) {
       return this.service.reopen(journalId);
     }
   
-    /* ───── Ajout de pièce jointe ───── */
     @Roles('STAFF', 'DIRECTOR', 'ADMIN', 'SERVICE_MANAGER')
     @UseInterceptors(
       FileInterceptor('file', {
@@ -132,21 +121,25 @@ import {
       @Param('journalId', ParseIntPipe) journalId: number,
       @UploadedFile() file: Express.Multer.File,
     ) {
-      const journal = await this.service.findOneById(journalId);
-      if (!journal) throw new NotFoundException(`Journal ${journalId} introuvable.`);
-      if (await this.service.countAttachments(journalId) >= 3) {
-        throw new BadRequestException('Limite de 3 pièces jointes atteinte.');
+      const j = await this.service.findOneById(journalId);
+      if (!j) throw new NotFoundException(`Journal ${journalId} introuvable.`);
+      const count = await this.service.countAttachments(journalId);
+      if (count >= 3) {
+        throw new BadRequestException('Maximum 3 pièces jointes autorisées.');
       }
       return this.service.addAttachment(journalId, file.filename, file.originalname);
     }
   
-    /* ───── Suppression de pièce jointe ───── */
     @Roles('STAFF', 'DIRECTOR', 'ADMIN', 'SERVICE_MANAGER')
     @Delete('attachment/:attachmentId')
-    async deleteAttachment(
-      @Param('attachmentId', ParseIntPipe) attachmentId: number,
-    ) {
+    async deleteAttachment(@Param('attachmentId', ParseIntPipe) attachmentId: number) {
       return this.service.removeAttachment(attachmentId);
+    }
+  
+    @Roles('STAFF', 'DIRECTOR', 'ADMIN', 'SERVICE_MANAGER')
+    @Get()
+    async findByMonth(@Query('month') month: string) {
+      return this.service.findByMonth(month);
     }
   }
   

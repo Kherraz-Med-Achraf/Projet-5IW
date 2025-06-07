@@ -247,7 +247,13 @@
   const authStore    = useAuthStore()
   const route        = useRoute()
   const router       = useRouter()
-  
+  const allMissionsFilled = computed(() => {
+  if (!missions.value.length) return false
+  return missions.value.every(m => {
+    const v = form.progressionMissions[m.id]
+    return typeof v === 'string' && v.trim().length > 0
+  })
+})
   
   const childId = Number(route.params.childId)
   const yearId  = Number(route.params.yearId)

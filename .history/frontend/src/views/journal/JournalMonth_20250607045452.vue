@@ -248,7 +248,6 @@
   const route        = useRoute()
   const router       = useRouter()
   
-  
   const childId = Number(route.params.childId)
   const yearId  = Number(route.params.yearId)
   const month   = Number(route.params.month)

@@ -115,6 +115,7 @@ onMounted(async () => {
 })
 
 /* ───── Alerte STAFF déclenchée dès que auth.user est dispo ───── */
+/* ───── Alerte STAFF déclenchée dès que auth.user est dispo ───── */
 watch(
   () => auth.user,
   async (user) => {
@@ -153,6 +154,9 @@ watch(
   { immediate: true }
 )
 
+  },
+  { immediate: true }
+)
 
 /* ───── Actions UI ───── */
 function saveAlertDay() {

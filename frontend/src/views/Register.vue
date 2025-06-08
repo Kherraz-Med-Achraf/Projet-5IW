@@ -66,7 +66,7 @@
       <BaseInput v-model="child.birthDate" label="Date de naissance" type="date" />
       <button class="absolute top-1 right-1" @click="removeChild(i)">✕</button>
     </div>
-    <button class="btn" @click="addChild">+ Ajouter un enfant</button>
+    <button class="btn" @click="addChild">+ Ajouter un enfant</button> -->
 
     <!-- ─────── ÉTAPE 3 ───────── -->
     <h2 class="text-xl font-bold mt-10">Étape 3 : Création du compte</h2>
@@ -84,7 +84,7 @@
 
     <button class="btn-primary mt-8" @click="submit" :disabled="auth.loading">
       Créer le compte
-    </button>
+    </button> -->
   </div>
 </template>
 

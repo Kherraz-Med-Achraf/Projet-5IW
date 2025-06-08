@@ -28,7 +28,9 @@
             @click="setActiveMenu(item.name)"
           >
             <div class="nav-item">
-              <span class="nav-icon" v-html="item.icon"></span>
+              <span class="nav-icon">
+                <i class="material-icons">{{ item.icon }}</i>
+              </span>
               <span v-if="!sidebarCollapsed" class="nav-text">{{
                 item.label
               }}</span>
@@ -46,7 +48,11 @@
 
       <div class="content-body">
         <transition name="slide-fade" mode="out-in">
-          <component :is="currentComponent" :key="activeMenu" />
+          <component
+            :is="currentComponent"
+            :key="activeMenu"
+            @navigateToMenu="setActiveMenu"
+          />
         </transition>
       </div>
     </div>
@@ -54,47 +60,60 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
+import { useToast } from "vue-toastification";
 
-// Composants pour le contenu dynamique
 import DashboardHome from "@/components/dashboard/DashboardHome.vue";
-import DashboardUsers from "@/components/dashboard/DashboardUsers.vue";
-import DashboardSettings from "@/components/dashboard/DashboardSettings.vue";
-import DashboardReports from "@/components/dashboard/DashboardReports.vue";
 import DashboardChild from "@/components/dashboard/DashboardChild.vue";
+import DashboardParent from "@/components/dashboard/DashboardParent.vue";
+import DashboardSecretary from "@/components/dashboard/DashboardSecretary.vue";
+import DashboardDirector from "@/components/dashboard/DashboardDirector.vue";
+import DashboardStaff from "@/components/dashboard/DashboardStaff.vue";
+import DashboardServiceManager from "@/components/dashboard/DashboardServiceManager.vue";
 
 const sidebarCollapsed = ref(false);
 const activeMenu = ref("home");
 const auth = useAuthStore();
 const router = useRouter();
+const toast = useToast();
 
 const menuItems = [
   {
     name: "home",
     label: "Accueil",
-    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>',
+    icon: "home",
   },
   {
     name: "children",
     label: "Enfants",
-    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>',
+    icon: "child_care",
   },
   {
-    name: "users",
-    label: "Utilisateurs",
-    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    name: "parents",
+    label: "Parents",
+    icon: "family_restroom",
   },
   {
-    name: "reports",
-    label: "Rapports",
-    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>',
+    name: "directors",
+    label: "Directeurs",
+    icon: "admin_panel_settings",
   },
   {
-    name: "settings",
-    label: "Paramètres",
-    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="m12 1v6m0 6v6m11-7h-6m-6 0H1m17-4a4 4 0 0 1-8 0 4 4 0 0 1 8 0zM7 21a4 4 0 0 1-8 0 4 4 0 0 1 8 0z"/></svg>',
+    name: "secretaries",
+    label: "Secrétaires",
+    icon: "business_center",
+  },
+  {
+    name: "service-managers",
+    label: "Chefs de service",
+    icon: "supervisor_account",
+  },
+  {
+    name: "staff",
+    label: "Personnel",
+    icon: "groups",
   },
 ];
 
@@ -107,22 +126,96 @@ const currentComponent = computed(() => {
   const components = {
     home: DashboardHome,
     children: DashboardChild,
-    users: DashboardUsers,
-    reports: DashboardReports,
-    settings: DashboardSettings,
+    parents: DashboardParent,
+    secretaries: DashboardSecretary,
+    directors: DashboardDirector,
+    staff: DashboardStaff,
+    "service-managers": DashboardServiceManager,
   };
   return (
     components[activeMenu.value as keyof typeof components] || DashboardHome
   );
 });
 
+async function verifyToken(): Promise<boolean> {
+  try {
+    if (!auth.token) {
+      return false;
+    }
+
+    const response = await fetch(
+      `${
+        import.meta.env.VITE_NEST_API_URL || "http://localhost:3000"
+      }/auth/verify-token`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
+      }
+    );
+
+    return response.ok;
+  } catch (error) {
+    console.error("Erreur lors de la vérification du token:", error);
+    return false;
+  }
+}
+
+async function handleInvalidToken() {
+  toast.error("Session expirée. Veuillez vous reconnecter.");
+  await auth.logout();
+  router.push("/login");
+}
+
 function toggleSidebar() {
   sidebarCollapsed.value = !sidebarCollapsed.value;
 }
 
-function setActiveMenu(menuName: string) {
+async function setActiveMenu(menuName: string) {
   activeMenu.value = menuName;
 }
+
+async function checkInitialAuth() {
+  if (!auth.isAuthenticated) {
+    router.push("/login");
+    return;
+  }
+
+  const isTokenValid = await verifyToken();
+  if (!isTokenValid) {
+    await handleInvalidToken();
+  }
+}
+
+let tokenCheckInterval: number | null = null;
+
+function startTokenCheck() {
+  tokenCheckInterval = setInterval(async () => {
+    if (auth.isAuthenticated) {
+      const isTokenValid = await verifyToken();
+      if (!isTokenValid) {
+        await handleInvalidToken();
+      }
+    }
+  }, 5 * 60 * 1000);
+}
+
+function stopTokenCheck() {
+  if (tokenCheckInterval) {
+    clearInterval(tokenCheckInterval);
+    tokenCheckInterval = null;
+  }
+}
+
+onMounted(async () => {
+  await checkInitialAuth();
+  startTokenCheck();
+});
+
+onUnmounted(() => {
+  stopTokenCheck();
+});
 </script>
 
 <style scoped lang="scss">
@@ -215,10 +308,15 @@ function setActiveMenu(menuName: string) {
         transition: color 0.2s ease;
 
         .nav-icon {
-          min-width: 20px;
+          min-width: 24px;
           display: flex;
           align-items: center;
           justify-content: center;
+
+          .material-icons {
+            font-size: 20px;
+            line-height: 1;
+          }
         }
 
         .nav-text {

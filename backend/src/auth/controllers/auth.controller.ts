@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   Req,
   Res,
@@ -114,6 +115,23 @@ export class AuthController {
     await this.authService.logout(token);
     res.clearCookie('refresh_token', { sameSite: 'strict', secure: true });
     return { message: 'Logout successful' };
+  }
+
+  /* ──────────────── VERIFY TOKEN ──────────────── */
+  @UseGuards(JwtAuthGuard)
+  @Get('verify-token')
+  async verifyToken(@Req() req: Request) {
+    const user = req.user as { id?: string; email?: string; role?: string };
+    if (!user?.id) throw new UnauthorizedException('Token invalide');
+    
+    return { 
+      valid: true, 
+      user: { 
+        id: user.id, 
+        email: user.email, 
+        role: user.role 
+      } 
+    };
   }
 
   @UseGuards(JwtAuthGuard)

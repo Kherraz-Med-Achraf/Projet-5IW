@@ -9,6 +9,7 @@ import StepTwo from "../views/register/steps/StepTwo.vue";
 import StepThree from "../views/register/steps/StepThree.vue";
 import Login from "../views/Login.vue";
 import Home from "@/views/Home.vue";
+import Dashboard from "@/views/Dashboard.vue";
 import ForgotPassword from "@/views/ForgotPassword.vue";
 import ResetPassword from "@/views/ResetPassword.vue";
 import OtpActivation from "@/views/OtpActivation.vue";
@@ -62,6 +63,12 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: true },
   },
   {
+    path: "/dashboard",
+    name: "Dashboard",
+    component: Dashboard,
+    meta: { requiresAuth: true },
+  },
+  {
     path: "/forgot-password",
     name: "ForgotPassword",
     component: ForgotPassword,
@@ -85,7 +92,7 @@ const routes: Array<RouteRecordRaw> = [
     component: OtpActivation,
     meta: { requiresAuth: true },
   },
-  // … d’autres routes éventuelles
+  // … d'autres routes éventuelles
 ];
 
 const router = createRouter({
@@ -103,14 +110,26 @@ router.beforeEach((to, from, next) => {
       requiresInvite?: boolean;
     };
 
-  // 1) Si la page requiert un token d’invitation (ex. /register)
+  // Vérification du token expiré ou invalide
+  if (auth.token) {
+    try {
+      const payload = JSON.parse(atob(auth.token.split(".")[1]));
+      if (payload.exp && Date.now() / 1000 > payload.exp) {
+        auth.logout && auth.logout();
+        return next({ name: "Login" });
+      }
+    } catch (e) {
+      auth.logout && auth.logout();
+      return next({ name: "Login" });
+    }
+  }
+
+  // 1) Si la page requiert un token d'invitation (ex. /register)
   if (requiresInvite) {
     const token = (to.query.token as string) || "";
-    // pas de token → on redirige vers Login
     if (!token) {
       return next({ name: "Login" });
     }
-    // sinon, on laisse passer pour que le composant Register valide lui-même le token
     return next();
   }
 
@@ -119,7 +138,7 @@ router.beforeEach((to, from, next) => {
     return next({ name: "Home" });
   }
 
-  // 3) Routes nécessitant d’être authentifié (home, activate-otp, etc.)
+  // 3) Routes nécessitant d'être authentifié (home, activate-otp, etc.)
   if (requiresAuth && !auth.isAuthenticated) {
     return next({ name: "Login" });
   }
@@ -129,7 +148,6 @@ router.beforeEach((to, from, next) => {
     return next({ name: "Home" });
   }
 
-  // 5) Sinon, on autorise la navigation
   next();
 });
 

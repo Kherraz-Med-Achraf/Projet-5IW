@@ -1,6 +1,6 @@
-import { createRouter, createWebHistory } from "vue-router";
-import type { RouteRecordRaw } from "vue-router";
-import { useAuthStore } from "@/stores/auth";
+import { createRouter, createWebHistory } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 import Register from "../views/Register.vue";
 import TheRegister from "../views/register/TheRegister.vue";
@@ -14,6 +14,12 @@ import ResetPassword from "@/views/ResetPassword.vue";
 import OtpActivation from "@/views/OtpActivation.vue";
 import VerifyEmail from "@/views/VerifyEmail.vue";
 
+// Ajout des vues du journal (éducateur et parent)
+import JournalHome from '@/views/journal/JournalHome.vue'
+import JournalMonth from '@/views/journal/JournalMonth.vue'
+import JournalHomeParent from '@/views/journal/JournalHomeParent.vue'
+import JournalMissions from '@/views/journal/JournalMissions.vue'
+
 const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
@@ -23,6 +29,7 @@ const routes: Array<RouteRecordRaw> = [
     path: "/register-old",
     name: "RegisterOld",
     component: Register,
+    meta: { requiresInvite: true },
   },
   {
     path: "/register",
@@ -85,8 +92,39 @@ const routes: Array<RouteRecordRaw> = [
     component: OtpActivation,
     meta: { requiresAuth: true },
   },
-  // … d’autres routes éventuelles
-];
+
+  // Route principale du journal pour le staff
+  {
+    path: '/journal',
+    name: 'JournalHome',
+    component: JournalHome,
+    meta: { requiresAuth: true, requiredRole: 'STAFF' },
+  },
+  // Écriture des missions annuelles (accessible au staff seulement)
+  {
+    path: '/journal/:childId/:yearId/missions',
+    name: 'JournalMissions',
+    component: JournalMissions,
+    props: true,
+    meta: { requiresAuth: true, requiredRole: 'STAFF' },
+  },
+  // Détail/édition d’un mois pour un enfant et une année (accessible au staff et au parent)
+  {
+    path: '/journal/:childId/:yearId/:month',
+    name: 'JournalMonth',
+    component: JournalMonth,
+    props: true,
+    meta: { requiresAuth: true },
+  },
+
+  // Vue principale du journal pour le parent
+  {
+    path: '/journal-parent',
+    name: 'JournalHomeParent',
+    component: JournalHomeParent,
+    meta: { requiresAuth: true, requiredRole: 'PARENT' },
+  },
+]
 
 const router = createRouter({
   history: createWebHistory(),
@@ -105,21 +143,19 @@ router.beforeEach((to, from, next) => {
 
   // 1) Si la page requiert un token d’invitation (ex. /register)
   if (requiresInvite) {
-    const token = (to.query.token as string) || "";
-    // pas de token → on redirige vers Login
+    const token = (to.query.token as string) || ''
     if (!token) {
       return next({ name: "Login" });
     }
-    // sinon, on laisse passer pour que le composant Register valide lui-même le token
-    return next();
+    return next()
   }
 
-  // 2) Routes pour « guests » (login, forgot-password, reset-password, verify-email)
+  // 2) Routes pour « guests »
   if (requiresGuest && auth.isAuthenticated) {
     return next({ name: "Home" });
   }
 
-  // 3) Routes nécessitant d’être authentifié (home, activate-otp, etc.)
+  // 3) Routes nécessitant d’être authentifié
   if (requiresAuth && !auth.isAuthenticated) {
     return next({ name: "Login" });
   }
@@ -129,8 +165,7 @@ router.beforeEach((to, from, next) => {
     return next({ name: "Home" });
   }
 
-  // 5) Sinon, on autorise la navigation
-  next();
-});
+  next()
+})
 
 export default router;

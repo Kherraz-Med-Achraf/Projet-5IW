@@ -9,6 +9,9 @@ import {
   ValidateNested,
   Matches,
   IsMobilePhone,
+  IsArray,
+  ArrayMaxSize,
+  IsOptional,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { ChildDto } from './child.dto';
@@ -47,10 +50,12 @@ export class RegisterParentDto {
   @IsNotEmpty({ message: 'La responsabilité légale est obligatoire' })
   legalResponsibility: string;
 
+  @IsOptional()
+  @IsArray({ message: 'Les contacts d’urgence doivent être un tableau' })
+  @ArrayMaxSize(2, { message: 'Au maximum 2 contacts d’urgence' })
   @ValidateNested({ each: true })
   @Type(() => EmergencyContactDto)
-  @ArrayMinSize(1, { message: 'Au moins un contact d’urgence doit être fourni' })
-  emergencyContacts: EmergencyContactDto[];
+  emergencyContacts?: EmergencyContactDto[];
 
   /* Étape 2 – Enfant(s) */
   @ValidateNested({ each: true })

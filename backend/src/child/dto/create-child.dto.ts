@@ -1,4 +1,3 @@
-// src/child/dto/create-child.dto.ts
 import { IsString, IsDateString, IsOptional } from 'class-validator';
 
 export class CreateChildDto {

@@ -5,6 +5,8 @@ secrets:
     external: true
   sentry_dsn:
     external: true
+  mongo_root_password:
+    external: true
 
 networks:
   frontend-net:
@@ -40,10 +42,10 @@ services:
       mode: global
       placement:
         constraints:
-          - node.role == manager # Traefik doit être sur le manager pour interroger l’API Swarm
+          - node.role == manager # Traefik doit être sur le manager pour interroger l'API Swarm
       update_config:
         parallelism: 1 # 1 conteneur à la fois
-        delay: 5s # attente de 5 s entre chaque mise à jour
+        delay: 5s # attente de 5 s entre chaque mise à jour
         failure_action: rollback
       labels:
         - "traefik.enable=true"
@@ -93,9 +95,15 @@ services:
       - POSTGRES_HOST=postgres
       - POSTGRES_USER=myuser
       - POSTGRES_DB=mydb
+      # Variables pour MongoDB
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_DB=mydb
+      - MONGO_USER=myuser
     secrets:
       - pg_password
       - sentry_dsn
+      - mongo_root_password
     networks:
       - backend-net
     deploy:
@@ -152,7 +160,7 @@ services:
       update_config:
         parallelism: 1
         delay: 10s
-        monitor: 30s # attend 30s après démarrage pour vérifier l’état
+        monitor: 30s # attend 30s après démarrage pour vérifier l'état
         max_failure_ratio: 0 # tout échec = rollback
         failure_action: rollback
       restart_policy:
@@ -162,6 +170,39 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  ########################################## MONGODB ##########################################
+  mongodb:
+    image: mongo:7-jammy
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=myuser
+      - MONGO_INITDB_DATABASE=mydb
+      - MONGO_INITDB_ROOT_PASSWORD_FILE=/run/secrets/mongo_root_password
+    secrets:
+      - mongo_root_password
+    networks:
+      - backend-net
+    volumes:
+      - mongodb_data:/data/db
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      update_config:
+        parallelism: 1
+        delay: 10s
+        monitor: 30s
+        max_failure_ratio: 0
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand({ping: 1})' --quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   ############################################# Obeservabilité #############################################
   uptime-kuma:
     image: louislam/uptime-kuma:1
@@ -194,3 +235,4 @@ volumes:
   postgres_data:
   traefik_letsencrypt:
   kuma_data:
+  mongodb_data:

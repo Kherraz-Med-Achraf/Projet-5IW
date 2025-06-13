@@ -2,63 +2,10 @@
   <div class="dashboard-child">
     <div class="child-header">
       <h3>Gestion des enfants</h3>
-      <button class="btn-primary" @click="openCreateModal">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-        Ajouter un enfant
-      </button>
     </div>
 
     <div class="grid-container">
       <div ref="gridWrapper"></div>
-    </div>
-
-    <div v-if="showCreateModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h4>Ajouter un enfant</h4>
-          <button class="close-btn" @click="closeCreateModal">×</button>
-        </div>
-        <form @submit.prevent="createChild">
-          <div class="form-group">
-            <label>Prénom</label>
-            <input v-model="newChild.firstName" type="text" required />
-          </div>
-          <div class="form-group">
-            <label>Nom</label>
-            <input v-model="newChild.lastName" type="text" required />
-          </div>
-          <div class="form-group">
-            <label>Date de naissance</label>
-            <input v-model="newChild.birthDate" type="date" required />
-          </div>
-          <div class="modal-actions">
-            <button
-              type="button"
-              class="btn-secondary"
-              @click="closeCreateModal"
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              class="btn-primary"
-              :disabled="childStore.loading"
-            >
-              {{ childStore.loading ? "Création..." : "Créer" }}
-            </button>
-          </div>
-        </form>
-      </div>
     </div>
 
     <div v-if="showViewModal" class="modal">
@@ -128,56 +75,6 @@
         </form>
       </div>
     </div>
-
-    <!-- Modal de confirmation de suppression -->
-    <div v-if="showDeleteModal" class="modal">
-      <div class="modal-content modal-delete">
-        <div class="modal-header">
-          <h4>Confirmer la suppression</h4>
-          <button class="close-btn" @click="closeDeleteModal">×</button>
-        </div>
-        <div class="delete-content">
-          <div class="delete-icon">
-            <svg
-              width="48"
-              height="48"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="15" y1="9" x2="9" y2="15" />
-              <line x1="9" y1="9" x2="15" y2="15" />
-            </svg>
-          </div>
-          <p class="delete-message">
-            Êtes-vous sûr de vouloir supprimer définitivement l'enfant
-            <strong
-              >{{ childToDelete?.firstName }}
-              {{ childToDelete?.lastName }}</strong
-            >
-            ?
-          </p>
-          <p class="delete-warning">
-            Cette action est irréversible et toutes les données associées seront
-            perdues.
-          </p>
-        </div>
-        <div class="modal-actions">
-          <button class="btn-secondary" @click="closeDeleteModal">
-            Annuler
-          </button>
-          <button
-            class="btn-danger"
-            @click="confirmDeleteChild"
-            :disabled="childStore.loading"
-          >
-            {{ childStore.loading ? "Suppression..." : "Supprimer" }}
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -193,18 +90,9 @@ const childStore = useChildStore();
 const gridWrapper = ref(null);
 const grid = ref(null);
 
-const showCreateModal = ref(false);
 const showViewModal = ref(false);
 const showEditModal = ref(false);
-const showDeleteModal = ref(false);
 const selectedChild = ref(null);
-const childToDelete = ref(null);
-
-const newChild = ref({
-  firstName: "",
-  lastName: "",
-  birthDate: "",
-});
 
 const editingChild = ref({
   id: null,
@@ -228,19 +116,6 @@ function calculateAge(birthDate) {
     age--;
   }
   return age;
-}
-
-function openCreateModal() {
-  newChild.value = {
-    firstName: "",
-    lastName: "",
-    birthDate: "",
-  };
-  showCreateModal.value = true;
-}
-
-function closeCreateModal() {
-  showCreateModal.value = false;
 }
 
 function viewChild(child) {
@@ -274,17 +149,6 @@ function closeEditModal() {
   };
 }
 
-async function createChild() {
-  try {
-    await childStore.createChild(newChild.value);
-    toast.success("Enfant créé avec succès");
-    closeCreateModal();
-    await fetchChildren();
-  } catch (error) {
-    toast.error(childStore.error || "Erreur lors de la création");
-  }
-}
-
 async function updateChild() {
   try {
     const { id, ...updateData } = editingChild.value;
@@ -294,29 +158,6 @@ async function updateChild() {
     await fetchChildren();
   } catch (error) {
     toast.error(childStore.error || "Erreur lors de la modification");
-  }
-}
-
-function openDeleteModal(child) {
-  childToDelete.value = child;
-  showDeleteModal.value = true;
-}
-
-function closeDeleteModal() {
-  showDeleteModal.value = false;
-  childToDelete.value = null;
-}
-
-async function confirmDeleteChild() {
-  if (!childToDelete.value) return;
-
-  try {
-    await childStore.deleteChild(childToDelete.value.id);
-    toast.success("Enfant supprimé avec succès");
-    closeDeleteModal();
-    await fetchChildren();
-  } catch (error) {
-    toast.error(childStore.error || "Erreur lors de la suppression");
   }
 }
 
@@ -366,7 +207,7 @@ function initGrid() {
       { id: "age", name: "Âge", width: "80px" },
       {
         name: "Actions",
-        width: "200px",
+        width: "150px",
         formatter: (cell, row) =>
           html(`
           <div class="action-buttons">
@@ -380,12 +221,6 @@ function initGrid() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                 <path d="m18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-            </button>
-            <button class="btn-icon delete-btn" data-id="${row.cells[4].data}">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="3,6 5,6 21,6"/>
-                <path d="m19,6v14a2,2 0 0,1-2,2H7a2,2 0 0,1-2-2V6m3,0V4a2,2 0 0,1,2-2h4a2,2 0 0,1,2,2v2"/>
               </svg>
             </button>
           </div>
@@ -522,8 +357,6 @@ function initGrid() {
       viewChild(child);
     } else if (target.classList.contains("edit-btn")) {
       editChild(child);
-    } else if (target.classList.contains("delete-btn")) {
-      openDeleteModal(child);
     }
   });
 }
@@ -537,9 +370,6 @@ onMounted(async () => {
 <style scoped lang="scss">
 .dashboard-child {
   .child-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 2rem;
 
     h3 {
@@ -547,29 +377,6 @@ onMounted(async () => {
       color: #111827;
       font-size: 1.5rem;
       font-weight: 600;
-    }
-
-    .btn-primary {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.75rem 1rem;
-      background-color: $primary-color;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: background-color 0.2s;
-
-      &:hover {
-        background-color: darken($primary-color, 10%);
-      }
-
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
     }
   }
 }
@@ -705,66 +512,6 @@ onMounted(async () => {
           cursor: not-allowed;
         }
       }
-
-      .btn-danger {
-        padding: 0.75rem 1rem;
-        background-color: #dc2626;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 500;
-        transition: background-color 0.2s;
-
-        &:hover:not(:disabled) {
-          background-color: #b91c1c;
-        }
-
-        &:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-      }
-    }
-
-    // Styles spécifiques pour la modal de suppression
-    &.modal-delete {
-      .delete-content {
-        padding: 1.5rem;
-        text-align: center;
-
-        .delete-icon {
-          display: flex;
-          justify-content: center;
-          margin-bottom: 1rem;
-
-          svg {
-            color: #dc2626;
-            background: #fef2f2;
-            border-radius: 50%;
-            padding: 0.75rem;
-          }
-        }
-
-        .delete-message {
-          margin: 0 0 1rem 0;
-          font-size: 1rem;
-          color: #374151;
-          line-height: 1.5;
-
-          strong {
-            color: #111827;
-            font-weight: 600;
-          }
-        }
-
-        .delete-warning {
-          margin: 0;
-          font-size: 0.875rem;
-          color: #6b7280;
-          line-height: 1.4;
-        }
-      }
     }
   }
 }
@@ -845,15 +592,5 @@ onMounted(async () => {
 :deep(.edit-btn:hover) {
   background-color: #e5e7eb;
   box-shadow: 0 2px 4px rgba(107, 114, 128, 0.1);
-}
-
-:deep(.delete-btn) {
-  background-color: #fef2f2;
-  color: #dc2626;
-}
-
-:deep(.delete-btn:hover) {
-  background-color: #fee2e2;
-  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.1);
 }
 </style>

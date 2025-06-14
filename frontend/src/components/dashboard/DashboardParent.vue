@@ -474,6 +474,8 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+@use "sass:color";
+
 .dashboard-parent {
   .parent-header {
     display: flex;
@@ -620,7 +622,7 @@ onMounted(async () => {
         transition: background-color 0.2s;
 
         &:hover:not(:disabled) {
-          background-color: darken($primary-color, 10%);
+          background-color: color.adjust($primary-color, $lightness: -10%);
         }
 
         &:disabled {

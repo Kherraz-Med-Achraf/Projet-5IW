@@ -83,13 +83,16 @@ jobs:
           target: "/tmp/"
 
       - name: 🚀 Deploy to production
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN:    ${{ secrets.DOCKERHUB_TOKEN }}
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.MGR_HOST }}
           username: ${{ secrets.MGR_SSH_USER }}
           key: ${{ secrets.MGR_SSH_KEY }}
           port: ${{ secrets.MGR_SSH_PORT || 22 }}
-          envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN
+          envs: "DOCKERHUB_USERNAME,DOCKERHUB_TOKEN"
           command_timeout: 30m
           script: |
             set -euo pipefail

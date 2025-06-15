@@ -92,14 +92,13 @@ jobs:
 
             echo "🔄 Sauvegarde de l'ancien déploiement..."
             if [ -d "/home/github/projet5iw" ]; then
-              sudo cp -r /home/github/projet5iw /home/github/projet5iw.backup.$(date +%Y%m%d_%H%M%S)
+              cp -r /home/github/projet5iw /home/github/projet5iw.backup.$(date +%Y%m%d_%H%M%S) 2>/dev/null || echo "⚠️  Impossible de sauvegarder (permissions)"
             fi
 
             echo "📂 Mise à jour du code..."
-            sudo mkdir -p /home/github
-            sudo rm -rf /home/github/projet5iw
-            sudo mv /tmp/projet5iw-deploy /home/github/projet5iw
-            sudo chown -R $(whoami):$(whoami) /home/github/projet5iw
+            mkdir -p /home/github 2>/dev/null || echo "📂 Répertoire /home/github existe déjà"
+            rm -rf /home/github/projet5iw 2>/dev/null || echo "🧹 Nettoyage de l'ancien code..."
+            mv /tmp/projet5iw-deploy /home/github/projet5iw
 
             echo "🔍 Vérification de l'état du Swarm..."
             docker node ls

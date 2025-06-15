@@ -103,30 +103,25 @@ jobs:
             echo "🔍 Vérification de l'état du Swarm..."
             docker node ls
 
-            # → On se place dans le dossier déployé
-            cd /home/github/projet5iw
 
-            echo "📋 Contenu du répertoire avant chmod :"
+            # → Aller dans le dossier où sont vraiment les scripts
+            cd /home/github/projet5iw/projet5iw-deploy
+
+            echo "📋 Contenu de projet5iw-deploy :"
             ls -al
-            find . -maxdepth 2 -type f -name '*deploy*.sh' || echo "⚠️ Aucun script trouvé à cet emplacement"
 
-            echo "🏗️ Lancement du processus de build et déploiement..."
-            chmod +x ./build-deploy.sh ./cleanup.sh
+            echo "🏗️ Lancement du build et du déploiement…"
+            chmod +x build-deploy.sh cleanup.sh
             ./build-deploy.sh
 
-            echo "🏗️ Lancement du processus de build et déploiement..."
-            cd /home/github/projet5iw
-            chmod +x ./build-deploy.sh ./cleanup.sh
-            ./build-deploy.sh
-
-            echo "✅ Vérification du déploiement..."
+            echo "✅ Vérification du déploiement…"
             sleep 10
             docker stack services projet5iw
 
-            echo "🧹 Nettoyage des fichiers temporaires..."
+            echo "🧹 Nettoyage des temporaires…"
             rm -f /tmp/projet5iw-deploy.tar.gz
 
-            echo "🎉 Déploiement terminé avec succès !"
+            echo "🎉 Déploiement terminé !"
 
       - name: 📊 Deployment Summary
         if: always()

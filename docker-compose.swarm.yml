@@ -7,6 +7,8 @@ secrets:
     external: true
   mongo_root_password:
     external: true
+  pgadmin_password:
+    external: true 
 
 networks:
   frontend-net:
@@ -279,7 +281,7 @@ services:
         - "traefik.http.routers.mongo.middlewares=auth-mongo"
         - "traefik.http.middlewares.auth-mongo.basicauth.users=admin:$$apr1$$…"
         - "traefik.http.services.mongo.loadbalancer.server.port=8081"
-        
+
 volumes:
   postgres_data:
   traefik_letsencrypt:

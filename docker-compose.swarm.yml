@@ -230,7 +230,56 @@ services:
         - "traefik.http.services.kuma.loadbalancer.server.port=3001"
       restart_policy:
         condition: on-failure
+  pgadmin:
+    image: dpage/pgadmin4:8
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@educareschool.me
+      - PGADMIN_DEFAULT_PASSWORD_FILE=/run/secrets/pgadmin_password
+    secrets:
+      - pgadmin_password 
+    networks:
+      - backend-net        
+      - frontend-net       
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.educareschool.me`)"
+        - "traefik.http.routers.pgadmin.entrypoints=websecure"
+        - "traefik.http.routers.pgadmin.tls.certresolver=myresolver"
+        # Basic-auth supplémentaire (nom d’utilisateur : admin)
+        - "traefik.http.routers.pgadmin.middlewares=auth-pgadmin"
+        - "traefik.http.middlewares.auth-pgadmin.basicauth.users=admin:$$apr1$$V….<hash>"
+        - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
 
+  mongo-express:
+    image: mongo-express:1.0
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=myuser
+      - ME_CONFIG_MONGODB_ADMINPASSWORD_FILE=/run/secrets/mongo_root_password
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+    secrets:
+      - mongo_root_password
+    networks:
+      - backend-net
+      - frontend-net
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.mongo.rule=Host(`mongo.educareschool.me`)"
+        - "traefik.http.routers.mongo.entrypoints=websecure"
+        - "traefik.http.routers.mongo.tls.certresolver=myresolver"
+        - "traefik.http.routers.mongo.middlewares=auth-mongo"
+        - "traefik.http.middlewares.auth-mongo.basicauth.users=admin:$$apr1$$…"
+        - "traefik.http.services.mongo.loadbalancer.server.port=8081"
+        
 volumes:
   postgres_data:
   traefik_letsencrypt:

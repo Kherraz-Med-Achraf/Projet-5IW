@@ -88,7 +88,7 @@ jobs:
 
             echo "📦 Extraction de l'archive..."
             cd /tmp
-            tar -xzf projet5iw-deploy.tar.gz -C projet5iw-deploy
+            tar -xzf projet5iw-deploy.tar.gz -C projet5iw-deploy --strip-components=1
 
             echo "🔄 Sauvegarde de l'ancien déploiement..."
             if [ -d "/home/github/projet5iw" ]; then

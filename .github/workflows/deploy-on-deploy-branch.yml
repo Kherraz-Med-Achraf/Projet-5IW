@@ -18,12 +18,19 @@ jobs:
           echo "🚀 Début du déploiement automatique"
           echo "📝 Commit: ${{ github.sha }}"
           echo "👤 Auteur: ${{ github.actor }}"
+      
 
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
         with:
           ref: deploy
-
+      
+      - name: 🔐 Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
       - name: 📦 Create deployment archive
         run: |
           echo "📦 Création de l'archive de déploiement..."

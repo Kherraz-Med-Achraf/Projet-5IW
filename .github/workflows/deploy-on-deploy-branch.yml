@@ -89,9 +89,14 @@ jobs:
           username: ${{ secrets.MGR_SSH_USER }}
           key: ${{ secrets.MGR_SSH_KEY }}
           port: ${{ secrets.MGR_SSH_PORT || 22 }}
+          envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN
           command_timeout: 30m
           script: |
             set -euo pipefail
+
+            echo "$DOCKERHUB_TOKEN" | docker login \
+              --username "$DOCKERHUB_USERNAME" \
+              --password-stdin
 
             echo "📦 Extraction de l'archive..."
             cd /tmp

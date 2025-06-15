@@ -53,21 +53,36 @@
       </button>
     </div>
 
-    <!-- 3) Missions annuelles (liste à puces) -->
+    <!-- 3) Missions annuelles (objectifs de l'enfant) -->
     <div
       v-if="missions.length && selectedYearId"
       class="journal-home__missions"
     >
-      <h2 class="journal-home__subtitle">Missions de l'année :</h2>
-      <ul class="journal-home__missions-list">
-        <li
-          v-for="m in missions"
-          :key="m.id"
-          class="journal-home__mission-item"
+      <div class="journal-home__missions-header">
+        <h2 class="journal-home__subtitle">
+          <span class="journal-home__subtitle-icon">🎯</span>
+          Objectifs annuels de l'enfant
+        </h2>
+        <h2 class="journal-home__missions-count">
+          {{ missions.length }} objectif{{ missions.length > 1 ? "s" : "" }}
+        </h2>
+      </div>
+
+      <div class="journal-home__missions-grid">
+        <div
+          v-for="(mission, index) in missions"
+          :key="mission.id"
+          class="journal-home__mission-card"
+          :style="{ '--delay': `${index * 0.1}s` }"
         >
-          {{ m.description }}
-        </li>
-      </ul>
+          <div class="journal-home__mission-content">
+            <div class="journal-home__mission-icon">📋</div>
+            <p class="journal-home__mission-text">
+              {{ mission.description }}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 4) Affichage de la grille des mois -->
@@ -128,6 +143,12 @@ const router = useRouter();
 const selectedChildId = ref<number | null>(null);
 const selectedYearId = ref<number | null>(null);
 const error = ref<string>("");
+
+// Clés pour le localStorage
+const STORAGE_KEYS = {
+  SELECTED_CHILD_ID: "journal_selected_child_id",
+  SELECTED_YEAR_ID: "journal_selected_year_id",
+};
 
 const monthLabels = [
   "Janvier",
@@ -233,6 +254,15 @@ async function onChildChange() {
   selectedYearId.value = null;
   journalStore.journals = [];
   journalStore.missions = [];
+
+  // Sauvegarder dans le localStorage
+  if (selectedChildId.value) {
+    localStorage.setItem(
+      STORAGE_KEYS.SELECTED_CHILD_ID,
+      selectedChildId.value.toString()
+    );
+  }
+  localStorage.removeItem(STORAGE_KEYS.SELECTED_YEAR_ID);
 }
 
 /**
@@ -243,6 +273,13 @@ async function onYearChange() {
   error.value = "";
   journalStore.missions = [];
   journalStore.journals = [];
+
+  // Sauvegarder dans le localStorage
+  localStorage.setItem(
+    STORAGE_KEYS.SELECTED_YEAR_ID,
+    selectedYearId.value.toString()
+  );
+
   try {
     await journalStore.fetchMissions(
       selectedChildId.value,
@@ -258,14 +295,80 @@ async function onYearChange() {
 }
 
 /**
+ * Restaure les valeurs sauvegardées depuis le localStorage
+ */
+function restoreFromLocalStorage() {
+  const savedChildId = localStorage.getItem(STORAGE_KEYS.SELECTED_CHILD_ID);
+  const savedYearId = localStorage.getItem(STORAGE_KEYS.SELECTED_YEAR_ID);
+
+  if (savedChildId) {
+    const childId = parseInt(savedChildId);
+    // Vérifier que l'enfant existe toujours dans la liste des enfants référés
+    if (referentChildren.value.some((child) => child.id === childId)) {
+      selectedChildId.value = childId;
+    } else {
+      // Nettoyer le localStorage si l'enfant n'existe plus
+      localStorage.removeItem(STORAGE_KEYS.SELECTED_CHILD_ID);
+    }
+  }
+
+  if (savedYearId) {
+    const yearId = parseInt(savedYearId);
+    // Vérifier que l'année existe toujours dans la liste des années scolaires
+    if (academicYears.value.some((year) => year.id === yearId)) {
+      selectedYearId.value = yearId;
+    } else {
+      // Nettoyer le localStorage si l'année n'existe plus
+      localStorage.removeItem(STORAGE_KEYS.SELECTED_YEAR_ID);
+    }
+  }
+}
+
+/**
+ * Nettoie le localStorage (utile lors de la déconnexion)
+ */
+function clearLocalStorage() {
+  localStorage.removeItem(STORAGE_KEYS.SELECTED_CHILD_ID);
+  localStorage.removeItem(STORAGE_KEYS.SELECTED_YEAR_ID);
+}
+
+/**
+ * Charge automatiquement les données si un enfant et une année sont sélectionnés
+ */
+async function loadDataIfSelected() {
+  if (selectedChildId.value && selectedYearId.value) {
+    try {
+      await journalStore.fetchMissions(
+        selectedChildId.value,
+        selectedYearId.value
+      );
+      await journalStore.fetchJournals(
+        selectedChildId.value,
+        selectedYearId.value
+      );
+    } catch (e: any) {
+      error.value = e.message;
+    }
+  }
+}
+
+/**
  * Au montage, on charge :
  * 1) la liste des enfants référés
  * 2) les années scolaires
+ * 3) on restaure les sélections depuis le localStorage
+ * 4) on charge les données si une sélection complète existe
  */
 onMounted(async () => {
   try {
     await journalStore.fetchReferentChildren();
     await journalStore.fetchAcademicYears();
+
+    // Restaurer les sélections sauvegardées
+    restoreFromLocalStorage();
+
+    // Charger les données si une sélection complète existe
+    await loadDataIfSelected();
   } catch (e: any) {
     error.value = e.message;
   }
@@ -302,20 +405,6 @@ function onManageMissions() {
 </script>
 
 <style lang="scss" scoped>
-// Variables de couleurs pour le thème sobre et épuré
-$bg-primary: #ffffff;
-$bg-secondary: #f8fafc;
-$bg-tertiary: #f1f5f9;
-$text-primary: #0f172a;
-$text-secondary: #475569;
-$text-muted: #94a3b8;
-$accent-primary: #3b82f6;
-$accent-hover: #2563eb;
-$success: #10b981;
-$warning: #f59e0b;
-$error: #ef4444;
-$border: #e2e8f0;
-
 .journal-home {
   padding: 2rem;
   max-width: 64rem;
@@ -465,84 +554,161 @@ $border: #e2e8f0;
     margin-bottom: 2rem;
     background: linear-gradient(
       135deg,
-      rgba($success, 0.05),
-      rgba($accent-primary, 0.05)
+      rgba($success, 0.08),
+      rgba($accent-primary, 0.08)
     );
     padding: 2rem;
     border-radius: 1rem;
     border: 1px solid rgba($success, 0.2);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     position: relative;
+    overflow: hidden;
 
     &::before {
-      content: "📚";
+      content: "";
       position: absolute;
-      top: 1rem;
-      right: 1rem;
-      font-size: 2rem;
-      opacity: 0.3;
+      top: -50%;
+      right: -50%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(
+        circle,
+        rgba($success, 0.1) 0%,
+        transparent 70%
+      );
+      border-radius: 50%;
+      pointer-events: none;
     }
+  }
+
+  &__missions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
   }
 
   &__subtitle {
     font-size: 1.5rem;
     font-weight: 700;
-    margin-bottom: 1.5rem;
     color: $text-primary;
     display: flex;
     align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+
+    &-icon {
+      font-size: 1.75rem;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    }
 
     &::before {
       content: "";
       width: 6px;
       height: 1.5rem;
       background: linear-gradient(135deg, $success, $accent-primary);
-      margin-right: 1rem;
       border-radius: 3px;
     }
   }
 
-  &__missions-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+  &__missions-count {
+    background: linear-gradient(135deg, $accent-primary, $accent-hover);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    white-space: nowrap;
   }
 
-  &__mission-item {
-    padding: 1rem 1.5rem;
-    color: $text-primary;
-    font-size: 1rem;
-    line-height: 1.6;
-    background-color: rgba(255, 255, 255, 0.7);
-    border-radius: 0.5rem;
-    border-left: 4px solid $accent-primary;
+  &__missions-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+
+  &__mission-card {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid rgba($accent-primary, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     position: relative;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    animation: slideInUp 0.6s ease var(--delay, 0s) both;
 
     &:hover {
-      background-color: rgba(255, 255, 255, 0.9);
-      transform: translateX(4px);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+      border-color: $accent-primary;
+
+      .journal-home__mission-number {
+        background: linear-gradient(135deg, $success, $accent-primary);
+        transform: scale(1.1);
+      }
+
+      .journal-home__mission-icon {
+        transform: scale(1.2) rotate(5deg);
+      }
     }
 
     &::before {
-      content: "✓";
+      content: "";
       position: absolute;
-      left: -2px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 1.5rem;
-      height: 1.5rem;
-      background-color: $accent-primary;
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-      font-weight: bold;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, $accent-primary, $success);
+    }
+  }
+
+  &__mission-content {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  &__mission-icon {
+    font-size: 1.5rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+  }
+
+  &__mission-text {
+    color: $text-primary;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0;
+    font-weight: 500;
+    flex: 1;
+  }
+
+  &__mission-progress {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba($border, 0.5);
+  }
+
+  &__mission-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &-icon {
+      font-size: 1rem;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+    }
+
+    &-text {
+      color: $text-secondary;
+      font-size: 0.875rem;
+      font-weight: 500;
     }
   }
 
@@ -694,6 +860,18 @@ $border: #e2e8f0;
   }
 }
 
+// Animations
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 // Responsive design
 @media (max-width: 768px) {
   .journal-home {
@@ -716,6 +894,28 @@ $border: #e2e8f0;
     &__subtitle {
       font-size: 1.125rem;
     }
+
+    &__missions-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    &__missions-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    &__mission-card {
+      padding: 1rem;
+    }
+
+    &__mission-number {
+      top: -6px;
+      right: 0.75rem;
+      width: 1.5rem;
+      height: 1.5rem;
+      font-size: 0.75rem;
+    }
   }
 }
 
@@ -727,6 +927,19 @@ $border: #e2e8f0;
 
     &__month-content {
       padding: 1rem 0.5rem;
+    }
+
+    &__missions {
+      padding: 1rem;
+    }
+
+    &__mission-content {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    &__mission-icon {
+      align-self: flex-start;
     }
   }
 }

@@ -286,11 +286,6 @@ model PresenceRecord {
   @@unique([sheetId, childId])
 }
 
-enum JustificationType {
-  ABSENCE
-  LATENESS
-}
-
 model AbsenceJustification {
   id                Int             @id @default(autoincrement())
   record            PresenceRecord  @relation(fields: [recordId], references: [id], onDelete: Cascade)
@@ -298,6 +293,5 @@ model AbsenceJustification {
   justificationDate DateTime
   motif             String
   filePath          String?
-  type              JustificationType    @default(ABSENCE)   
   createdAt         DateTime        @default(now())
 }

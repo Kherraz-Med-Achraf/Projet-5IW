@@ -71,7 +71,7 @@ import { ChatModule } from './chat/chat.module';
     MissionModule,
     AiModule,
     ChatModule,
-    PresenceModule,
+    
 
     // **Module Chat pour la messagerie instantanée**
     ChatModule,

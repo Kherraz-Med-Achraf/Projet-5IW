@@ -298,6 +298,6 @@ model AbsenceJustification {
   justificationDate DateTime
   motif             String
   filePath          String?
-  type              JustificationType    @default(ABSENCE)   
+    type              JustificationType    @default(ABSENCE)   
   createdAt         DateTime        @default(now())
 }

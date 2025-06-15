@@ -22,7 +22,6 @@ import { JournalModule } from './journal/journal.module';
 import { AiModule } from './ai/ai.module';
 import { HealthModule } from './health/health.module';
 import { PresenceModule } from './presence/presence.module';
-import { ScheduleModule } from '@nestjs/schedule';
 
 // **Nouvel import**
 import { ChatModule } from './chat/chat.module';
@@ -71,7 +70,6 @@ import { ChatModule } from './chat/chat.module';
     MissionModule,
     AiModule,
     ChatModule,
-    PresenceModule,
 
     // **Module Chat pour la messagerie instantanée**
     ChatModule,

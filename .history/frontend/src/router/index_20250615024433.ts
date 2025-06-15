@@ -125,7 +125,7 @@ const routes: Array<RouteRecordRaw> = [
        name: 'SecretaryAbsence',
        component: SecretaryAbsenceView,
        props: true,
-       meta: { requiresAuth: true, requiredRole: 'SECRETARY' },
+       meta: { requiresAuth: true, requiredRole: 'SECRETARY'] },
      },
      // Présence – rapport (direction & chef de service)
      {

@@ -17,8 +17,8 @@ import ChatView from '@/views/chat/ChatView.vue'
 import ChatListView from '@/views/chat/ChatListView.vue'
 
 import StaffPresenceView from '@/views/presence/StaffPresenceView.vue'
-import SecretaryAbsenceView from '@/views/presence/SecretaryAbsenceView.vue'
-import PresenceReportView from '@/views/presence/PresenceReportView.vue'
+import SecretaryAbsenceView from '@/views/Presence/SecretaryAbsenceView.vue'
+import PresenceReportView from '@/views/Presence/PresenceReportView.vue'
 
 
 // Ajout des vues du journal (éducateur et parent)
@@ -125,7 +125,7 @@ const routes: Array<RouteRecordRaw> = [
        name: 'SecretaryAbsence',
        component: SecretaryAbsenceView,
        props: true,
-       meta: { requiresAuth: true, requiredRole: 'SECRETARY' },
+       meta: { requiresAuth: true, requiredRole: ['SECRETARY'] },
      },
      // Présence – rapport (direction & chef de service)
      {

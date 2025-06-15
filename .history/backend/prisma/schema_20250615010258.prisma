@@ -35,7 +35,7 @@ model User {
   serviceManagerProfile ServiceManagerProfile?
   staffProfile          StaffProfile?
 
-  /** relation “enfant référent” **/
+  /** relation “enfant référent” (plusieurs enfants peuvent référer à un User) **/
   referentOf            Child[]          @relation("ChildReferents")
 
   /** relation “invitations émises” **/
@@ -43,9 +43,6 @@ model User {
 
   /** journaux mensuels rédigés **/
   journals              JournalMensuel[] @relation("JournalEducator")
-
-  /** feuilles de présence validées par cet utilisateur **/
-  presenceSheets        PresenceSheet[]  @relation("PresenceSheetStaff")
 }
 
 model PasswordReset {
@@ -66,17 +63,20 @@ model EmailVerification {
   createdAt DateTime @default(now())
 }
 
-/** Invitation **/
+/** 
+ * Nouveau modèle “Invitation” 
+ * Pour gérer les liens d’envoi d’invitations (inscription par token)
+ */
 model Invitation {
   id           String   @id @default(uuid())
-  email        String
+  email        String   // e-mail cible de l’invitation
   token        String   @unique
-  roleToAssign Role
+  roleToAssign Role     // rôle qui sera attribué après inscription
   createdAt    DateTime @default(now())
-  expiresAt    DateTime
+  expiresAt    DateTime // date d’expiration du lien
   used         Boolean  @default(false)
 
-  invitedBy    String
+  invitedBy    String   // id du User qui a généré l’invitation
   inviter      User     @relation("InvitationInviter", fields: [invitedBy], references: [id], onDelete: Cascade)
 }
 
@@ -100,19 +100,24 @@ enum Discipline {
   ORTHOPEDIST
 }
 
-/* Profils parent/enfant */
+/* =========================
+ * Profils parent/enfant
+ * ========================= */
 model ParentProfile {
   id                  Int               @id @default(autoincrement())
   user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId              String            @unique
+
   firstName           String
   lastName            String
   phone               String
   address             String
   legalResponsibility String
   notificationPrefs   Json              @default("{}")
+
   emergencyContacts   EmergencyContact[]
   children            Child[]
+
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt()
 }
@@ -122,14 +127,26 @@ model Child {
   firstName        String
   lastName         String
   birthDate        DateTime
+
   parent           ParentProfile   @relation(fields: [parentProfileId], references: [id], onDelete: Cascade)
   parentProfileId  Int
+
   user             User?           @relation(name: "ChildToUser", fields: [userId], references: [id], onDelete: Cascade)
   userId           String?         @unique
+
+  /** plusieurs référents possibles **/
   referents        User[]          @relation("ChildReferents")
+
+  /** missions annuelles fixées pour cet enfant **/
   missions         Mission[]
+
+  /** journaux mensuels du child **/
   journals         JournalMensuel[]
+  
+    /** présences journalières **/
   presenceRecords  PresenceRecord[]
+
+
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt()
 }
@@ -143,7 +160,9 @@ model EmergencyContact {
   parentProfileId  Int
 }
 
-/* Profils staff / direction */
+/* =========================
+ * Profils staff / direction
+ * ========================= */
 model SecretaryProfile {
   id           Int      @id @default(autoincrement())
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -195,28 +214,38 @@ model StaffProfile {
   id          Int        @id @default(autoincrement())
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId      String     @unique
+
   firstName   String
   lastName    String
   phone       String
   birthDate   DateTime
+
   discipline  Discipline
   specialty   String?
+
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt()
 }
 
-/* Année scolaire, missions, journaux */
+/* =========================
+ * Gestion de l’année scolaire
+ * ========================= */
 model AcademicYear {
   id        Int               @id @default(autoincrement())
-  label     String            @unique
+  label     String            @unique        // ex. "2024-2025"
   startDate DateTime
   endDate   DateTime
+
   missions  Mission[]
   journals  JournalMensuel[]
+
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt()
 }
 
+/* =========================
+ * Missions annuelles par enfant
+ * ========================= */
 model Mission {
   id             Int           @id @default(autoincrement())
   description    String
@@ -228,6 +257,9 @@ model Mission {
   updatedAt      DateTime      @updatedAt()
 }
 
+/* =========================
+ * Journal mensuel
+ * ========================= */
 model JournalMensuel {
   id                 Int               @id @default(autoincrement())
   child              Child             @relation(fields: [childId], references: [id], onDelete: Cascade)
@@ -236,17 +268,21 @@ model JournalMensuel {
   educatorId         String
   academicYear       AcademicYear      @relation(fields: [academicYearId], references: [id])
   academicYearId     Int
-  month              Int
+  month              Int               // 1 = Septembre … 12 = Août
   isDraft            Boolean           @default(true)
   isSubmitted        Boolean           @default(false)
   submittedAt        DateTime?
   contenu            String?
   progressionMissions Json?
   attachments        JournalAttachment[]
+
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt()
 }
 
+/* =========================
+ * Pièces jointes du journal
+ * ========================= */
 model JournalAttachment {
   id          Int              @id @default(autoincrement())
   journal     JournalMensuel   @relation(fields: [journalId], references: [id], onDelete: Cascade)
@@ -256,22 +292,30 @@ model JournalAttachment {
   uploadedAt  DateTime         @default(now())
 }
 
+// … votre schéma existant …
+
+
+// =========================
+// Feuilles de présence & justifications
+// =========================
+
 enum PresenceStatus {
-  PENDING_STAFF
-  PENDING_SECRETARY
-  VALIDATED
+  PENDING_STAFF     // en cours de validation par l’éducateur
+  PENDING_SECRETARY // en cours de saisie par la secrétaire
+  VALIDATED         // feuille entièrement validée
 }
 
 model PresenceSheet {
   id                   Int                  @id @default(autoincrement())
   date                 DateTime             @unique
   staffId              String?
-  staff                User?                @relation("PresenceSheetStaff", fields: [staffId], references: [id])
+  staff                User?                @relation(fields: [staffId], references: [id])
   validatedAtStaff     DateTime?
   validatedBySecretary Boolean              @default(false)
   validatedAtSecretary DateTime?
   status               PresenceStatus       @default(PENDING_STAFF)
   records              PresenceRecord[]
+
   @@index([date])
 }
 
@@ -281,23 +325,20 @@ model PresenceRecord {
   sheetId            Int
   child              Child                 @relation(fields: [childId], references: [id], onDelete: Cascade)
   childId            Int
-  present            Boolean
-  justification      AbsenceJustification?
+  present            Boolean               // true = présent, false = absent
+
+  justification      AbsenceJustification? // lien vers la justification saisie par la secrétaire
+
   @@unique([sheetId, childId])
 }
 
-enum JustificationType {
-  ABSENCE
-  LATENESS
+model AbsenceJustification {
+  id                  Int        @id @default(autoincrement())
+  record              PresenceRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  recordId            Int        @unique
+  justificationDate   DateTime   // date du justificatif (≤ today)
+  motif               String
+  filePath            String?    // chemin local ou URL S3
+  createdAt           DateTime   @default(now())
 }
 
-model AbsenceJustification {
-  id                Int             @id @default(autoincrement())
-  record            PresenceRecord  @relation(fields: [recordId], references: [id], onDelete: Cascade)
-  recordId          Int             @unique
-  justificationDate DateTime
-  motif             String
-  filePath          String?
-  type              JustificationType    @default(ABSENCE)   
-  createdAt         DateTime        @default(now())
-}

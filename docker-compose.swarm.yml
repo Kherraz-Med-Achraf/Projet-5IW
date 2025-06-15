@@ -9,6 +9,14 @@ secrets:
     external: true
   pgadmin_password:
     external: true 
+  jwt_secret:
+    external: true
+  email_pass:
+    external: true
+  openai_api_key:
+    external: true
+  yousign_api_key:
+    external: true
 
 networks:
   frontend-net:
@@ -94,18 +102,36 @@ services:
   nest:
     image: achraf97/projet5iw-nest:prod
     environment:
+      # Variables pour Postgres
       - POSTGRES_HOST=postgres
       - POSTGRES_USER=myuser
       - POSTGRES_DB=mydb
+      - POSTGRES_PASSWORD_FILE=/run/secrets/pg_password
+      - DATABASE_URL=postgresql://${POSTGRES_USER}@${POSTGRES_HOST}:5432/${POSTGRES_DB}?password=$(cat /run/secrets/pg_password)
       # Variables pour MongoDB
       - MONGO_HOST=mongodb
       - MONGO_PORT=27017
       - MONGO_DB=mydb
       - MONGO_USER=myuser
+      - MONGO_PASSWORD_FILE=/run/secrets/mongo_root_password
+      # Variables pour JWT
+      - JWT_SECRET_FILE=/run/secrets/jwt_secret
+      # Variables pour Mailer
+      - EMAIL_USER=aapajhtest@gmail.com                      
+      - EMAIL_PASS_FILE=/run/secrets/email_pass
+      # Variables pour OpenAI
+      - OPENAI_API_KEY_FILE=/run/secrets/openai_api_key
+      # Variables pour YouSign
+      - YOUSIGN_API_URL=https://api-sandbox.yousign.app/v3
+      - YOUSIGN_API_KEY_FILE=/run/secrets/yousign_api_key
     secrets:
       - pg_password
       - sentry_dsn
       - mongo_root_password
+      - jwt_secret
+      - email_pass
+      - openai_api_key
+      - yousign_api_key
     networks:
       - backend-net
     deploy:

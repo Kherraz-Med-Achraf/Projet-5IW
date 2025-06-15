@@ -1,0 +1,84 @@
+name: Deploy on deploy branch
+
+# Déclenche uniquement sur push vers la branche deploy
+on:
+  push:
+    branches: [deploy]
+  pull_request:
+    branches: [deploy]
+    types: [closed]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    # Ne s'exécute que si c'est un push direct ou un PR mergé
+    if: github.event_name == 'push' || (github.event.pull_request.merged == true)
+
+    steps:
+      - name: 🏁 Start deployment
+        run: |
+          echo "🚀 Début du déploiement automatique"
+          echo "📝 Commit: ${{ github.sha }}"
+          echo "👤 Auteur: ${{ github.actor }}"
+
+      - name: 📡 SSH to manager & deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.MGR_HOST }}
+          username: ${{ secrets.MGR_SSH_USER }}
+          key: ${{ secrets.MGR_SSH_KEY }}
+          port: ${{ secrets.MGR_SSH_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            
+            echo "📂 Accès au répertoire du projet..."
+            cd /home/github/projet5iw
+            
+            echo "🔄 Mise à jour du code depuis la branche deploy..."
+            git fetch origin
+            git checkout deploy
+            git reset --hard origin/deploy
+            
+            echo "🔍 Vérification de l'état du Swarm..."
+            docker node ls
+            
+            echo "🏗️ Lancement du processus de build et déploiement..."
+            chmod +x ./build-deploy.sh
+            ./build-deploy.sh
+            
+            echo "✅ Vérification du déploiement..."
+            sleep 10
+            docker stack services projet5iw
+            
+            echo "🎉 Déploiement terminé avec succès !"
+
+      - name: 📊 Deployment Summary
+        if: always()
+        run: |
+          echo "## 📈 Résumé du Déploiement" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branche**: deploy" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Auteur**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Statut**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: https://educareschool.me" >> $GITHUB_STEP_SUMMARY
+
+  notify-success:
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    if: success()
+    steps:
+      - name: 🎉 Success notification
+        run: |
+          echo "✅ Déploiement réussi !"
+          echo "🌐 Application disponible sur: https://educareschool.me"
+          echo "📊 Monitoring: https://kuma.educareschool.me"
+
+  notify-failure:
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    if: failure()
+    steps:
+      - name: ❌ Failure notification
+        run: |
+          echo "❌ Échec du déploiement"
+          echo "🔍 Vérifiez les logs ci-dessus pour plus de détails"

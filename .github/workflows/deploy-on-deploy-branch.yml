@@ -103,6 +103,15 @@ jobs:
             echo "🔍 Vérification de l'état du Swarm..."
             docker node ls
 
+            echo "📋 Contenu du répertoire avant chmod :"
+            ls -al
+            find . -maxdepth 2 -type f -name '*deploy*.sh' || echo "⚠️ Aucun script trouvé"
+
+            echo "🏗️ Lancement du processus de build et déploiement..."
+            # ===> Vos chmod et exécution après ce point <===
+            chmod +x ./build-deploy.sh ./cleanup.sh
+            ./build-deploy.sh
+
             echo "🏗️ Lancement du processus de build et déploiement..."
             cd /home/github/projet5iw
             chmod +x ./build-deploy.sh ./cleanup.sh

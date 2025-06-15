@@ -1,14 +1,64 @@
-name: Simple Deploy on Deploy Branch
+name: Deploy on deploy branch
 
+# Déclenche uniquement sur push vers la branche deploy
 on:
   push:
     branches: [deploy]
+  pull_request:
+    branches: [deploy]
+    types: [closed]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      - name: 🏁 Start deployment
+        run: |
+          echo "🚀 Début du déploiement automatique"
+          echo "📝 Commit: ${{ github.sha }}"
+          echo "👤 Auteur: ${{ github.actor }}"
+
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: deploy
+
+      - name: 📦 Create deployment archive
+        run: |
+          echo "📦 Création de l'archive de déploiement..."
+          tar -czf projet5iw-deploy.tar.gz \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='.history' \
+            --exclude='.DS_Store' \
+            .
+          ls -lh projet5iw-deploy.tar.gz
+
+      - name: 📤 Transfer and deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.MGR_HOST }}
+          username: ${{ secrets.MGR_SSH_USER }}
+          key: ${{ secrets.MGR_SSH_KEY }}
+          port: ${{ secrets.MGR_SSH_PORT || 22 }}
+          script: |
+            set -euo pipefail
+
+            echo "📂 Préparation du répertoire de déploiement..."
+            mkdir -p /tmp/projet5iw-deploy
+            cd /tmp/projet5iw-deploy
+
+      - name: 📁 Upload code archive
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.MGR_HOST }}
+          username: ${{ secrets.MGR_SSH_USER }}
+          key: ${{ secrets.MGR_SSH_KEY }}
+          port: ${{ secrets.MGR_SSH_PORT || 22 }}
+          source: "projet5iw-deploy.tar.gz"
+          target: "/tmp/"
+
       - name: 🚀 Deploy to production
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -20,30 +70,44 @@ jobs:
           script: |
             set -euo pipefail
 
-            echo "📂 Accès au répertoire du projet..."
-            cd /home/github/projet5iw
+            echo "📦 Extraction de l'archive..."
+            cd /tmp
+            tar -xzf projet5iw-deploy.tar.gz -C projet5iw-deploy
 
-            echo "🔄 Mise à jour du code depuis la branche deploy..."
-            # Utiliser le token GitHub stocké
-            git pull https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git deploy
+            echo "🔄 Sauvegarde de l'ancien déploiement..."
+            if [ -d "/home/github/projet5iw" ]; then
+              sudo cp -r /home/github/projet5iw /home/github/projet5iw.backup.$(date +%Y%m%d_%H%M%S)
+            fi
+
+            echo "📂 Mise à jour du code..."
+            sudo mkdir -p /home/github
+            sudo rm -rf /home/github/projet5iw
+            sudo mv /tmp/projet5iw-deploy /home/github/projet5iw
+            sudo chown -R $(whoami):$(whoami) /home/github/projet5iw
 
             echo "🔍 Vérification de l'état du Swarm..."
             docker node ls
 
             echo "🏗️ Lancement du processus de build et déploiement..."
-            chmod +x ./build-deploy.sh
+            cd /home/github/projet5iw
+            chmod +x ./build-deploy.sh ./cleanup.sh
             ./build-deploy.sh
 
             echo "✅ Vérification du déploiement..."
             sleep 10
             docker stack services projet5iw
 
+            echo "🧹 Nettoyage des fichiers temporaires..."
+            rm -f /tmp/projet5iw-deploy.tar.gz
+
             echo "🎉 Déploiement terminé avec succès !"
 
-      - name: 📊 Summary
+      - name: 📊 Deployment Summary
         if: always()
         run: |
-          echo "## 📈 Déploiement" >> $GITHUB_STEP_SUMMARY
-          echo "- **Statut**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "## 📈 Résumé du Déploiement" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branche**: deploy" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Auteur**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Statut**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           echo "- **URL**: https://educareschool.me" >> $GITHUB_STEP_SUMMARY

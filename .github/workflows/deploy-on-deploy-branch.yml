@@ -27,12 +27,28 @@ jobs:
       - name: 📦 Create deployment archive
         run: |
           echo "📦 Création de l'archive de déploiement..."
-          tar -czf projet5iw-deploy.tar.gz \
-            --exclude='.git' \
-            --exclude='node_modules' \
-            --exclude='.history' \
-            --exclude='.DS_Store' \
+          # Créer un fichier .tarignore pour les exclusions
+          cat > .tarignore << EOF
+          .git
+          node_modules
+          .history
+          .DS_Store
+          *.tar.gz
+          *.log
+          .github/workflows
+          EOF
+
+          # Créer l'archive en excluant les fichiers listés
+          tar -czf /tmp/projet5iw-deploy.tar.gz \
+            --exclude-from=.tarignore \
+            --exclude='.tarignore' \
             .
+
+          # Déplacer l'archive et nettoyer
+          mv /tmp/projet5iw-deploy.tar.gz ./projet5iw-deploy.tar.gz
+          rm -f .tarignore
+
+          echo "✅ Archive créée :"
           ls -lh projet5iw-deploy.tar.gz
 
       - name: 📤 Transfer and deploy

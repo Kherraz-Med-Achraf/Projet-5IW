@@ -12,88 +12,71 @@ import { JustifyAbsenceDto, JustificationType } from './dto/presence.dto';
 export class PresenceService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Aplatit la feuille en extrayant child.parent.phone → child.parentPhone
-   */
-  private mapSheet(raw: any) {
-    if (!raw) return null;
-
-    return {
-      id: raw.id,
-      date: raw.date,
-      status: raw.status,
-      validatedAtStaff: raw.validatedAtStaff,
-      validatedAtSecretary: raw.validatedAtSecretary,
-      staff: raw.staff, // { staffProfile: { firstName, lastName } }
-      records: raw.records.map((r: any) => ({
-        id: r.id,
-        present: r.present,
-        justification: r.justification,
-        child: {
-          id: r.child.id,
-          firstName: r.child.firstName,
-          lastName: r.child.lastName,
-          birthDate: r.child.birthDate,
-          parentProfileId: r.child.parentProfileId,
-          parentPhone: r.child.parent?.phone ?? null,
-        },
-      })),
-    };
-  }
-
-  /** 1. Créer ou récupérer la feuille du jour (STAFF) */
+  /* 1. Création / récupération d’une feuille */
   async createSheet(dateString: string, staffId: string) {
     const date = new Date(dateString);
 
     // 1) Upsert de la feuille
-    const sheetUpsert = await this.prisma.presenceSheet.upsert({
+    const sheet = await this.prisma.presenceSheet.upsert({
       where: { date },
       create: { date, staffId, status: 'PENDING_STAFF' },
       update: {},
     });
 
-    // 2) Génération des records s’ils n’existent pas
-    const exists = await this.prisma.presenceRecord.findFirst({
-      where: { sheetId: sheetUpsert.id },
+    // 2) Si aucun record encore présent → on génère “absent” pour chaque enfant
+    const hasRecords = await this.prisma.presenceRecord.findFirst({
+      where: { sheetId: sheet.id },
       select: { id: true },
     });
-    if (!exists) {
+    if (!hasRecords) {
       const children = await this.prisma.child.findMany();
       await this.prisma.presenceRecord.createMany({
         data: children.map(c => ({
-          sheetId: sheetUpsert.id,
+          sheetId: sheet.id,
           childId: c.id,
           present: false,
         })),
       });
     }
 
-    // 3) Lecture complète avec parent.phone
-    const raw = (await this.prisma.presenceSheet.findUnique({
-      where: { id: sheetUpsert.id },
+    // 3) Retourne la feuille complète, en incluant désormais le phone parent
+    return this.prisma.presenceSheet.findUnique({
+      where: { id: sheet.id },
       include: {
         records: {
           include: {
             child: {
               include: {
-                parent: { select: { phone: true } },
+                // <-- Ici on remonte le parentProfile.phone
+                parentProfile: {
+                  select: { phone: true },
+                },
               },
             },
-            justification: true,
+            justification: {
+              select: {
+                id: true,
+                type: true,
+                justificationDate: true,
+                motif: true,
+                filePath: true,
+                createdAt: true,
+              },
+            },
           },
         },
         staff: {
           select: {
-            staffProfile: { select: { firstName: true, lastName: true } },
+            staffProfile: {
+              select: { firstName: true, lastName: true },
+            },
           },
         },
       },
-    })) as any;
-
-    return this.mapSheet(raw);
+    });
   }
 
-  /** 2. Valider la feuille (STAFF) */
+  /* 2. Validation par l’éducateur */
   async validateSheet(
     sheetId: number,
     presentChildIds: number[],
@@ -104,20 +87,20 @@ export class PresenceService {
     if (sheet.status !== 'PENDING_STAFF')
       throw new BadRequestException('Feuille non éligible à la validation');
 
-    // Supprime puis recrée tous les records
+    // Recréation de tous les enregistrements
     const children = await this.prisma.child.findMany();
     const presentSet = new Set(presentChildIds);
     await this.prisma.presenceRecord.deleteMany({ where: { sheetId } });
     await this.prisma.presenceRecord.createMany({
-      data: children.map(ch => ({
+      data: children.map(child => ({
         sheetId,
-        childId: ch.id,
-        present: presentSet.has(ch.id),
+        childId: child.id,
+        present: presentSet.has(child.id),
       })),
     });
 
-    // Retourne le sheet mis à jour avec parent.phone
-    const raw = (await this.prisma.presenceSheet.update({
+    // Passe au statut secrétaire
+    return this.prisma.presenceSheet.update({
       where: { id: sheetId },
       data: {
         staffId,
@@ -129,10 +112,19 @@ export class PresenceService {
           include: {
             child: {
               include: {
-                parent: { select: { phone: true } },
+                parentProfile: { select: { phone: true } },
               },
             },
-            justification: true,
+            justification: {
+              select: {
+                id: true,
+                type: true,
+                justificationDate: true,
+                motif: true,
+                filePath: true,
+                createdAt: true,
+              },
+            },
           },
         },
         staff: {
@@ -141,22 +133,21 @@ export class PresenceService {
           },
         },
       },
-    })) as any;
-
-    return this.mapSheet(raw);
+    });
   }
 
-  /** 3. Justifier une absence ou un retard (SECRETARY) */
+  /* 3. Justification d’une absence ou d’un retard */
   async justify(recordId: number, dto: JustifyAbsenceDto, filePath?: string) {
-    const rec = await this.prisma.presenceRecord.findUnique({
+    const record = await this.prisma.presenceRecord.findUnique({
       where: { id: recordId },
       include: { sheet: true },
     });
-    if (!rec) throw new NotFoundException('Enregistrement introuvable');
-    if (rec.present) throw new BadRequestException('Impossible de justifier un présent');
+    if (!record) throw new NotFoundException('Enregistrement introuvable');
+    if (record.present) throw new BadRequestException('Impossible de justifier un présent');
 
     const motifValue =
-      dto.motif ?? (dto.type === JustificationType.LATENESS ? 'Retard justifié' : '');
+      dto.motif ??
+      (dto.type === JustificationType.LATENESS ? 'Retard justifié' : '');
 
     await this.prisma.absenceJustification.create({
       data: {
@@ -168,10 +159,10 @@ export class PresenceService {
       },
     });
 
-    // Si plus d’absences non justifiées → passe au statut VALIDATED
+    // Si plus d’absences non justifiées → statut VALIDATED
     const pending = await this.prisma.presenceRecord.count({
       where: {
-        sheetId: rec.sheetId,
+        sheetId: record.sheetId,
         present: false,
         justification: null,
       },
@@ -182,18 +173,27 @@ export class PresenceService {
       updateData.status = 'VALIDATED';
     }
 
-    const raw = (await this.prisma.presenceSheet.update({
-      where: { id: rec.sheetId },
+    return this.prisma.presenceSheet.update({
+      where: { id: record.sheetId },
       data: updateData,
       include: {
         records: {
           include: {
             child: {
               include: {
-                parent: { select: { phone: true } },
+                parentProfile: { select: { phone: true } },
               },
             },
-            justification: true,
+            justification: {
+              select: {
+                id: true,
+                type: true,
+                justificationDate: true,
+                motif: true,
+                filePath: true,
+                createdAt: true,
+              },
+            },
           },
         },
         staff: {
@@ -202,25 +202,32 @@ export class PresenceService {
           },
         },
       },
-    })) as any;
-
-    return this.mapSheet(raw);
+    });
   }
 
-  /** 4. Lire la feuille par date (STAFF, SECRETARY…) */
+  /* 4. Lecture d’une feuille par date */
   async findByDate(dateString: string) {
     const date = new Date(dateString);
-    const raw = (await this.prisma.presenceSheet.findUnique({
+    const sheet = await this.prisma.presenceSheet.findUnique({
       where: { date },
       include: {
         records: {
           include: {
             child: {
               include: {
-                parent: { select: { phone: true } },
+                parentProfile: { select: { phone: true } },
               },
             },
-            justification: true,
+            justification: {
+              select: {
+                id: true,
+                type: true,
+                justificationDate: true,
+                motif: true,
+                filePath: true,
+                createdAt: true,
+              },
+            },
           },
         },
         staff: {
@@ -229,10 +236,10 @@ export class PresenceService {
           },
         },
       },
-    })) as any;
-
-    if (!raw)
+    });
+    if (!sheet) {
       throw new NotFoundException(`Feuille non trouvée pour la date ${dateString}`);
-    return this.mapSheet(raw);
+    }
+    return sheet;
   }
 }

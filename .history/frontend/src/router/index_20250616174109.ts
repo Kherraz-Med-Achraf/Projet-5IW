@@ -133,10 +133,7 @@ const routes: Array<RouteRecordRaw> = [
        name: 'PresenceReport',
        component: PresenceReportView,
        props: true,
-       meta: {
-                requiresAuth: true,
-                requiredRoles: ['DIRECTOR', 'SERVICE_MANAGER'],
-             },
+       meta: { requiresAuth: true, requiredRole: 'DIRECTOR', 'SERVICE_MANAGER' },
      },
     
 

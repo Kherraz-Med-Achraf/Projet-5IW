@@ -52,18 +52,15 @@
             <tr>
               <th class="px-4 py-2 text-left">Nom</th>
               <th class="px-4 py-2 text-left">Prénom</th>
-              <th class="px-4 py-2 text-left">Téléphone du parent</th>
+              <th class="px-4 py-2 text-left">Téléphone</th>
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="rec in presentRecords"
-              :key="rec.id"
-              class="border-t"
-            >
+            <tr v-for="rec in presentRecords" :key="rec.id" class="border-t">
               <td class="px-4 py-2">{{ rec.child.lastName }}</td>
               <td class="px-4 py-2">{{ rec.child.firstName }}</td>
               <td class="px-4 py-2">{{ rec.child.parentPhone || 'N/A' }}</td>
+
             </tr>
           </tbody>
         </table>
@@ -77,19 +74,16 @@
             <tr>
               <th class="px-4 py-2 text-left">Nom</th>
               <th class="px-4 py-2 text-left">Prénom</th>
-              <th class="px-4 py-2 text-left">Téléphone du parent</th>
+              <th class="px-4 py-2 text-left">Téléphone</th>
               <th class="px-4 py-2 text-center">Action</th>
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="rec in pendingRecords"
-              :key="rec.id"
-              class="border-t"
-            >
+            <tr v-for="rec in pendingRecords" :key="rec.id" class="border-t">
               <td class="px-4 py-2">{{ rec.child.lastName }}</td>
               <td class="px-4 py-2">{{ rec.child.firstName }}</td>
               <td class="px-4 py-2">{{ rec.child.parentPhone || 'N/A' }}</td>
+
               <td class="px-4 py-2 text-center">
                 <button
                   class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
@@ -111,43 +105,34 @@
             <tr>
               <th class="px-4 py-2 text-left">Nom</th>
               <th class="px-4 py-2 text-left">Prénom</th>
-              <th class="px-4 py-2 text-left">Téléphone du parent</th>
+              <th class="px-4 py-2 text-left">Téléphone</th>
               <th class="px-4 py-2 text-left">Date justif.</th>
               <th class="px-4 py-2 text-left">Motif</th>
               <th class="px-4 py-2 text-center">Fichier</th>
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="rec in justifiedLateness"
-              :key="rec.id"
-              class="border-t"
-            >
+            <tr v-for="rec in justifiedLateness" :key="rec.id" class="border-t">
               <td class="px-4 py-2">{{ rec.child.lastName }}</td>
               <td class="px-4 py-2">{{ rec.child.firstName }}</td>
               <td class="px-4 py-2">{{ rec.child.parentPhone || 'N/A' }}</td>
-              <td class="px-4 py-2">
-                {{ formatDate(rec.justification!.justificationDate) }}
-              </td>
+
+              <td class="px-4 py-2">{{ formatDate(rec.justification!.justificationDate) }}</td>
               <td class="px-4 py-2">{{ rec.justification!.motif || '—' }}</td>
-              <td class="px-4 py-2 text-center space-x-2">
+              <td class="px-4 py-2 text-center">
                 <a
                   v-if="rec.justification!.filePath"
                   :href="fileUrl(rec.justification!.filePath)"
                   target="_blank"
                   rel="noopener"
                   class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  Ouvrir
-                </a>
+                >Ouvrir</a>
                 <a
                   v-if="rec.justification!.filePath"
                   :href="fileUrl(rec.justification!.filePath)"
                   download
                   class="px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
-                >
-                  Télécharger
-                </a>
+                >Télécharger</a>
               </td>
             </tr>
           </tbody>
@@ -162,43 +147,34 @@
             <tr>
               <th class="px-4 py-2 text-left">Nom</th>
               <th class="px-4 py-2 text-left">Prénom</th>
-              <th class="px-4 py-2 text-left">Téléphone du parent</th>
+              <th class="px-4 py-2 text-left">Téléphone</th>
               <th class="px-4 py-2 text-left">Date justif.</th>
               <th class="px-4 py-2 text-left">Motif</th>
               <th class="px-4 py-2 text-center">Fichier</th>
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="rec in justifiedAbsences"
-              :key="rec.id"
-              class="border-t"
-            >
+            <tr v-for="rec in justifiedAbsences" :key="rec.id" class="border-t">
               <td class="px-4 py-2">{{ rec.child.lastName }}</td>
               <td class="px-4 py-2">{{ rec.child.firstName }}</td>
               <td class="px-4 py-2">{{ rec.child.parentPhone || 'N/A' }}</td>
-              <td class="px-4 py-2">
-                {{ formatDate(rec.justification!.justificationDate) }}
-              </td>
+
+              <td class="px-4 py-2">{{ formatDate(rec.justification!.justificationDate) }}</td>
               <td class="px-4 py-2">{{ rec.justification!.motif }}</td>
-              <td class="px-4 py-2 text-center space-x-2">
+              <td class="px-4 py-2 text-center">
                 <a
                   v-if="rec.justification!.filePath"
                   :href="fileUrl(rec.justification!.filePath)"
                   target="_blank"
                   rel="noopener"
                   class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  Ouvrir
-                </a>
+                >Ouvrir</a>
                 <a
                   v-if="rec.justification!.filePath"
                   :href="fileUrl(rec.justification!.filePath)"
                   download
                   class="px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
-                >
-                  Télécharger
-                </a>
+                >Télécharger</a>
               </td>
             </tr>
           </tbody>

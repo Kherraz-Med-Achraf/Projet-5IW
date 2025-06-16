@@ -136,7 +136,7 @@ const routes: Array<RouteRecordRaw> = [
        meta: {
                 requiresAuth: true,
                 requiredRoles: ['DIRECTOR', 'SERVICE_MANAGER'],
-             },
+        +      },
      },
     
 

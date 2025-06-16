@@ -134,9 +134,9 @@ const routes: Array<RouteRecordRaw> = [
        component: PresenceReportView,
        props: true,
        meta: {
-                requiresAuth: true,
-                requiredRoles: ['DIRECTOR', 'SERVICE_MANAGER'],
-             },
+        +        requiresAuth: true,
+        +        requiredRoles: ['DIRECTOR', 'SERVICE_MANAGER'],
+        +      },
      },
     
 

@@ -52,7 +52,7 @@
             <tr>
               <th class="px-4 py-2 text-left">Nom</th>
               <th class="px-4 py-2 text-left">Prénom</th>
-              <th class="px-4 py-2 text-left">Téléphone du parent</th>
+              <th class="px-4 py-2 text-left">Téléphone</th>
             </tr>
           </thead>
           <tbody>
@@ -77,7 +77,7 @@
             <tr>
               <th class="px-4 py-2 text-left">Nom</th>
               <th class="px-4 py-2 text-left">Prénom</th>
-              <th class="px-4 py-2 text-left">Téléphone du parent</th>
+              <th class="px-4 py-2 text-left">Téléphone</th>
               <th class="px-4 py-2 text-center">Action</th>
             </tr>
           </thead>
@@ -111,7 +111,7 @@
             <tr>
               <th class="px-4 py-2 text-left">Nom</th>
               <th class="px-4 py-2 text-left">Prénom</th>
-              <th class="px-4 py-2 text-left">Téléphone du parent</th>
+              <th class="px-4 py-2 text-left">Téléphone</th>
               <th class="px-4 py-2 text-left">Date justif.</th>
               <th class="px-4 py-2 text-left">Motif</th>
               <th class="px-4 py-2 text-center">Fichier</th>
@@ -162,7 +162,7 @@
             <tr>
               <th class="px-4 py-2 text-left">Nom</th>
               <th class="px-4 py-2 text-left">Prénom</th>
-              <th class="px-4 py-2 text-left">Téléphone du parent</th>
+              <th class="px-4 py-2 text-left">Téléphone</th>
               <th class="px-4 py-2 text-left">Date justif.</th>
               <th class="px-4 py-2 text-left">Motif</th>
               <th class="px-4 py-2 text-center">Fichier</th>

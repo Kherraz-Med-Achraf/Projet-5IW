@@ -13,7 +13,7 @@ export class PresenceService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Aplatit la feuille en extrayant child.parent.phone → child.parentPhone
+   * Aplatit la feuille avec records, en extrayant child.parentProfile.phone → child.parentPhone
    */
   private mapSheet(raw: any) {
     if (!raw) return null;
@@ -35,29 +35,29 @@ export class PresenceService {
           lastName: r.child.lastName,
           birthDate: r.child.birthDate,
           parentProfileId: r.child.parentProfileId,
-          parentPhone: r.child.parent?.phone ?? null,
+          parentPhone: r.child.parentProfile?.phone ?? null,
         },
       })),
     };
   }
 
-  /** 1. Créer ou récupérer la feuille du jour (STAFF) */
+  /* 1. Création / récupération d’une feuille */
   async createSheet(dateString: string, staffId: string) {
     const date = new Date(dateString);
 
-    // 1) Upsert de la feuille
+    // Upsert de la feuille
     const sheetUpsert = await this.prisma.presenceSheet.upsert({
       where: { date },
       create: { date, staffId, status: 'PENDING_STAFF' },
       update: {},
     });
 
-    // 2) Génération des records s’ils n’existent pas
-    const exists = await this.prisma.presenceRecord.findFirst({
+    // Génération des records s’ils n’existent pas
+    const has = await this.prisma.presenceRecord.findFirst({
       where: { sheetId: sheetUpsert.id },
       select: { id: true },
     });
-    if (!exists) {
+    if (!has) {
       const children = await this.prisma.child.findMany();
       await this.prisma.presenceRecord.createMany({
         data: children.map(c => ({
@@ -68,7 +68,7 @@ export class PresenceService {
       });
     }
 
-    // 3) Lecture complète avec parent.phone
+    // Requête avec include parentProfile.phone
     const raw = (await this.prisma.presenceSheet.findUnique({
       where: { id: sheetUpsert.id },
       include: {
@@ -76,24 +76,20 @@ export class PresenceService {
           include: {
             child: {
               include: {
-                parent: { select: { phone: true } },
+                parentProfile: { select: { phone: true } },
               },
             },
             justification: true,
           },
         },
-        staff: {
-          select: {
-            staffProfile: { select: { firstName: true, lastName: true } },
-          },
-        },
+        staff: { select: { staffProfile: { select: { firstName: true, lastName: true } } } },
       },
     })) as any;
 
     return this.mapSheet(raw);
   }
 
-  /** 2. Valider la feuille (STAFF) */
+  /* 2. Validation par l’éducateur */
   async validateSheet(
     sheetId: number,
     presentChildIds: number[],
@@ -104,19 +100,18 @@ export class PresenceService {
     if (sheet.status !== 'PENDING_STAFF')
       throw new BadRequestException('Feuille non éligible à la validation');
 
-    // Supprime puis recrée tous les records
+    // On supprime / recrée tous les records
     const children = await this.prisma.child.findMany();
-    const presentSet = new Set(presentChildIds);
+    const setPresent = new Set(presentChildIds);
     await this.prisma.presenceRecord.deleteMany({ where: { sheetId } });
     await this.prisma.presenceRecord.createMany({
       data: children.map(ch => ({
         sheetId,
         childId: ch.id,
-        present: presentSet.has(ch.id),
+        present: setPresent.has(ch.id),
       })),
     });
 
-    // Retourne le sheet mis à jour avec parent.phone
     const raw = (await this.prisma.presenceSheet.update({
       where: { id: sheetId },
       data: {
@@ -129,24 +124,20 @@ export class PresenceService {
           include: {
             child: {
               include: {
-                parent: { select: { phone: true } },
+                parentProfile: { select: { phone: true } },
               },
             },
             justification: true,
           },
         },
-        staff: {
-          select: {
-            staffProfile: { select: { firstName: true, lastName: true } },
-          },
-        },
+        staff: { select: { staffProfile: { select: { firstName: true, lastName: true } } } },
       },
     })) as any;
 
     return this.mapSheet(raw);
   }
 
-  /** 3. Justifier une absence ou un retard (SECRETARY) */
+  /* 3. Justification d’une absence ou d’un retard */
   async justify(recordId: number, dto: JustifyAbsenceDto, filePath?: string) {
     const rec = await this.prisma.presenceRecord.findUnique({
       where: { id: recordId },
@@ -190,24 +181,20 @@ export class PresenceService {
           include: {
             child: {
               include: {
-                parent: { select: { phone: true } },
+                parentProfile: { select: { phone: true } },
               },
             },
             justification: true,
           },
         },
-        staff: {
-          select: {
-            staffProfile: { select: { firstName: true, lastName: true } },
-          },
-        },
+        staff: { select: { staffProfile: { select: { firstName: true, lastName: true } } } },
       },
     })) as any;
 
     return this.mapSheet(raw);
   }
 
-  /** 4. Lire la feuille par date (STAFF, SECRETARY…) */
+  /* 4. Lecture d’une feuille par date */
   async findByDate(dateString: string) {
     const date = new Date(dateString);
     const raw = (await this.prisma.presenceSheet.findUnique({
@@ -217,22 +204,17 @@ export class PresenceService {
           include: {
             child: {
               include: {
-                parent: { select: { phone: true } },
+                parentProfile: { select: { phone: true } },
               },
             },
             justification: true,
           },
         },
-        staff: {
-          select: {
-            staffProfile: { select: { firstName: true, lastName: true } },
-          },
-        },
+        staff: { select: { staffProfile: { select: { firstName: true, lastName: true } } } },
       },
     })) as any;
 
-    if (!raw)
-      throw new NotFoundException(`Feuille non trouvée pour la date ${dateString}`);
+    if (!raw) throw new NotFoundException(`Feuille non trouvée pour la date ${dateString}`);
     return this.mapSheet(raw);
   }
 }

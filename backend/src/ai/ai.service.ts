@@ -8,7 +8,7 @@ export class AiService {
 
   constructor() {
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: process.env.OPENAI_API_KEY || require('fs').readFileSync('/run/secrets/openai_api_key', 'utf8').trim(),
     })
   }
 

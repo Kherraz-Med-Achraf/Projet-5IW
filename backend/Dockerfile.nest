@@ -30,5 +30,5 @@ EXPOSE 3000
 
 
 # Lancement direct du code compilé
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]
 

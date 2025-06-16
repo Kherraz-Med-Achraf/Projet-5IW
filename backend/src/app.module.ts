@@ -25,6 +25,15 @@ import { HealthModule } from './health/health.module';
 // **Nouvel import**
 import { ChatModule } from './chat/chat.module';
 
+function readSecret(path: string, envVar: string): string {
+  // si la variable d’environnement est présente (mode docker-compose), on la prend
+  if (process.env[envVar] && process.env[envVar].length > 0) {
+    return process.env[envVar];
+  }
+  // sinon on lit le secret Docker (mode Swarm)
+  return fs.readFileSync(path, 'utf8').trim();
+}
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -35,9 +44,7 @@ import { ChatModule } from './chat/chat.module';
       host: process.env.POSTGRES_HOST || 'postgres',
       port: parseInt(process.env.POSTGRES_PORT || '5432', 10),
       username: process.env.POSTGRES_USER || 'myuser',
-      password:
-        process.env.POSTGRES_PASSWORD ||
-        fs.readFileSync('/run/secrets/pg_password', 'utf8').trim(),
+      password: readSecret('/run/secrets/pg_password', 'POSTGRES_PASSWORD'),
       database: process.env.POSTGRES_DB || 'mydb',
       autoLoadEntities: true,
       synchronize: true,
@@ -47,11 +54,16 @@ import { ChatModule } from './chat/chat.module';
 
     // **MongoDB via Mongoose**
     MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (config: ConfigService) => ({
-        uri: `mongodb://${config.get('MONGO_USER')}:${config.get('MONGO_PASSWORD')}@${config.get('MONGO_HOST')}:${config.get('MONGO_PORT')}/${config.get('MONGO_DB')}?authSource=admin`,
-      }),
-      inject: [ConfigService],
+      useFactory: () => {
+        const mongoUser = process.env.MONGO_USER || 'myuser';
+        const mongoHost = process.env.MONGO_HOST || 'mongodb';
+        const mongoPort = process.env.MONGO_PORT || '27017';
+        const mongoDb   = process.env.MONGO_DB   || 'mydb';
+        const mongoPw   = readSecret('/run/secrets/mongo_root_password', 'MONGO_PASSWORD');
+        return {
+          uri: `mongodb://${mongoUser}:${mongoPw}@${mongoHost}:${mongoPort}/${mongoDb}?authSource=admin`,
+        };
+      },
     }),
 
     // Modules métiers

@@ -64,11 +64,6 @@
                 Validé le {{ formatDate(sheet.validatedAtStaff) }}
               </p>
             </div>
-            <div class="summary">
-              <p>Nombre d'enfants présents : {{ presentCount }}</p>
-              <p>dont {{ latenessCount }} en retards</p>
-              <p>Nombre d'enfants absents : {{ absenceCount }}</p>
-            </div>
             <div class="table-wrapper">
               <table class="presence-table">
                 <thead>
@@ -213,10 +208,6 @@ const staffName = computed(() => {
       : ''
 })
 
-const presentCount  = computed(() => sheet.value?.records.filter(r => r.present).length || 0)
-const latenessCount = computed(() => sheet.value?.records.filter(r => r.justification?.type === 'LATENESS').length || 0)
-const absenceCount  = computed(() => sheet.value?.records.filter(r => !r.present && r.justification?.type === 'ABSENCE').length || 0)
-
 // Date formatter for display
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', {
@@ -251,6 +242,8 @@ onMounted(async () => {
   await store.fetchSheet()
 })
 </script>
+
+
 
 <style scoped>
 /* Container */
@@ -322,29 +315,6 @@ onMounted(async () => {
   to { transform: rotate(360deg); }
 }
 
-/* Tabs */
-.tabs {
-  display: flex;
-  border-bottom: 1px solid #e5e7eb;
-  margin: 1rem 1.5rem 0;
-}
-.tab {
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  color: #6b7280;
-  transition: color .2s, border-color .2s;
-  border-bottom: 2px solid transparent;
-}
-.tab:hover {
-  color: #4f46e5;
-}
-.tab-active {
-  color: #4f46e5;
-  border-bottom-color: #4f46e5;
-  font-weight: 500;
-}
-
 /* Body */
 .presence-body {
   padding: 1rem 1.5rem;
@@ -370,7 +340,7 @@ onMounted(async () => {
   border: 1px solid #bbf7d0;
   padding: 1rem;
   border-radius: 0.375rem;
-  margin: 1rem 1.5rem 1rem;
+  margin-bottom: 1rem;
   color: #166534;
 }
 .presence-alert p + p {
@@ -382,7 +352,7 @@ onMounted(async () => {
 /* Table wrapper */
 .table-wrapper {
   overflow-x: auto;
-  margin: 1rem 1.5rem;
+  margin-bottom: 1rem;
 }
 
 /* Table */
@@ -443,5 +413,3 @@ onMounted(async () => {
   box-shadow: 0 0 0 3px rgba(99,102,241,0.5);
 }
 </style>
-
-

@@ -9,6 +9,7 @@
         id="date-picker"
         type="date"
         v-model="date"
+        @change="onDateChange"
         class="border rounded px-2 py-1"
       />
     </div>
@@ -16,11 +17,9 @@
     <!-- Loader -->
     <div v-if="loading" class="text-center py-8">Chargement…</div>
 
-    <!-- Message si pas de feuille pour la date -->
-    <div v-else-if="!sheet">
-      <p class="text-center py-8 text-gray-600">
-        Aucune feuille de présence n’existe pour le {{ formattedDate }}.
-      </p>
+    <!-- Message si pas de feuille pour cette date -->
+    <div v-else-if="noSheet" class="p-4 bg-yellow-100 rounded text-center">
+      Aucune feuille de présence trouvée pour le {{ formatDate(date) }}.
     </div>
 
     <div v-else>
@@ -56,7 +55,11 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="rec in presentRecords" :key="rec.id" class="border-t">
+            <tr
+              v-for="rec in presentRecords"
+              :key="rec.id"
+              class="border-t"
+            >
               <td class="px-4 py-2">{{ rec.child.lastName }}</td>
               <td class="px-4 py-2">{{ rec.child.firstName }}</td>
               <td class="px-4 py-2">{{ rec.child.parent?.phone || 'N/A' }}</td>
@@ -78,7 +81,11 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="rec in pendingRecords" :key="rec.id" class="border-t">
+            <tr
+              v-for="rec in pendingRecords"
+              :key="rec.id"
+              class="border-t"
+            >
               <td class="px-4 py-2">{{ rec.child.lastName }}</td>
               <td class="px-4 py-2">{{ rec.child.firstName }}</td>
               <td class="px-4 py-2">{{ rec.child.parent?.phone || 'N/A' }}</td>
@@ -109,19 +116,16 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="rec in justifiedLateness" :key="rec.id" class="border-t">
+            <tr
+              v-for="rec in justifiedLateness"
+              :key="rec.id"
+              class="border-t"
+            >
               <td class="px-4 py-2">{{ rec.child.lastName }}</td>
               <td class="px-4 py-2">{{ rec.child.firstName }}</td>
               <td class="px-4 py-2">{{ formatDate(rec.justification!.justificationDate) }}</td>
               <td class="px-4 py-2">{{ rec.justification!.motif || '—' }}</td>
               <td class="px-4 py-2 text-center">
-                <a
-                  v-if="rec.justification!.filePath"
-                  :href="fileUrl(rec.justification!.filePath)"
-                  target="_blank"
-                  rel="noopener"
-                  class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >Ouvrir</a>
                 <a
                   v-if="rec.justification!.filePath"
                   :href="fileUrl(rec.justification!.filePath)"
@@ -148,12 +152,16 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="rec in justifiedAbsences" :key="rec.id" class="border-t">
+            <tr
+              v-for="rec in justifiedAbsences"
+              :key="rec.id"
+              class="border-t"
+            >
               <td class="px-4 py-2">{{ rec.child.lastName }}</td>
               <td class="px-4 py-2">{{ rec.child.firstName }}</td>
               <td class="px-4 py-2">{{ formatDate(rec.justification!.justificationDate) }}</td>
               <td class="px-4 py-2">{{ rec.justification!.motif }}</td>
-              <td class="px-4 py-2 text-center">
+              <td class="px-4 py-2 text-center space-x-2">
                 <a
                   v-if="rec.justification!.filePath"
                   :href="fileUrl(rec.justification!.filePath)"
@@ -185,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { usePresenceStore } from '@/stores/presenceStore'
 import { useNotificationStore } from '@/stores/notificationStore'
 import JustifyModal from '@/components/presence/JustifyModal.vue'
@@ -193,47 +201,48 @@ import JustifyModal from '@/components/presence/JustifyModal.vue'
 const store = usePresenceStore()
 const notify = useNotificationStore()
 
-// Liaison du sélecteur de date sur store.date via computed getter/setter
-const date = computed<string>({
-  get: () => store.date,
-  set: async (val: string) => {
-    store.setDate(val)
-    await store.fetchSheet()
-  },
-})
+const date = ref(store.date)
+const loading = ref(false)
+const noSheet = ref(false)
 
-const loading = computed(() => store.loading)
-const sheet = computed(() => store.sheet)
-const formattedDate = computed(() =>
-  new Date(date.value).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-)
+// Lorsque l'utilisateur change la date, on effectue un GET sans création
+async function onDateChange() {
+  loading.value = true
+  noSheet.value = false
+  try {
+    const auth = useAuthStore()
+    const res = await fetch(
+      `${import.meta.env.VITE_NEST_API_URL}/presences?date=${date.value}`,
+      { headers: { Authorization: `Bearer ${auth.token}` } }
+    )
+    if (res.status === 404) {
+      // pas de feuille pour cette date
+      store.sheet = null
+      noSheet.value = true
+    } else {
+      const data = await res.json()
+      store.sheet = data
+    }
+  } catch (err: any) {
+    notify.showNotification(err.message || 'Erreur réseau', 'error')
+  } finally {
+    loading.value = false
+  }
+}
 
-// Jeux d’enregistrements filtrés par type
-const presentRecords    = computed(() => sheet.value?.records.filter(r => r.present) || [])
-const pendingRecords    = computed(() => sheet.value?.records.filter(r => !r.present && !r.justification) || [])
-const justifiedLateness = computed(() => sheet.value?.records.filter(r => r.justification?.type === 'LATENESS') || [])
-const justifiedAbsences = computed(() => sheet.value?.records.filter(r => r.justification?.type === 'ABSENCE') || [])
+// Autres calculs
+const presentRecords    = computed(() => store.sheet?.records.filter(r => r.present) || [])
+const pendingRecords    = computed(() => store.sheet?.records.filter(r => !r.present && !r.justification) || [])
+const justifiedLateness = computed(() => store.sheet?.records.filter(r => r.justification?.type === 'LATENESS') || [])
+const justifiedAbsences = computed(() => store.sheet?.records.filter(r => r.justification?.type === 'ABSENCE') || [])
 
-// Compteurs
 const presentCount  = computed(() => presentRecords.value.length)
 const pendingCount  = computed(() => pendingRecords.value.length)
 const latenessCount = computed(() => justifiedLateness.value.length)
 const absenceCount  = computed(() => justifiedAbsences.value.length)
 
-const modalOpen   = ref(false)
+const modalOpen = ref(false)
 const modalRecord = ref<any>(null)
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
-}
-function fileUrl(path: string) {
-  const cleaned = path.startsWith('/') ? path : `/${path}`
-  return `http://localhost:3000${cleaned}`
-}
 
 function openModal(rec: any) {
   modalRecord.value = rec
@@ -242,16 +251,36 @@ function openModal(rec: any) {
 function closeModal() {
   modalOpen.value = false
 }
-async function submitJustification(payload: any) {
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('fr-FR', {
+    day: '2-digit', month: '2-digit', year: 'numeric'
+  })
+}
+
+function fileUrl(path: string) {
+  const cleaned = path.startsWith('/') ? path : `/${path}`
+  return `http://localhost:3000${cleaned}`
+}
+
+async function submitJustification(payload: {
+  recordId: number
+  type: string
+  justificationDate: string
+  motif?: string
+  file?: File
+}) {
   try {
     await store.justifyRecord(
       payload.recordId,
       payload.type,
       payload.justificationDate,
       payload.motif,
-      payload.file,
+      payload.file
     )
     notify.showNotification('Justification enregistrée', 'success')
+    // recharger automatiquement la vue
+    onDateChange()
   } catch (err: any) {
     notify.showNotification(err.message || 'Erreur lors de la justification', 'error')
   } finally {
@@ -259,9 +288,9 @@ async function submitJustification(payload: any) {
   }
 }
 
-// Chargement initial
+// Chargement initial de la date du store
 onMounted(() => {
-  store.fetchSheet()
+  onDateChange()
 })
 </script>
 

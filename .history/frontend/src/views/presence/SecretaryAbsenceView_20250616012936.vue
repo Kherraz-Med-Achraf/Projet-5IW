@@ -9,19 +9,13 @@
         id="date-picker"
         type="date"
         v-model="date"
+        @change="onDateChange"
         class="border rounded px-2 py-1"
       />
     </div>
 
     <!-- Loader -->
     <div v-if="loading" class="text-center py-8">Chargement…</div>
-
-    <!-- Message si pas de feuille pour la date -->
-    <div v-else-if="!sheet">
-      <p class="text-center py-8 text-gray-600">
-        Aucune feuille de présence n’existe pour le {{ formattedDate }}.
-      </p>
-    </div>
 
     <div v-else>
       <!-- Statistiques -->
@@ -52,13 +46,19 @@
             <tr>
               <th class="px-4 py-2 text-left">Nom</th>
               <th class="px-4 py-2 text-left">Prénom</th>
+              <th class="px-4 py-2 text-left">Statut</th>
               <th class="px-4 py-2 text-left">Téléphone</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="rec in presentRecords" :key="rec.id" class="border-t">
+            <tr
+              v-for="rec in presentRecords"
+              :key="rec.id"
+              class="border-t"
+            >
               <td class="px-4 py-2">{{ rec.child.lastName }}</td>
               <td class="px-4 py-2">{{ rec.child.firstName }}</td>
+              <td class="px-4 py-2 text-green-700 font-medium">Présent</td>
               <td class="px-4 py-2">{{ rec.child.parent?.phone || 'N/A' }}</td>
             </tr>
           </tbody>
@@ -73,14 +73,20 @@
             <tr>
               <th class="px-4 py-2 text-left">Nom</th>
               <th class="px-4 py-2 text-left">Prénom</th>
+              <th class="px-4 py-2 text-red-700 font-medium">Statut</th>
               <th class="px-4 py-2 text-left">Téléphone</th>
               <th class="px-4 py-2 text-center">Action</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="rec in pendingRecords" :key="rec.id" class="border-t">
+            <tr
+              v-for="rec in pendingRecords"
+              :key="rec.id"
+              class="border-t"
+            >
               <td class="px-4 py-2">{{ rec.child.lastName }}</td>
               <td class="px-4 py-2">{{ rec.child.firstName }}</td>
+              <td class="px-4 py-2 text-red-700 font-medium">Absent</td>
               <td class="px-4 py-2">{{ rec.child.parent?.phone || 'N/A' }}</td>
               <td class="px-4 py-2 text-center">
                 <button
@@ -103,18 +109,24 @@
             <tr>
               <th class="px-4 py-2 text-left">Nom</th>
               <th class="px-4 py-2 text-left">Prénom</th>
+              <th class="px-4 py-2 text-yellow-700 font-medium">Statut</th>
               <th class="px-4 py-2 text-left">Date justif.</th>
               <th class="px-4 py-2 text-left">Motif</th>
               <th class="px-4 py-2 text-center">Fichier</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="rec in justifiedLateness" :key="rec.id" class="border-t">
+            <tr
+              v-for="rec in justifiedLateness"
+              :key="rec.id"
+              class="border-t"
+            >
               <td class="px-4 py-2">{{ rec.child.lastName }}</td>
               <td class="px-4 py-2">{{ rec.child.firstName }}</td>
+              <td class="px-4 py-2 text-yellow-700 font-medium">Retard</td>
               <td class="px-4 py-2">{{ formatDate(rec.justification!.justificationDate) }}</td>
               <td class="px-4 py-2">{{ rec.justification!.motif || '—' }}</td>
-              <td class="px-4 py-2 text-center">
+              <td class="px-4 py-2 text-center space-x-2">
                 <a
                   v-if="rec.justification!.filePath"
                   :href="fileUrl(rec.justification!.filePath)"
@@ -142,18 +154,24 @@
             <tr>
               <th class="px-4 py-2 text-left">Nom</th>
               <th class="px-4 py-2 text-left">Prénom</th>
+              <th class="px-4 py-2 text-indigo-700 font-medium">Statut</th>
               <th class="px-4 py-2 text-left">Date justif.</th>
               <th class="px-4 py-2 text-left">Motif</th>
               <th class="px-4 py-2 text-center">Fichier</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="rec in justifiedAbsences" :key="rec.id" class="border-t">
+            <tr
+              v-for="rec in justifiedAbsences"
+              :key="rec.id"
+              class="border-t"
+            >
               <td class="px-4 py-2">{{ rec.child.lastName }}</td>
               <td class="px-4 py-2">{{ rec.child.firstName }}</td>
+              <td class="px-4 py-2 text-indigo-700 font-medium">Absence</td>
               <td class="px-4 py-2">{{ formatDate(rec.justification!.justificationDate) }}</td>
               <td class="px-4 py-2">{{ rec.justification!.motif }}</td>
-              <td class="px-4 py-2 text-center">
+              <td class="px-4 py-2 text-center space-x-2">
                 <a
                   v-if="rec.justification!.filePath"
                   :href="fileUrl(rec.justification!.filePath)"
@@ -185,7 +203,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { usePresenceStore } from '@/stores/presenceStore'
 import { useNotificationStore } from '@/stores/notificationStore'
 import JustifyModal from '@/components/presence/JustifyModal.vue'
@@ -193,26 +211,15 @@ import JustifyModal from '@/components/presence/JustifyModal.vue'
 const store = usePresenceStore()
 const notify = useNotificationStore()
 
-// Liaison du sélecteur de date sur store.date via computed getter/setter
-const date = computed<string>({
-  get: () => store.date,
-  set: async (val: string) => {
-    store.setDate(val)
-    await store.fetchSheet()
-  },
-})
-
+const date = ref(store.date)
 const loading = computed(() => store.loading)
-const sheet = computed(() => store.sheet)
-const formattedDate = computed(() =>
-  new Date(date.value).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-)
+const today = new Date().toISOString().substring(0, 10)
 
 // Jeux d’enregistrements filtrés par type
-const presentRecords    = computed(() => sheet.value?.records.filter(r => r.present) || [])
-const pendingRecords    = computed(() => sheet.value?.records.filter(r => !r.present && !r.justification) || [])
-const justifiedLateness = computed(() => sheet.value?.records.filter(r => r.justification?.type === 'LATENESS') || [])
-const justifiedAbsences = computed(() => sheet.value?.records.filter(r => r.justification?.type === 'ABSENCE') || [])
+const presentRecords    = computed(() => store.sheet?.records.filter(r => r.present) || [])
+const pendingRecords    = computed(() => store.sheet?.records.filter(r => !r.present && !r.justification) || [])
+const justifiedLateness = computed(() => store.sheet?.records.filter(r => r.justification?.type === 'LATENESS') || [])
+const justifiedAbsences = computed(() => store.sheet?.records.filter(r => r.justification?.type === 'ABSENCE') || [])
 
 // Compteurs
 const presentCount  = computed(() => presentRecords.value.length)
@@ -220,7 +227,7 @@ const pendingCount  = computed(() => pendingRecords.value.length)
 const latenessCount = computed(() => justifiedLateness.value.length)
 const absenceCount  = computed(() => justifiedAbsences.value.length)
 
-const modalOpen   = ref(false)
+const modalOpen = ref(false)
 const modalRecord = ref<any>(null)
 
 function formatDate(iso: string) {
@@ -230,26 +237,39 @@ function formatDate(iso: string) {
     year: 'numeric',
   })
 }
+
 function fileUrl(path: string) {
-  const cleaned = path.startsWith('/') ? path : `/${path}`
-  return `http://localhost:3000${cleaned}`
+  return path.startsWith('/') ? path : `/${path}`
+}
+
+function onDateChange() {
+  store.setDate(date.value)
+  store.fetchSheet()
 }
 
 function openModal(rec: any) {
   modalRecord.value = rec
   modalOpen.value   = true
 }
+
 function closeModal() {
   modalOpen.value = false
 }
-async function submitJustification(payload: any) {
+
+async function submitJustification(payload: {
+  recordId: number
+  type: string
+  justificationDate: string
+  motif?: string
+  file?: File
+}) {
   try {
     await store.justifyRecord(
       payload.recordId,
       payload.type,
       payload.justificationDate,
       payload.motif,
-      payload.file,
+      payload.file
     )
     notify.showNotification('Justification enregistrée', 'success')
   } catch (err: any) {
@@ -259,12 +279,14 @@ async function submitJustification(payload: any) {
   }
 }
 
-// Chargement initial
 onMounted(() => {
   store.fetchSheet()
+  date.value = store.date
 })
+
+watch(() => store.date, d => date.value = d)
 </script>
 
 <style scoped>
-/* Ajustements CSS éventuels */
+/* Ajustez ici si nécessaire */
 </style>

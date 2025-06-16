@@ -262,11 +262,11 @@ async function main() {
   /* ---------------------------------------------------------------------- */
   /* 9. PRÉSENCES & JUSTIFICATIONS (janvier → juin 2025)                    */
   /* ---------------------------------------------------------------------- */
-  const staffIds    = allStaff.map(u => u.id);
+  const staffUsers  = allStaff.map(u => u.id);
   let staffCursor   = 0;
   function nextStaffId() {
-    const id = staffIds[staffCursor];
-    staffCursor = (staffCursor + 1) % staffIds.length;
+    const id = staffUsers[staffCursor];
+    staffCursor = (staffCursor + 1) % staffUsers.length;
     return id;
   }
 
@@ -277,11 +277,11 @@ async function main() {
     const weekday = d.getDay();
     if (weekday === 0 || weekday === 6) continue;
 
-    // Upsert de la feuille (on suppose staff déjà validé)
+    // Upsert de la feuille (suppose staff déjà validé)
     const sheet = await prisma.presenceSheet.upsert({
       where: { date: d },
       create: {
-        date: d,
+        Date,
         staffId: nextStaffId(),
         status: 'PENDING_SECRETARY',
         validatedAtStaff: faker.date.between({
@@ -292,7 +292,7 @@ async function main() {
       update: {},
     });
 
-    // Enregistrements pour chaque enfant
+    // Boucle enfants
     for (const { id: childId } of allChildren) {
       const isPresent = faker.number.float({ min: 0, max: 1, fractionDigits: 2 }) < 0.7;
       const record = await prisma.presenceRecord.create({

@@ -10,7 +10,6 @@ import {
   IsArray,
   ArrayNotEmpty,
   ArrayUnique,
-  ValidateIf,
 } from 'class-validator';
 
 /**
@@ -48,8 +47,6 @@ export class ValidateSheetDto {
 
 /**
  * DTO pour justifier une absence ou un retard par la secrétaire.
- * - Si type = ABSENCE : motif et éventuel fichier obligatoires.
- * - Si type = LATENESS : motif et fichier non requis.
  */
 export class JustifyAbsenceDto {
   @ApiProperty({
@@ -64,25 +61,18 @@ export class JustifyAbsenceDto {
   @IsDateString()
   justificationDate: string;
 
-  @ApiProperty({
-    description: 'Motif de l’absence (obligatoire si ABSENCE, facultatif si LATENESS)',
-    required: false,
-  })
-  @ValidateIf(o => o.type === JustificationType.ABSENCE)
+  @ApiProperty({ description: 'Motif de l’absence ou du retard' })
   @IsString()
   @IsNotEmpty()
-  @IsOptional()
-  motif?: string;
+  motif: string;
 
+  /** Le fichier est récupéré via @UploadedFile() dans le contrôleur */
   @ApiProperty({
-    description: 'Fichier justificatif (PDF/JPG), requis uniquement pour ABSENCE',
+    description: 'Fichier justificatif (PDF/JPG), facultatif',
     type: 'string',
     format: 'binary',
     required: false,
   })
-  @ValidateIf(o => o.type === JustificationType.ABSENCE)
   @IsOptional()
   file?: any;
 }
-
-

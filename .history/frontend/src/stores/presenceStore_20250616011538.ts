@@ -53,11 +53,7 @@ export const usePresenceStore = defineStore('presence', {
       this.date = date;
     },
 
-    /**
-     * Récupère la feuille pour la date sélectionnée.
-     * En mode secrétaire on ne crée PAS de nouvelle feuille :
-     * si 404 on met sheet à null et on affiche un message d’absence.
-     */
+    /** Récupère (ou crée) la feuille pour la date sélectionnée **/
     async fetchSheet() {
       this.loading = true;
       this.error = null;
@@ -65,28 +61,32 @@ export const usePresenceStore = defineStore('presence', {
       const notify = useNotificationStore();
 
       try {
-        const res = await fetch(`${API}/presences?date=${this.date}`, {
+        let res = await fetch(`${API}/presences?date=${this.date}`, {
           headers: { Authorization: `Bearer ${auth.token}` },
         });
 
+        // Si 404, on crée puis on retente
         if (res.status === 404) {
-          // Pas de feuille pour cette date
-          this.sheet = null;
-          return;
+          await fetch(`${API}/presences`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${auth.token}`,
+            },
+            body: JSON.stringify({ date: this.date }),
+          });
+          res = await fetch(`${API}/presences?date=${this.date}`, {
+            headers: { Authorization: `Bearer ${auth.token}` },
+          });
         }
 
-        if (!res.ok) {
-          throw new Error(await res.text() || 'Erreur récupération de la feuille');
-        }
-
+        if (!res.ok) throw new Error(await res.text() || 'Erreur récupération de la feuille');
         const data: PresenceSheet = await res.json();
         this.sheet = data;
         this.presentChildIds = data.records.filter(r => r.present).map(r => r.childId);
-
       } catch (err: any) {
         this.error = err.message;
         notify.showNotification(this.error, 'error');
-        this.sheet = null;
       } finally {
         this.loading = false;
       }

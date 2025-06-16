@@ -213,10 +213,6 @@ const staffName = computed(() => {
       : ''
 })
 
-const presentCount  = computed(() => sheet.value?.records.filter(r => r.present).length || 0)
-const latenessCount = computed(() => sheet.value?.records.filter(r => r.justification?.type === 'LATENESS').length || 0)
-const absenceCount  = computed(() => sheet.value?.records.filter(r => !r.present && r.justification?.type === 'ABSENCE').length || 0)
-
 // Date formatter for display
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', {

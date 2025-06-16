@@ -64,11 +64,6 @@
                 Validé le {{ formatDate(sheet.validatedAtStaff) }}
               </p>
             </div>
-            <div class="summary">
-              <p>Nombre d'enfants présents : {{ presentCount }}</p>
-              <p>dont {{ latenessCount }} en retards</p>
-              <p>Nombre d'enfants absents : {{ absenceCount }}</p>
-            </div>
             <div class="table-wrapper">
               <table class="presence-table">
                 <thead>
@@ -212,10 +207,6 @@ const staffName = computed(() => {
       ? user.email
       : ''
 })
-
-const presentCount  = computed(() => sheet.value?.records.filter(r => r.present).length || 0)
-const latenessCount = computed(() => sheet.value?.records.filter(r => r.justification?.type === 'LATENESS').length || 0)
-const absenceCount  = computed(() => sheet.value?.records.filter(r => !r.present && r.justification?.type === 'ABSENCE').length || 0)
 
 // Date formatter for display
 function formatDate(iso: string) {

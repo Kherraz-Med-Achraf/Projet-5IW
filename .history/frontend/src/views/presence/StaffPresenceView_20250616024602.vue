@@ -64,11 +64,6 @@
                 Validé le {{ formatDate(sheet.validatedAtStaff) }}
               </p>
             </div>
-            <div class="summary">
-              <p>Nombre d'enfants présents : {{ presentCount }}</p>
-              <p>dont {{ latenessCount }} en retards</p>
-              <p>Nombre d'enfants absents : {{ absenceCount }}</p>
-            </div>
             <div class="table-wrapper">
               <table class="presence-table">
                 <thead>
@@ -176,80 +171,61 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
-import { usePresenceStore } from '@/stores/presenceStore'
-import { useNotificationStore } from '@/stores/notificationStore'
+import { computed, ref, onMounted } from 'vue';
+import { usePresenceStore } from '@/stores/presenceStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 
-const store  = usePresenceStore()
-const notify = useNotificationStore()
+const store  = usePresenceStore();
+const notify = useNotificationStore();
 
-// Today’s ISO and formatted label
-const todayIso   = new Date().toISOString().substring(0, 10)
+const todayIso   = new Date().toISOString().substring(0, 10);
 const todayLabel = computed(() =>
   new Date(todayIso).toLocaleDateString('fr-FR', {
-    weekday: 'long',
-    day:     '2-digit',
-    month:   'long',
-    year:    'numeric',
+    weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
   })
-)
+);
 
-// Reactive state & store bindings
-const sheet      = computed(() => store.sheet)
-const loading    = computed(() => store.loading)
-const submitting = ref(false)
+const sheet      = computed(() => store.sheet);
+const loading    = computed(() => store.loading);
+const submitting = ref(false);
 
-// Which tab is active once validated: 'staff' | 'secretary'
-const activeTab = ref<'staff' | 'secretary'>('staff')
-
-// Display staff name from the sheet
 const staffName = computed(() => {
-  const user = sheet.value?.staff
-  const prof = user?.staffProfile
+  const user = sheet.value?.staff;
+  const prof = user?.staffProfile;
   return prof
     ? `${prof.firstName} ${prof.lastName}`
     : user
       ? user.email
-      : ''
-})
+      : '';
+});
 
-const presentCount  = computed(() => sheet.value?.records.filter(r => r.present).length || 0)
-const latenessCount = computed(() => sheet.value?.records.filter(r => r.justification?.type === 'LATENESS').length || 0)
-const absenceCount  = computed(() => sheet.value?.records.filter(r => !r.present && r.justification?.type === 'ABSENCE').length || 0)
-
-// Date formatter for display
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', {
-    day:    '2-digit',
-    month:  '2-digit',
-    year:   'numeric',
-    hour:   '2-digit',
-    minute: '2-digit',
-  })
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
 }
 
-// Validation handler
 async function onValidate() {
-  if (!sheet.value) return
+  if (!sheet.value) return;
   if (!confirm('Une fois validé, vous ne pourrez plus modifier la feuille. Continuer ?'))
-    return
+    return;
 
-  submitting.value = true
+  submitting.value = true;
   try {
-    await store.validateSheet()
-    notify.showNotification('Appel validé avec succès', 'success')
+    await store.validateSheet();
+    notify.showNotification('Appel validé avec succès', 'success');
   } catch (err: any) {
-    notify.showNotification(err?.message || 'Erreur lors de la validation', 'error')
+    notify.showNotification(err?.message || 'Erreur lors de la validation', 'error');
   } finally {
-    submitting.value = false
+    submitting.value = false;
   }
 }
 
-// On mount, fetch today’s sheet
 onMounted(async () => {
-  store.setDate(todayIso)
-  await store.fetchSheet()
-})
+  store.setDate(todayIso);
+  await store.fetchSheet();
+});
 </script>
 
 <style scoped>
@@ -322,29 +298,6 @@ onMounted(async () => {
   to { transform: rotate(360deg); }
 }
 
-/* Tabs */
-.tabs {
-  display: flex;
-  border-bottom: 1px solid #e5e7eb;
-  margin: 1rem 1.5rem 0;
-}
-.tab {
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  color: #6b7280;
-  transition: color .2s, border-color .2s;
-  border-bottom: 2px solid transparent;
-}
-.tab:hover {
-  color: #4f46e5;
-}
-.tab-active {
-  color: #4f46e5;
-  border-bottom-color: #4f46e5;
-  font-weight: 500;
-}
-
 /* Body */
 .presence-body {
   padding: 1rem 1.5rem;
@@ -370,7 +323,7 @@ onMounted(async () => {
   border: 1px solid #bbf7d0;
   padding: 1rem;
   border-radius: 0.375rem;
-  margin: 1rem 1.5rem 1rem;
+  margin-bottom: 1rem;
   color: #166534;
 }
 .presence-alert p + p {
@@ -382,7 +335,7 @@ onMounted(async () => {
 /* Table wrapper */
 .table-wrapper {
   overflow-x: auto;
-  margin: 1rem 1.5rem;
+  margin-bottom: 1rem;
 }
 
 /* Table */
@@ -443,5 +396,3 @@ onMounted(async () => {
   box-shadow: 0 0 0 3px rgba(99,102,241,0.5);
 }
 </style>
-
-

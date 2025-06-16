@@ -84,5 +84,3 @@ export class JustifyAbsenceDto {
   @IsOptional()
   file?: any;
 }
-
-

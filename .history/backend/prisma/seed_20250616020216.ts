@@ -18,6 +18,7 @@ function initialEmail(first: string, last: string, index = 0) {
 
 async function uniqueStaffEmail(first: string, last: string) {
   let idx = 0;
+  // on boucle jusqu’à trouver un email non utilisé
   while (true) {
     const mail = initialEmail(first, last, idx);
     const exists = await prisma.user.findUnique({ where: { email: mail } });
@@ -51,10 +52,11 @@ async function main() {
   /* ---------------------------------------------------------------------- */
   const directorMail = 'apajh94.direction@gmail.com';
   if (!(await prisma.user.findUnique({ where: { email: directorMail } }))) {
+    const pwdHash = await hash(DEFAULT_PWD);
     const usr = await prisma.user.create({
       data: {
         email: directorMail,
-        password: await hash(DEFAULT_PWD),
+        password: pwdHash,
         role: Role.DIRECTOR,
         emailVerified: true,
         directorProfile: {
@@ -212,11 +214,13 @@ async function main() {
   console.log('✅ Parents + enfants créés');
 
   /* ---------------------------------------------------------------------- */
-  /* 7. ANNÉES SCOLAIRES                                                     */
+  /* 7. INSÉRER LES ANNÉES SCOLAIRES                                         */
   /* ---------------------------------------------------------------------- */
   const existingYears = await prisma.academicYear.findMany({
-    where: { label: { in: ['2025-2026', '2026-2027', '2027-2028'] } },
-    select: { label: true },
+    where: {
+      label: { in: ['2025-2026', '2026-2027', '2027-2028'] }
+    },
+    select: { label: true }
   });
   const existingLabels = existingYears.map(y => y.label);
   const yearsToCreate = [
@@ -228,96 +232,135 @@ async function main() {
   for (const yr of yearsToCreate) {
     await prisma.academicYear.create({ data: yr });
   }
-  console.log('✅ Années scolaires insérées');
+  console.log('✅ Années scolaires (2025-2026, 2026-2027, 2027-2028) insérées');
 
   /* ---------------------------------------------------------------------- */
-  /* 8. RÉFÉRENTS                                                            */
+  /* 8. ASSIGNER UN RÉFÉRENT À CHAQUE ENFANT                                 */
   /* ---------------------------------------------------------------------- */
-  const allChildren = await prisma.child.findMany({ select: { id: true } });
-  const allStaff    = await prisma.user.findMany({
+  // Récupérer tous les enfants créés
+  const allChildren = await prisma.child.findMany({
+    select: { id: true }
+  });
+  // Récupérer tous les utilisateurs STAFF
+  const allStaff = await prisma.user.findMany({
     where: { role: Role.STAFF },
-    select: { id: true },
+    select: { id: true }
   });
 
+  // Parcours des enfants et attribution d’un référent (4 à 5 enfants par référent)
   let staffIndex = 0;
   let countForCurrent = 0;
-  const maxPerStaff = 5;
+  const maxPerStaff = 5; // au plus 5 enfants par staff
 
   for (const child of allChildren) {
     const referentId = allStaff[staffIndex]?.id;
     if (referentId) {
       await prisma.child.update({
         where: { id: child.id },
-        data: { referents: { connect: { id: referentId } } },
+        data: {
+          referents: { connect: { id: referentId } }
+        }
       });
       countForCurrent++;
       if (countForCurrent >= maxPerStaff) {
-        staffIndex = Math.min(staffIndex + 1, allStaff.length - 1);
         countForCurrent = 0;
+        staffIndex = Math.min(staffIndex + 1, allStaff.length - 1);
       }
     }
   }
-  console.log('✅ Référents assignés');
+  console.log('✅ Référents assignés à chaque enfant');
+  // ... le début de ton seed.ts inchangé ...
 
   /* ---------------------------------------------------------------------- */
-  /* 9. PRÉSENCES & JUSTIFICATIONS (janvier → juin 2025)                    */
+  /* 8. ASSIGNER UN RÉFÉRENT À CHAQUE ENFANT                                 */
   /* ---------------------------------------------------------------------- */
-  const staffIds    = allStaff.map(u => u.id);
-  let staffCursor   = 0;
+  // (ton code existant pour les référents)
+
+  /* ---------------------------------------------------------------------- */
+  /* 9. SEED DE PRESENCE & ABSENCE JUSTIFICATIONS (janvier → juin 2025)     */
+  /* ---------------------------------------------------------------------- */
+  // Récupère tous les enfants et tout le staff
+  const allChildren = await prisma.child.findMany({ select: { id: true } });
+  const staffUsers  = await prisma.user.findMany({
+    where: { role: Role.STAFF },
+    select: { id: true },
+  });
+  const staffIds = staffUsers.map(u => u.id);
+  let staffCursor = 0;
   function nextStaffId() {
     const id = staffIds[staffCursor];
     staffCursor = (staffCursor + 1) % staffIds.length;
     return id;
   }
 
+  // Période : du 1er janvier au 30 juin 2025
   const start = new Date('2025-01-01');
   const end   = new Date('2025-06-30');
 
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     const weekday = d.getDay();
-    if (weekday === 0 || weekday === 6) continue;
+    if (weekday === 0 || weekday === 6) continue; // skip dimanche(0)/samedi(6)
 
-    // Upsert de la feuille (on suppose staff déjà validé)
+    // Upsert de la feuille
     const sheet = await prisma.presenceSheet.upsert({
       where: { date: d },
       create: {
         date: d,
         staffId: nextStaffId(),
-        status: 'PENDING_SECRETARY',
+        status: 'PENDING_SECRETARY', // on suppose que le staff a déjà validé
         validatedAtStaff: faker.date.between({
-          from: new Date(d.getTime() - 2 * 3600_000),
-          to:   new Date(d.getTime() -   30 * 60_000),
+          from: new Date(d.getTime() - 1000 * 60 * 60 * 2),
+          to: new Date(d.getTime() - 1000 * 60 * 30),
         }),
       },
       update: {},
     });
 
-    // Enregistrements pour chaque enfant
+    // Pour chaque enfant, on crée un record et éventuellement une justification
     for (const { id: childId } of allChildren) {
-      const isPresent = faker.number.float({ min: 0, max: 1, fractionDigits: 2 }) < 0.7;
+      // Présent ou absent aléatoire (70% présents)
+      const isPresent = faker.datatype.float({ min: 0, max: 1 }) < 0.7;
       const record = await prisma.presenceRecord.create({
-        data: { sheetId: sheet.id, childId, present: isPresent },
+        data: {
+          sheetId : sheet.id,
+          childId,
+          present : isPresent,
+        },
       });
 
-      if (!isPresent && faker.datatype.boolean()) {
-        const type = faker.helpers.arrayElement(['ABSENCE', 'LATENESS'] as const);
-        await prisma.absenceJustification.create({
-          data: {
-            recordId: record.id,
-            type,
-            justificationDate: d,
-            motif: type === 'ABSENCE'
-              ? faker.helpers.arrayElement(['Certificat médical', 'RDV familial', 'Congé exceptionnel'])
-              : '',
-            filePath: faker.datatype.boolean()
-              ? `uploads/justifications/${faker.string.uuid()}.pdf`
-              : null,
-          },
-        });
+      if (!isPresent) {
+        // 50% des absents sont justifiés
+        if (faker.datatype.boolean()) {
+          // Choix du type de justification
+          const type = faker.helpers.arrayElement(['ABSENCE', 'LATENESS'] as const);
+          await prisma.absenceJustification.create({
+            data: {
+              recordId:       record.id,
+              type,
+              justificationDate: d, // même date que la feuille
+              motif:          type === 'ABSENCE'
+                ? faker.helpers.arrayElement([
+                    'Certificat médical',
+                    'RDV familial',
+                    'Congé exceptionnel',
+                  ])
+                : '', // pas de motif pour le retard
+              filePath:       faker.datatype.boolean()
+                ? `uploads/justifications/${faker.string.uuid()}.pdf`
+                : null,
+            },
+          });
+        }
       }
     }
   }
-  console.log('✅ Présences & justifications générées (janv → juin 2025)');
+
+  console.log('✅ Présences et justifications générées pour janvier→juin 2025');
+
+} // fin de main()
+
+// ... le reste de ton fichier seed.ts inchangé ...
+
 }
 
 main()

@@ -10,7 +10,6 @@ import {
   IsArray,
   ArrayNotEmpty,
   ArrayUnique,
-  ValidateIf,
 } from 'class-validator';
 
 /**
@@ -48,14 +47,11 @@ export class ValidateSheetDto {
 
 /**
  * DTO pour justifier une absence ou un retard par la secrétaire.
- * - Si type = ABSENCE : motif et éventuel fichier obligatoires.
- * - Si type = LATENESS : motif et fichier non requis.
  */
 export class JustifyAbsenceDto {
   @ApiProperty({
-    description: 'Type de la justification : ABSENCE ou LATENESS',
-    enum: Object.values(JustificationType),
-    enumName: 'JustificationType',
+    description: 'Type de la justification: ABSENCE ou LATENESS',
+    enum: JustificationType,
   })
   @IsEnum(JustificationType)
   type: JustificationType;
@@ -64,25 +60,10 @@ export class JustifyAbsenceDto {
   @IsDateString()
   justificationDate: string;
 
-  @ApiProperty({
-    description: 'Motif de l’absence (obligatoire si ABSENCE, facultatif si LATENESS)',
-    required: false,
-  })
-  @ValidateIf(o => o.type === JustificationType.ABSENCE)
+  @ApiProperty({ description: 'Motif de l’absence ou du retard' })
   @IsString()
   @IsNotEmpty()
-  @IsOptional()
-  motif?: string;
+  motif: string;
 
-  @ApiProperty({
-    description: 'Fichier justificatif (PDF/JPG), requis uniquement pour ABSENCE',
-    type: 'string',
-    format: 'binary',
-    required: false,
-  })
-  @ValidateIf(o => o.type === JustificationType.ABSENCE)
-  @IsOptional()
-  file?: any;
+  // NB : le fichier est récupéré via @UploadedFile() et non via le corps JSON
 }
-
-

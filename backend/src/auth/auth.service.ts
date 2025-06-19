@@ -523,7 +523,8 @@ export class AuthService {
       data: { token: tokenHashed, expiresAt, userId: user.id },
     });
 
-    const resetLink = `http://localhost:5173/reset-password?prid=${passReset.id}&token=${tokenPlain}`;
+    const { FRONTEND_BASE_URL } = await import('../utils/frontend-url');
+    const resetLink = `${FRONTEND_BASE_URL}/reset-password?prid=${passReset.id}&token=${tokenPlain}`;
     const html = `
       <p>Cliquez pour réinitialiser votre mot de passe :</p>
       <a href="${resetLink}">Réinitialiser</a>

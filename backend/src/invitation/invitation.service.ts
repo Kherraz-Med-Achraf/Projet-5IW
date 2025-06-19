@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { v4 as uuidv4 } from 'uuid';
 import { Role } from '@prisma/client';
+import { FRONTEND_BASE_URL } from '../utils/frontend-url';
 
 @Injectable()
 export class InvitationService {
@@ -51,7 +52,7 @@ export class InvitationService {
       },
     });
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = FRONTEND_BASE_URL;
     const registrationLink = `${frontendUrl}/register?token=${token}`;
     const subject = 'Invitation à rejoindre la plateforme';
     const html = `
@@ -59,8 +60,8 @@ export class InvitationService {
       <p>Vous avez été invité·e à créer un compte sur notre plateforme.</p>
       <p>Pour vous inscrire, cliquez sur le lien suivant :</p>
       <p><a href="${registrationLink}">${registrationLink}</a></p>
-      <p>Ce lien est valable jusqu’au <strong>${invitation.expiresAt.toLocaleString()}</strong>.</p>
-      <p>Si vous n’avez pas demandé cette invitation, ignorez simplement ce message.</p>
+      <p>Ce lien est valable jusqu'au <strong>${invitation.expiresAt.toLocaleString()}</strong>.</p>
+      <p>Si vous n'avez pas demandé cette invitation, ignorez simplement ce message.</p>
     `;
     await this.mailService.sendMail(email, subject, html);
 
@@ -78,16 +79,16 @@ export class InvitationService {
       throw new NotFoundException('Invitation introuvable.');
     }
     if (invitation.used) {
-      throw new BadRequestException('Ce lien d’invitation a déjà été utilisé.');
+      throw new BadRequestException("Ce lien d'invitation a déjà été utilisé.");
     }
     if (invitation.expiresAt < new Date()) {
-      throw new BadRequestException('Ce lien d’invitation a expiré.');
+      throw new BadRequestException("Ce lien d'invitation a expiré.");
     }
     return invitation;
   }
 
   /**
-   * @param token  Le token d’invitation à marquer comme utilisé
+   * @param token  Le token d'invitation à marquer comme utilisé
    */
   async markAsUsed(token: string) {
     return this.prisma.invitation.update({

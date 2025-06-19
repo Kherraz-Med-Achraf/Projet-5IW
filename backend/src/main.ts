@@ -9,7 +9,7 @@ import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  // On précise que l’app est de type NestExpressApplication
+  // On précise que l'app est de type NestExpressApplication
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Middleware pour parser les cookies
@@ -27,9 +27,15 @@ async function bootstrap() {
     }),
   );
 
-  // CORS autorisé depuis le front (http://localhost:5173) et https://educareschool.me
+  // CORS : autorise localhost et le domaine de production déterminé dynamiquement
+  const { FRONTEND_BASE_URL } = await import('./utils/frontend-url');
+  const allowedOrigins = [
+    'http://localhost:5173',
+    FRONTEND_BASE_URL,
+    FRONTEND_BASE_URL.replace('http://', 'https://'),
+  ];
   app.enableCors({
-    origin: ['http://localhost:5173', 'https://educareschool.me', 'http://educareschool.me'],
+    origin: allowedOrigins,
     credentials: true,
   });
 

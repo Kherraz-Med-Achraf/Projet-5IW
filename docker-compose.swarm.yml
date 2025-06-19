@@ -17,6 +17,8 @@ secrets:
     external: true
   yousign_api_key:
     external: true
+  stripe_secret:
+    external: true
 
 networks:
   frontend-net:
@@ -125,6 +127,8 @@ services:
       # Variables pour YouSign
       - YOUSIGN_API_URL=https://api-sandbox.yousign.app/v3
       - YOUSIGN_API_KEY_FILE=/run/secrets/yousign_api_key
+      # Variables pour Stripe
+      - STRIPE_SECRET_FILE=/run/secrets/stripe_secret
     secrets:
       - pg_password
       - sentry_dsn
@@ -133,6 +137,7 @@ services:
       - email_pass
       - openai_api_key
       - yousign_api_key
+      - stripe_secret
     networks:
       - backend-net
     deploy:

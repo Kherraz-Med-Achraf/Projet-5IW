@@ -74,8 +74,9 @@ export class EventController {
     @Body() dto: RegisterEventDto,
     @Req() req: any,
   ) {
-    const origin = req.headers.origin || process.env.FRONT_URL || 'http://localhost:5173';
-    return this.svc.register(id, req.user.id, dto, origin);
+    const { FRONTEND_BASE_URL } = await import('../utils/frontend-url');
+    const frontUrl = FRONTEND_BASE_URL;
+    return this.svc.register(id, req.user.id, dto, frontUrl);
   }
 
   /** 7. Confirmation Stripe (redirect) */

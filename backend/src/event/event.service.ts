@@ -6,8 +6,18 @@ import { RegisterEventDto } from './dto/register-event.dto';
 import { PaymentMethod, PaymentStatus, Role } from '@prisma/client';
 import Stripe from 'stripe';
 import { MailService } from '../mail/mail.service';
+import * as fs from 'fs';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET || '', {
+// Determine Stripe secret: prefer environment variable for local dev, fall back to Docker secret file in production.
+const stripeSecret = process.env.STRIPE_SECRET || (() => {
+  try {
+    return fs.readFileSync('/run/secrets/stripe_secret', 'utf8').trim();
+  } catch {
+    return '';
+  }
+})();
+
+const stripe = new Stripe(stripeSecret, {
   apiVersion: '2023-10-16',
 });
 

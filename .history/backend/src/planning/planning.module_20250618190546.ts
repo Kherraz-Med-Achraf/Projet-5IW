@@ -1,0 +1,20 @@
+// src/planning/planning.module.ts
+import { Module } from '@nestjs/common';
+import { MulterModule } from '@nestjs/platform-express';
+import { PrismaModule } from '../prisma/prisma.module';
+import { PlanningService } from './planning.service';
+import { PlanningController } from './planning.controller';
+
+@Module({
+  imports: [
+    PrismaModule,
+    // On peut utiliser la mémoire côté Multer (override en controller),
+    // ou définir un dossier de base pour les écritures disque.
+    MulterModule.register({
+      dest: './uploads', 
+    }),
+  ],
+  controllers: [PlanningController],
+  providers: [PlanningService],
+})
+export class PlanningModule {}

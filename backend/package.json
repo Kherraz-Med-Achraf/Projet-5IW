@@ -48,6 +48,8 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.7",
+    "date-fns": "^4.1.0",
+    "date-holidays": "^3.24.3",
     "express-rate-limit": "^7.5.0",
     "mongoose": "^8.15.1",
     "nodemailer": "^6.10.0",
@@ -62,7 +64,8 @@
     "socket.io": "^4.8.1",
     "speakeasy": "^2.0.0",
     "swagger-ui-express": "^5.0.1",
-    "typeorm": "^0.3.21"
+    "typeorm": "^0.3.21",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

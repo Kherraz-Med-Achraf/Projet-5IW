@@ -236,18 +236,6 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/events/EventStripeCancel.vue'),
     meta: { requiresAuth: true, requiredRole: 'PARENT' },
   },
-  {
-    path: '/events/mine',
-    name: 'MyEventRegistrations',
-    component: () => import('@/views/events/MyEventRegistrations.vue'),
-    meta: { requiresAuth: true, requiredRole: 'PARENT' },
-  },
-  {
-    path: '/events/:eventId/registrations',
-    name: 'EventRegistrationsAdmin',
-    component: () => import('@/views/events/EventRegistrationsAdmin.vue'),
-    meta: { requiresAuth: true, requiredRoles: ['DIRECTOR', 'SERVICE_MANAGER', 'SECRETARY'] },
-  },
 ]
 
 const router = createRouter({

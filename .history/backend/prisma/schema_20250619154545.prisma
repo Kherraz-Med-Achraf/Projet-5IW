@@ -49,9 +49,6 @@ model User {
 
   /** planning semestriel en tant que staff **/
   scheduleEntries       ScheduleEntry[]  @relation("ScheduleEntryStaff")
-
-  /// nouvelles relations évènements créés
-  eventsCreated   Event[]  @relation("UserEventsCreated")
 }
 
 model PasswordReset {
@@ -121,8 +118,6 @@ model ParentProfile {
   children            Child[]
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt()
-
-  eventRegistrations EventRegistration[] @relation("ParentProfileRegistrations")
 }
 
 model Child {
@@ -141,8 +136,6 @@ model Child {
   createdAt        DateTime        @default(now())
 
   entryChildren    EntryChild[]    @relation("EntryChildren")
-
-  eventRegistrations EventRegistrationChild[] @relation("ChildEventRegistrations")
 }
 
 model EmergencyContact {
@@ -387,7 +380,7 @@ model Event {
   capacity        Int?                 /// quota maximum d'enfants (null = illimité)
   imageUrl        String?
   createdAt       DateTime             @default(now())
-  createdByUser   User                 @relation("UserEventsCreated", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  createdByUser   User                 @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
   createdByUserId String
   isLocked        Boolean              @default(false)
 
@@ -400,7 +393,7 @@ model EventRegistration {
   id               String          @id @default(cuid())
   event            Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId          String
-  parentProfile    ParentProfile   @relation("ParentProfileRegistrations", fields: [parentProfileId], references: [id], onDelete: Cascade)
+  parentProfile    ParentProfile   @relation(fields: [parentProfileId], references: [id], onDelete: Cascade)
   parentProfileId  Int
 
   paymentMethod    PaymentMethod
@@ -418,7 +411,7 @@ model EventRegistration {
 model EventRegistrationChild {
   registration   EventRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   registrationId String
-  child          Child             @relation("ChildEventRegistrations", fields: [childId], references: [id], onDelete: Cascade)
+  child          Child             @relation(fields: [childId], references: [id], onDelete: Cascade)
   childId        Int
 
   @@id([registrationId, childId])

@@ -1,27 +1,6 @@
 import { defineStore } from "pinia";
 import { useNotificationStore } from "@/stores/notificationStore";
-
-// Récupération de l'URL de base de l'API depuis les variables d'environnement
-// Fonction pour récupérer l'URL de l'API de manière dynamique au runtime
-function getApiBaseUrl(): string {
-  // En production (Docker Swarm), on utilise l'URL basée sur le hostname
-  if (
-    window.location.hostname !== "localhost" &&
-    window.location.hostname !== "127.0.0.1"
-  ) {
-    // Si on est sur educareschool.me (production), utiliser l'API en HTTPS
-    if (window.location.hostname.indexOf("educareschool.me") !== -1) {
-      return "http://api.educareschool.me";
-    }
-    // Sinon utiliser HTTP avec le hostname (pour d'autres environnements)
-    return `http://${window.location.hostname}:3000`;
-  }
-
-  // En développement local
-  return "http://localhost:3000";
-}
-
-const API_BASE_URL = getApiBaseUrl();
+import { API_BASE_URL } from "@/utils/api";
 
 console.log("API_BASE_URL", API_BASE_URL);
 

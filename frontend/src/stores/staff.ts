@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useAuthStore } from "./auth";
+import { API_BASE_URL } from "@/utils/api";
 
 export interface Staff {
   id: number;
@@ -54,8 +55,7 @@ export const useStaffStore = defineStore("staff", () => {
   const loading = ref(false);
   const error = ref("");
 
-  const API_BASE =
-    (import.meta.env.VITE_NEST_API_URL as string) || "http://localhost:3000";
+  const API_BASE = API_BASE_URL;
 
   async function fetchStaff(): Promise<Staff[]> {
     loading.value = true;

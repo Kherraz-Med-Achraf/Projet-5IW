@@ -2,10 +2,10 @@ import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
 import { useToast } from "vue-toastification";
 import { useRouter } from "vue-router";
+import { API_BASE_URL } from "@/utils/api";
 
 // URL du backend via variable d'environnement
-const API_URL =
-  (import.meta.env.VITE_NEST_API_URL as string) || "http://localhost:3000";
+const API_URL = API_BASE_URL;
 
 export const useRegisterStore = defineStore("register", () => {
   const toast = useToast();

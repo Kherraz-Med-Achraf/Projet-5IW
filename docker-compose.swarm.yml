@@ -84,13 +84,14 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.frontend.rule=Host(`educareschool.me`)"
-        - "traefik.http.routers.frontend.entrypoints=websecure"
-        - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+        - "# traefik.http.routers.frontend.entrypoints=websecure"
+        - "# traefik.http.routers.frontend.tls.certresolver=myresolver"
+        - "traefik.http.routers.frontend.entrypoints=web"
         - "traefik.http.services.frontend.loadbalancer.server.port=80"
-        - "traefik.http.routers.frontend-http.rule=Host(`educareschool.me`)"
-        - "traefik.http.routers.frontend-http.entrypoints=web"
-        - "traefik.http.routers.frontend-http.middlewares=redirect-to-https"
-        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+        - "# traefik.http.routers.frontend-http.rule=Host(`educareschool.me`)"
+        - "# traefik.http.routers.frontend-http.entrypoints=web"
+        - "# traefik.http.routers.frontend-http.middlewares=redirect-to-https"
+        - "# traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       update_config:
         parallelism: 1
         delay: 10s
@@ -144,14 +145,14 @@ services:
         - "traefik.enable=true"
         # Router HTTPS
         - "traefik.http.routers.nest.rule=Host(`api.educareschool.me`)"
-        - "traefik.http.routers.nest.entrypoints=websecure"
-        - "traefik.http.routers.nest.tls.certresolver=myresolver"
+        - "traefik.http.routers.nest.entrypoints=web"
+        - "# traefik.http.routers.nest.tls.certresolver=myresolver"
         # Port du service
         - "traefik.http.services.nest.loadbalancer.server.port=3000"
         # Redirection HTTP vers HTTPS
-        - "traefik.http.routers.nest-http.rule=Host(`api.educareschool.me`)"
-        - "traefik.http.routers.nest-http.entrypoints=web"
-        - "traefik.http.routers.nest-http.middlewares=redirect-to-https"
+        - "# traefik.http.routers.nest-http.rule=Host(`api.educareschool.me`)"
+        - "# traefik.http.routers.nest-http.entrypoints=web"
+        - "# traefik.http.routers.nest-http.middlewares=redirect-to-https"
       update_config:
         parallelism: 1
         delay: 10s

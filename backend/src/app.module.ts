@@ -21,6 +21,10 @@ import { MissionModule } from './mission/mission.module';
 import { JournalModule } from './journal/journal.module';
 import { AiModule } from './ai/ai.module';
 import { HealthModule } from './health/health.module';
+import { PresenceModule } from './presence/presence.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { PlanningModule } from './planning/planning.module';
+import { EventModule } from './event/event.module';
 
 // **Nouvel import**
 import { ChatModule } from './chat/chat.module';
@@ -65,7 +69,7 @@ function readSecret(path: string, envVar: string): string {
         };
       },
     }),
-
+    ScheduleModule.forRoot(), 
     // Modules métiers
     AuthModule,
     AcademicYearModule,
@@ -80,6 +84,10 @@ function readSecret(path: string, envVar: string): string {
     JournalModule,
     MissionModule,
     AiModule,
+    ChatModule,
+    PresenceModule,
+    PlanningModule,
+    EventModule,
 
     // **Module Chat pour la messagerie instantanée**
     ChatModule,

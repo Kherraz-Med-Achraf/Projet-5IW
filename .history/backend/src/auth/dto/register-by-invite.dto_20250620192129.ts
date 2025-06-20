@@ -7,8 +7,6 @@ import {
   Length,
   Matches,
   IsOptional,
-  IsArray,
-  ArrayMaxSize,
 } from 'class-validator';
 import { PASSWORD_REGEX } from '../../common/constants/pasword.regex';
 
@@ -69,8 +67,6 @@ export class RegisterByInviteDto {
   }[];
 
   @IsOptional()
-  @IsArray({ message: 'Les contacts d’urgence doivent être un tableau' })
-  @ArrayMaxSize(2, { message: 'Au maximum 2 contacts d’urgence' })
   emergencyContacts?: {
     name: string;
     phone: string;

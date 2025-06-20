@@ -19,8 +19,8 @@ import { ChildService } from '../child/child.service';
 import { Role, Prisma } from '@prisma/client';
 
 const PASSWORD_EXPIRATION_DAYS = 60;
-const MAX_FAILED_ATTEMPTS      = 3;
-const LOCK_DURATION_MS         = 5 * 60 * 1000; // 5 min après la démo remettre a 1h
+const MAX_FAILED_ATTEMPTS      = 5;
+const LOCK_DURATION_MS         = 60 * 60 * 1000; // 1 h
 
 @Injectable()
 export class AuthService {
@@ -93,7 +93,7 @@ export class AuthService {
     const now = new Date();
     if (user.lockUntil && user.lockUntil > now) {
       throw new HttpException(
-        `Compte bloqué momentanément`,
+        `Compte bloqué jusqu'à ${user.lockUntil.toISOString()}`,
         HttpStatus.LOCKED,
       );
     }

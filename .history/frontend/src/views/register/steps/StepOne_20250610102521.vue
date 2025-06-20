@@ -318,9 +318,9 @@ function validateForm() {
     errors.legalResponsibilityOther = "Précisez la responsabilité";
     valid = false;
   }
-  // Validation des contacts d'urgence (0 à 2) ; s'ils sont renseignés ils doivent être complets
-  if (f.emergencyContacts.length > 2) {
-    errors.emergencyContacts = "Maximum 2 contacts d'urgence";
+  // Validation des contacts d'urgence (au moins un complet)
+  if (!f.emergencyContacts.length) {
+    errors.emergencyContacts = "Ajoutez au moins un contact d'urgence";
     valid = false;
   } else {
     errors.emergencyContacts = [];

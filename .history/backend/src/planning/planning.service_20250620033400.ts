@@ -119,7 +119,7 @@ import {
             dayOfWeek: ((ev.date.getDay() || 7)),
             startTime: `${dateStr}T${start.substring(11)}`,
             endTime:   `${dateStr}T${end.substring(11)}`,
-            activity: this._sanitize(ev.title),
+            activity: ev.title,
             children: [{ id: rc.child.id, firstName: rc.child.firstName, lastName: rc.child.lastName }],
           });
         });
@@ -185,7 +185,7 @@ import {
         dayOfWeek: e.dayOfWeek,
         startTime: e.startTime.toISOString(),
         endTime: e.endTime.toISOString(),
-        activity: this._sanitize(e.activity),
+        activity: e.activity,
         children: e.entryChildren.map((ec: any) => ({
           id: ec.child.id,
           firstName: ec.child.firstName,
@@ -301,7 +301,7 @@ import {
   
             // sépare activité et liste des enfants
             const [actRaw, namesRaw] = cell.split('–').map(s => s.trim());
-            const act = this._sanitize(actRaw || '');
+            const act = actRaw || '';
             let childrenNames: string[];
   
             if (act.toLowerCase() === 'pause') {
@@ -738,20 +738,6 @@ import {
 
         return { moved: true };
       });
-    }
-
-    /**
-     * Échappe les caractères HTML dangereux afin d'éviter toute injection XSS
-     * quand le libellé d'activité est rendu dans le front.
-     * On encode les cinq plus courants : & < > " '
-     */
-    private _sanitize(text: string): string {
-      return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#x27;');
     }
   }
   

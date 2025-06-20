@@ -33,7 +33,11 @@
       <button @click="importAll"   :disabled="!canImport">
         {{ hasFile ? 'Changer le calendrier' : 'Importer définitivement' }}
       </button>
-      
+      <button
+        v-if="auth.user?.role === 'DIRECTOR'"
+        @click="submitAll"
+        :disabled="!canSubmit"
+      >Valider le planning</button>
     </div>
 
     <!-- 4) Affiche l'erreur s'il y en a -->

@@ -93,7 +93,7 @@ export class AuthService {
     const now = new Date();
     if (user.lockUntil && user.lockUntil > now) {
       throw new HttpException(
-        `Compte bloqué momentanément`,
+        `Compte bloqué jusqu'à ${user.lockUntil.toISOString()}`,
         HttpStatus.LOCKED,
       );
     }

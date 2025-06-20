@@ -39,7 +39,7 @@ import {
     }
   
     @SubscribeMessage('sendMessage')
-    @Throttle({ send: { limit: 5, ttl: 10 } })
+    @Throttle({ limit: 5, ttl: 10 })
     async onMessage(
       @ConnectedSocket() s: Socket,
       @MessageBody() { chatId, content }: { chatId: string; content: string },
@@ -55,7 +55,7 @@ import {
     }
   
     @SubscribeMessage('editMessage')
-    @Throttle({ edit: { limit: 5, ttl: 10 } })
+    @Throttle({ limit: 5, ttl: 10 })
     async onEdit(
       @ConnectedSocket() s: Socket,
       @MessageBody() { chatId, msgId, content }: { chatId: string; msgId: string; content: string },
@@ -70,7 +70,7 @@ import {
     }
   
     @SubscribeMessage('deleteMessage')
-    @Throttle({ del: { limit: 5, ttl: 10 } })
+    @Throttle({ limit: 5, ttl: 10 })
     async onDelete(
       @ConnectedSocket() s: Socket,
       @MessageBody() { chatId, msgId }: { chatId: string; msgId: string },

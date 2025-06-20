@@ -8,7 +8,7 @@ import {
   import { PrismaService } from '../prisma/prisma.service';
   import { Chat } from './schemas/chat.schema';
   import { Message } from './schemas/message.schema';
-  import * as sanitizeHtml from 'sanitize-html';
+  import sanitize from 'sanitize-html';
   
   type Contact = { id: string; name: string; role: string };
   
@@ -80,7 +80,7 @@ import {
       if (!(await this.canAccessChat(authorId, chatId))) {
         throw new ForbiddenException('Accès refusé');
       }
-      const clean = sanitizeHtml(content, { allowedTags: [], allowedAttributes: {} }).slice(0, 1000);
+      const clean = sanitize(content, { allowedTags: [], allowedAttributes: {} }).slice(0, 1000);
       const msg = await this.msgModel.create({
         chat: new Types.ObjectId(chatId),
         author: authorId,
@@ -107,7 +107,7 @@ import {
       if (msg.chat.toString() !== chatId) {
         throw new ForbiddenException('Message hors de ce chat');
       }
-      msg.content = sanitizeHtml(content, { allowedTags: [], allowedAttributes: {} }).slice(0, 1000);
+      msg.content = sanitize(content, { allowedTags: [], allowedAttributes: {} }).slice(0, 1000);
       (msg as any).editedAt = new Date();
       await msg.save();
       return msg;

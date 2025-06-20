@@ -8,7 +8,7 @@ import {
   import { PrismaService } from '../prisma/prisma.service';
   import { Chat } from './schemas/chat.schema';
   import { Message } from './schemas/message.schema';
-  import * as sanitizeHtml from 'sanitize-html';
+  import sanitize from 'sanitize-html';
   
   type Contact = { id: string; name: string; role: string };
   
@@ -39,16 +39,7 @@ import {
     }
    
     async createChat(participants: string[], userId: string, role: string) {
-      // Assure que l'appelant est présent
-      if (!participants.includes(userId)) {
-        participants.push(userId);
-      }
-  
-      // Enlève doublons et trie pour uniformiser la clé d'unicité
-      const uniquePart = Array.from(new Set(participants)).sort();
-  
-      // Vérifie les autorisations pour chaque destinataire
-      for (const targetId of uniquePart) {
+      for (const targetId of participants) {
         if (targetId === userId) continue;
         const tgt = await this.prisma.user.findUnique({
           where: { id: targetId },
@@ -58,12 +49,7 @@ import {
           throw new ForbiddenException('Conversation non autorisée');
         }
       }
-  
-      // Empêche les doublons : recherche d'un chat existant avec exactement ces participants
-      const existing = await this.chatModel.findOne({ participants: uniquePart }).exec();
-      if (existing) return existing;
-  
-      return this.chatModel.create({ participants: uniquePart });
+      return this.chatModel.create({ participants });
     }
   
     findAllForUser(userId: string) {
@@ -80,7 +66,7 @@ import {
       if (!(await this.canAccessChat(authorId, chatId))) {
         throw new ForbiddenException('Accès refusé');
       }
-      const clean = sanitizeHtml(content, { allowedTags: [], allowedAttributes: {} }).slice(0, 1000);
+      const clean = sanitize(content, { allowedTags: [], allowedAttributes: {} }).slice(0, 1000);
       const msg = await this.msgModel.create({
         chat: new Types.ObjectId(chatId),
         author: authorId,
@@ -107,7 +93,7 @@ import {
       if (msg.chat.toString() !== chatId) {
         throw new ForbiddenException('Message hors de ce chat');
       }
-      msg.content = sanitizeHtml(content, { allowedTags: [], allowedAttributes: {} }).slice(0, 1000);
+      msg.content = sanitize(content, { allowedTags: [], allowedAttributes: {} }).slice(0, 1000);
       (msg as any).editedAt = new Date();
       await msg.save();
       return msg;

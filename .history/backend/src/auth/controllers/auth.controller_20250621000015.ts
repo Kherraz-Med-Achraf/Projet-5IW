@@ -23,8 +23,6 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { InvitationService } from '../../invitation/invitation.service';
 import { Public } from '../../common/decorators/public.decorator';
-import { CsrfGuard } from '../../common/guards/csrf.guard';
-import { randomToken } from '../../utils/random-token';
 
 @Controller('auth')
 export class AuthController {
@@ -50,7 +48,7 @@ export class AuthController {
 
     // 2. Vérifier que l'e-mail fourni correspond à celui de l'invitation
     if (dto.email !== invitation.email) {
-      throw new BadRequestException("L'adresse e-mail ne correspond pas à l'invitation.");
+      throw new BadRequestException('L'adresse e-mail ne correspond pas à l'invitation.');
     }
 
     // 3. Créer l'utilisateur avec le rôle défini par invitation.roleToAssign
@@ -72,24 +70,14 @@ export class AuthController {
     const { access_token, refresh_token, user } =
       await this.authService.login(dto.email, dto.password, dto.otpCode);
 
-    const prod = process.env.NODE_ENV === 'production';
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
-      secure: prod,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 2 * 24 * 60 * 60 * 1000,
     });
 
-    // Génère un token CSRF aléatoire et le place dans un cookie accessible au front
-    const csrf = randomToken(16);
-    res.cookie('csrf_token', csrf, {
-      httpOnly: false,
-      secure: prod,
-      sameSite: 'strict',
-      maxAge: 2 * 24 * 60 * 60 * 1000,
-    });
-
-    return { access_token, user, csrf_token: csrf };
+    return { access_token, user };
   }
 
   /* ──────────────── 2FA (initiate / verify) ──────────────── */
@@ -108,40 +96,28 @@ export class AuthController {
     const { access_token, refresh_token, user } =
       await this.authService.verifyOtp(body.tempToken, body.otpCode);
 
-    const prod = process.env.NODE_ENV === 'production';
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
-      secure: prod,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 2 * 24 * 60 * 60 * 1000,
     });
 
-    const csrf = randomToken(16);
-    res.cookie('csrf_token', csrf, {
-      httpOnly: false,
-      secure: prod,
-      sameSite: 'strict',
-      maxAge: 2 * 24 * 60 * 60 * 1000,
-    });
-
-    return { access_token, user, csrf_token: csrf };
+    return { access_token, user };
   }
 
   /* ──────────────── LOGOUT / REFRESH ──────────────── */
   /*
    * Aucun access-token requis : l'authentification passe uniquement par le cookie refresh
    */
-  @UseGuards(CsrfGuard)
   @Post('logout')
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const token = req.cookies['refresh_token'];
     await this.authService.logout(token);
     res.clearCookie('refresh_token', { sameSite: 'strict', secure: true });
-    res.clearCookie('csrf_token', { sameSite: 'strict', secure: true });
     return { message: 'Logout successful' };
   }
 
-  @UseGuards(CsrfGuard)
   @Post('refresh')
   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const token = req.cookies['refresh_token'];
@@ -150,23 +126,13 @@ export class AuthController {
     const { access_token, refresh_token } =
       await this.authService.refreshToken(token);
 
-    const prod = process.env.NODE_ENV === 'production';
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
-      secure: prod,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 2 * 24 * 60 * 60 * 1000,
     });
-
-    const csrf = randomToken(16);
-    res.cookie('csrf_token', csrf, {
-      httpOnly: false,
-      secure: prod,
-      sameSite: 'strict',
-      maxAge: 2 * 24 * 60 * 60 * 1000,
-    });
-
-    return { access_token, csrf_token: csrf };
+    return { access_token };
   }
 
   /* ──────────────── MOT DE PASSE OUBLIÉ / RESET ──────────────── */

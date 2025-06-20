@@ -587,7 +587,7 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await this.prisma.user.update({
       where: { id: passwordReset.userId },
-      data: { password: hashedPassword, passwordChangedAt: new Date(), refreshToken: null },
+      data: { password: hashedPassword, passwordChangedAt: new Date() },
     });
     await this.prisma.passwordReset.delete({ where: { id: prid } });
 

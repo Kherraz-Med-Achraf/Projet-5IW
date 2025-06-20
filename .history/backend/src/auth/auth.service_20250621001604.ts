@@ -376,22 +376,6 @@ export class AuthService {
         });
         throw new HttpException('Refresh token révoqué', HttpStatus.UNAUTHORIZED);
       }
-
-      // Invalide si le mot de passe a été changé APRÈS l'émission du refresh-token
-      if (
-        user.passwordChangedAt &&
-        payload.iat * 1000 < new Date(user.passwordChangedAt).getTime()
-      ) {
-        await this.prisma.user.update({
-          where: { id: user.id },
-          data: { refreshToken: null },
-        });
-        throw new HttpException(
-          'Refresh token périmé (mot de passe modifié)',
-          HttpStatus.UNAUTHORIZED,
-        );
-      }
-
       const tokens = this.generateTokens(user.id, user.email, user.role);
       await this.storeHashedRefreshToken(user.id, tokens.refresh_token);
       return tokens;
@@ -587,7 +571,7 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await this.prisma.user.update({
       where: { id: passwordReset.userId },
-      data: { password: hashedPassword, passwordChangedAt: new Date(), refreshToken: null },
+      data: { password: hashedPassword, passwordChangedAt: new Date() },
     });
     await this.prisma.passwordReset.delete({ where: { id: prid } });
 
@@ -615,7 +599,6 @@ export class AuthService {
         failedLoginAttempts: 0,
         lockUntil: null,
         forcePasswordReset: false,
-        refreshToken: null,
       },
     });
 

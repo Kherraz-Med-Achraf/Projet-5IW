@@ -83,7 +83,7 @@ import { ChatModule } from './chat/chat.module';
     ChatModule,
 
     // Global rate-limiting : 10 requêtes / minute par IP
-    ThrottlerModule.forRoot([{ ttl: 60, limit: 10 }]),
+    ThrottlerModule.forRoot({ ttl: 60, limit: 10 }),
   ],
   controllers: [AppController],
   providers: [

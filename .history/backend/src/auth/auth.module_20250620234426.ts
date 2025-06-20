@@ -15,7 +15,6 @@ import { ChildModule } from '../child/child.module';
 
 // ← IMPORTER le module Invitation ici
 import { InvitationModule } from '../invitation/invitation.module';
-import { CsrfGuard } from '../common/guards/csrf.guard';
 
 @Module({
   imports: [
@@ -37,7 +36,6 @@ import { CsrfGuard } from '../common/guards/csrf.guard';
     AuthService,
     PrismaService,
     JwtStrategy,
-    CsrfGuard,
   ],
   controllers: [
     AuthController,

@@ -210,7 +210,8 @@ export class EventService {
       throw new BadRequestException('Le mode de paiement gratuit n\'est pas autorisé pour cet événement');
     }
 
-    // Les méthodes et statuts de paiement seront recalculés à l'intérieur de la transaction
+    const payMethodBaseline = ev.priceCt === 0 ? PaymentMethod.FREE : dto.paymentMethod;
+    const payStatusBaseline: PaymentStatus = ev.priceCt === 0 ? PaymentStatus.FREE : (payMethodBaseline === PaymentMethod.CHEQUE ? PaymentStatus.PENDING : PaymentStatus.PENDING);
 
     // Transaction atomique avec re-vérification de capacité et verrouillage pessimiste
     const result = await this.prisma.$transaction(async tx => {

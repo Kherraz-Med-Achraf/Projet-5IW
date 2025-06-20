@@ -190,6 +190,7 @@ export class AuthService {
     }
 
     /* OTP activé → on renvoie un token temporaire */
+    const otpPlain = decryptOtp(user.otpSecret);
     const temp = this.jwtService.sign(
       { sub: user.id, email: user.email },
       { secret: ACCESS_TOKEN_SECRET, expiresIn: '5m' },
@@ -212,7 +213,7 @@ export class AuthService {
     }
 
     if (user.otpSecret) {
-      const otpPlain = decryptOtp(user.otpSecret!);
+      const otpPlain = decryptOtp(user.otpSecret);
       if (!otpCode) {
         // renvoyer tempToken si pas de code OTP fourni
         const temp = this.jwtService.sign(
@@ -240,7 +241,7 @@ export class AuthService {
     return {
       access_token:  tokens.access_token,
       refresh_token: tokens.refresh_token,
-      user: { id: user.id, email: user.email, role: user.role },
+      user: { id: user.id, email: user.email, role: user.role, otpSecret: user.otpSecret },
     };
   }
 
@@ -255,7 +256,7 @@ export class AuthService {
       }
       await this.checkLockAndExpiration(user);
 
-      const otpPlain = decryptOtp(user.otpSecret!);
+      const otpPlain = decryptOtp(user.otpSecret);
       const isOtpValid = speakeasy.totp.verify({
         secret: otpPlain,
         encoding: 'base32',
@@ -271,7 +272,7 @@ export class AuthService {
       return {
         access_token:  tokens.access_token,
         refresh_token: tokens.refresh_token,
-        user: { id: user.id, email: user.email, role: user.role },
+        user: { id: user.id, email: user.email, role: user.role, otpSecret: user.otpSecret },
       };
     } catch {
       throw new HttpException(
@@ -319,24 +320,23 @@ export class AuthService {
         data: { emailVerified: true },
       });
 
+      const defaultPwd = process.env.CHILD_DEFAULT_PASSWORD || 'child1234';
       for (const cp of profile.children) {
         const existing = await tx.user.findFirst({
           where: { childProfile: { id: cp.id } },
         });
         if (existing) continue;
 
-        // Génération d'un login unique sous la forme « fbarbe@kids.local »
         const base = `${cp.firstName[0].toLowerCase()}${cp.lastName.toLowerCase()}`;
         let login = base;
         let suffix = 1;
-        while (await tx.user.findUnique({ where: { email: `${login}@kids.local` } })) {
+        while (
+          await tx.user.findUnique({ where: { email: `${login}@kids.local` } })
+        ) {
           login = `${base}_${suffix++}`;
         }
 
-        // Mot de passe aléatoire 16 caractères hex (>=12)
-        const plainPwd = crypto.randomBytes(8).toString('hex');
-        const hashed = await bcrypt.hash(plainPwd, 10);
-
+        const hashed = await bcrypt.hash(defaultPwd, 10);
         await tx.user.create({
           data: {
             email: `${login}@kids.local`,
@@ -347,11 +347,10 @@ export class AuthService {
           },
         });
 
-        // Envoi des identifiants au parent
         await this.mailService.sendChildCredentials(parent.email, {
           childName: `${cp.firstName} ${cp.lastName}`,
           login,
-          password: plainPwd,
+          password: defaultPwd,
         });
       }
 
@@ -376,22 +375,6 @@ export class AuthService {
         });
         throw new HttpException('Refresh token révoqué', HttpStatus.UNAUTHORIZED);
       }
-
-      // Invalide si le mot de passe a été changé APRÈS l'émission du refresh-token
-      if (
-        user.passwordChangedAt &&
-        payload.iat * 1000 < new Date(user.passwordChangedAt).getTime()
-      ) {
-        await this.prisma.user.update({
-          where: { id: user.id },
-          data: { refreshToken: null },
-        });
-        throw new HttpException(
-          'Refresh token périmé (mot de passe modifié)',
-          HttpStatus.UNAUTHORIZED,
-        );
-      }
-
       const tokens = this.generateTokens(user.id, user.email, user.role);
       await this.storeHashedRefreshToken(user.id, tokens.refresh_token);
       return tokens;
@@ -587,7 +570,7 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await this.prisma.user.update({
       where: { id: passwordReset.userId },
-      data: { password: hashedPassword, passwordChangedAt: new Date(), refreshToken: null },
+      data: { password: hashedPassword },
     });
     await this.prisma.passwordReset.delete({ where: { id: prid } });
 
@@ -615,7 +598,6 @@ export class AuthService {
         failedLoginAttempts: 0,
         lockUntil: null,
         forcePasswordReset: false,
-        refreshToken: null,
       },
     });
 

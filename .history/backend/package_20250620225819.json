@@ -66,8 +66,7 @@
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.21",
     "xlsx": "^0.18.5",
-    "stripe": "^14.24.0",
-    "file-type": "16.5.4"
+    "stripe": "^14.24.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

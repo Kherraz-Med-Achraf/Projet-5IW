@@ -210,7 +210,13 @@ export class EventService {
       throw new BadRequestException('Le mode de paiement gratuit n\'est pas autorisé pour cet événement');
     }
 
-    // Les méthodes et statuts de paiement seront recalculés à l'intérieur de la transaction
+    const amountCt = ev.priceCt * dto.childIds.length;
+    if (ev.priceCt > 0 && amountCt === 0) {
+      throw new BadRequestException('Montant invalide');
+    }
+
+    const payMethod = ev.priceCt === 0 ? PaymentMethod.FREE : dto.paymentMethod;
+    const payStatus: PaymentStatus = ev.priceCt === 0 ? PaymentStatus.FREE : (payMethod === PaymentMethod.CHEQUE ? PaymentStatus.PENDING : PaymentStatus.PENDING);
 
     // Transaction atomique avec re-vérification de capacité et verrouillage pessimiste
     const result = await this.prisma.$transaction(async tx => {
@@ -228,14 +234,12 @@ export class EventService {
         }
       }
 
-      const amountCt = evNow.priceCt * dto.childIds.length;
-
       const reg = await tx.eventRegistration.create({
         data: {
           eventId,
           parentProfileId,
-          paymentMethod: (evNow.priceCt === 0 ? PaymentMethod.FREE : dto.paymentMethod) as any,
-          paymentStatus: (evNow.priceCt === 0 ? PaymentStatus.FREE : (dto.paymentMethod === PaymentMethod.CHEQUE ? PaymentStatus.PENDING : PaymentStatus.PENDING)) as any,
+          paymentMethod: payMethod as any,
+          paymentStatus: payStatus as any,
           amountCt,
         },
       });
@@ -256,7 +260,7 @@ export class EventService {
     });
 
     // email immédiat (gratuit ou chèque)
-    if (result.paymentMethod !== PaymentMethod.STRIPE) {
+    if (payMethod !== PaymentMethod.STRIPE) {
       await this._sendRegistrationMail(result.id);
       return { registrationId: result.id, stripeUrl: null };
     }

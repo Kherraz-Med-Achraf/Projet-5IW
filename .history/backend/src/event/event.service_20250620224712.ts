@@ -100,11 +100,6 @@ export class EventService {
       throw new ForbiddenException();
     }
 
-    // Validation prix positif même côté service (double barrière)
-    if (dto.price !== undefined && dto.price < 0) {
-      throw new BadRequestException('Le prix doit être positif');
-    }
-
     return this.prisma.event.update({
       where: { id },
       data: {
@@ -124,7 +119,7 @@ export class EventService {
   async remove(id: string) {
     const regs = await this.prisma.eventRegistration.findMany({ where: { eventId: id }, include: { parentProfile: true, event: true } });
 
-    const refundFailures: string[] = [];
+    // rembourse Stripe si besoin
     for (const r of regs) {
       if (r.paymentMethod === PaymentMethod.STRIPE && r.paymentStatus === PaymentStatus.PAID && r.stripeSessionId) {
         try {
@@ -134,14 +129,8 @@ export class EventService {
           }
         } catch (e) {
           console.error('[Event remove] refund error', e);
-          refundFailures.push(r.id);
         }
       }
-    }
-
-    if (refundFailures.length > 0) {
-      // On ne supprime pas l'événement pour laisser une possibilité de remboursement manuel
-      throw new BadRequestException('Un ou plusieurs remboursements ont échoué, action annulée');
     }
 
     // supprime en cascade enfants -> regs -> event
@@ -186,56 +175,34 @@ export class EventService {
       throw new BadRequestException('Événement passé');
     }
 
+    // capacité
+    if (ev.capacity) {
+      const countChildren = await this.prisma.eventRegistrationChild.count({
+        where: { registration: { eventId } },
+      });
+      if (countChildren + dto.childIds.length > ev.capacity) {
+        throw new BadRequestException('Capacité maximale atteinte');
+      }
+    }
+
     // Vérifie doublon même parent
     const existing = await this.prisma.eventRegistration.findUnique({
       where: { eventId_parentProfileId: { eventId, parentProfileId } },
     });
     if (existing) throw new BadRequestException('Vous êtes déjà inscrit');
 
-    // Validation enfants : au moins un enfant et ils doivent appartenir au parent connecté
-    if (dto.childIds.length === 0) {
-      throw new BadRequestException('Au moins un enfant doit être inscrit');
-    }
+    const amountCt = ev.priceCt * dto.childIds.length;
+    const payMethod = ev.priceCt === 0 ? PaymentMethod.FREE : dto.paymentMethod;
+    const payStatus: PaymentStatus = ev.priceCt === 0 ? PaymentStatus.FREE : (payMethod === 'CHEQUE' ? PaymentStatus.PENDING : PaymentStatus.PENDING);
 
-    const ownedChildren = await this.prisma.child.findMany({
-      where: { parentProfileId, id: { in: dto.childIds } },
-      select: { id: true },
-    });
-    if (ownedChildren.length !== dto.childIds.length) {
-      throw new ForbiddenException('Un ou plusieurs enfants ne vous appartiennent pas');
-    }
-
-    // Empêche le mode FREE sur un événement payant
-    if (ev.priceCt > 0 && dto.paymentMethod === PaymentMethod.FREE) {
-      throw new BadRequestException('Le mode de paiement gratuit n\'est pas autorisé pour cet événement');
-    }
-
-    // Les méthodes et statuts de paiement seront recalculés à l'intérieur de la transaction
-
-    // Transaction atomique avec re-vérification de capacité et verrouillage pessimiste
+    // Transaction : création registration + enfants
     const result = await this.prisma.$transaction(async tx => {
-      // Re-charge l'événement à l'intérieur de la transaction pour éviter les races
-      const evNow = await tx.event.findUnique({ where: { id: eventId } });
-      if (!evNow) throw new NotFoundException('Événement introuvable');
-      if (evNow.isLocked) throw new BadRequestException('Événement complet');
-
-      if (evNow.capacity) {
-        const count = await tx.eventRegistrationChild.count({
-          where: { registration: { eventId } },
-        });
-        if (count + dto.childIds.length > evNow.capacity) {
-          throw new BadRequestException('Capacité maximale atteinte');
-        }
-      }
-
-      const amountCt = evNow.priceCt * dto.childIds.length;
-
       const reg = await tx.eventRegistration.create({
         data: {
           eventId,
           parentProfileId,
-          paymentMethod: (evNow.priceCt === 0 ? PaymentMethod.FREE : dto.paymentMethod) as any,
-          paymentStatus: (evNow.priceCt === 0 ? PaymentStatus.FREE : (dto.paymentMethod === PaymentMethod.CHEQUE ? PaymentStatus.PENDING : PaymentStatus.PENDING)) as any,
+          paymentMethod: payMethod as any,
+          paymentStatus: payStatus as any,
           amountCt,
         },
       });
@@ -244,19 +211,14 @@ export class EventService {
         data: dto.childIds.map(id => ({ registrationId: reg.id, childId: id })),
       });
 
-      // Verrouille l'événement uniquement si plein après inscription
-      if (evNow.capacity) {
-        const finalCount = await tx.eventRegistrationChild.count({ where: { registration: { eventId } } });
-        if (finalCount >= evNow.capacity) {
-          await tx.event.update({ where: { id: eventId }, data: { isLocked: true } });
-        }
-      }
+      // lock event
+      await tx.event.update({ where: { id: eventId }, data: { isLocked: true } });
 
       return reg;
     });
 
     // email immédiat (gratuit ou chèque)
-    if (result.paymentMethod !== PaymentMethod.STRIPE) {
+    if (payMethod !== PaymentMethod.STRIPE) {
       await this._sendRegistrationMail(result.id);
       return { registrationId: result.id, stripeUrl: null };
     }
@@ -338,15 +300,11 @@ export class EventService {
       }
     }
 
-    try {
-      // suppression des enfants puis de la registration
-      await this.prisma.$transaction(async tx => {
-        await tx.eventRegistrationChild.deleteMany({ where: { registrationId } });
-        await tx.eventRegistration.delete({ where: { id: registrationId } });
-      });
-    } catch (e) {
-      console.error('[cancel registration] delete error', e);
-    }
+    // suppression des enfants puis de la registration
+    await this.prisma.$transaction(async tx => {
+      await tx.eventRegistrationChild.deleteMany({ where: { registrationId } });
+      await tx.eventRegistration.delete({ where: { id: registrationId } });
+    });
 
     return { canceled: true };
   }

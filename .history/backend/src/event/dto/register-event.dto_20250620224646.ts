@@ -1,4 +1,4 @@
-import { IsArray, IsEnum, IsInt, ArrayMinSize } from 'class-validator';
+import { IsArray, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, Min, ArrayMinSize } from 'class-validator';
 import { PaymentMethod } from '@prisma/client';
 
 export class RegisterEventDto {

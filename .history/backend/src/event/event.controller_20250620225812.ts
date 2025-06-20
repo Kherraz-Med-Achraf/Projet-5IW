@@ -7,7 +7,6 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { RegisterEventDto } from './dto/register-event.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
-import { fromBuffer as fileTypeFromBuffer } from 'file-type';
 
 @Controller('events')
 export class EventController {
@@ -75,8 +74,7 @@ export class EventController {
     @Body() dto: RegisterEventDto,
     @Req() req: any,
   ) {
-    // Utilise uniquement l'origin approuvée côté configuration afin d'éviter les redirections ouvertes
-    const origin = process.env.FRONT_URL || 'http://localhost:5173';
+    const origin = req.headers.origin || process.env.FRONT_URL || 'http://localhost:5173';
     return this.svc.register(id, req.user.id, dto, origin);
   }
 
@@ -115,12 +113,13 @@ export class EventController {
     const fs = require('fs/promises');
     const dir = require('path').join(process.cwd(), 'uploads', 'events');
     await fs.mkdir(dir, { recursive: true });
-    // Validation MIME robuste via file-type : accepte uniquement JPEG / PNG
-    const detected = await fileTypeFromBuffer(file.buffer);
-    if (!detected || (detected.mime !== 'image/jpeg' && detected.mime !== 'image/png')) {
+    // Validation MIME via magic bytes (JPEG/PNG uniquement)
+    const isJpeg = file.buffer[0] === 0xff && file.buffer[1] === 0xd8;
+    const isPng = file.buffer[0] === 0x89 && file.buffer[1] === 0x50 && file.buffer[2] === 0x4e && file.buffer[3] === 0x47;
+    if (!isJpeg && !isPng) {
       throw new BadRequestException('Format d\'image non supporté');
     }
-    const ext = detected.ext;
+    const ext = isJpeg ? 'jpg' : 'png';
     const filename = `${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`;
     const full = path.join(dir, filename);
     await fs.writeFile(full, file.buffer);

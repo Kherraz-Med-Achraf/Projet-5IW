@@ -53,25 +53,13 @@ async function bootstrap() {
     }),
   );
 
-  // Rate limiter spécifique sur la route /auth/refresh (5 requêtes / min)
-  app.use(
-    '/auth/refresh',
-    rateLimit({
-      windowMs: 60_000,
-      max: 5,
-      message: 'Trop de requêtes sur /auth/refresh, merci de réessayer dans 1 minute.',
-    }),
-  );
-
   /**
-   * N'exporte publiquement que les images d'événements placées dans
-   * « uploads/events ». Les autres sous-dossiers (justificatifs, documents
-   * médicaux, etc.) restent privés et devront être servis via des routes
-   * protégées.
+   * Sert le dossier "uploads" situé à la racine du projet (process.cwd())
+   * Accessible ensuite via les URLs préfixées "/uploads/"
    */
-  const publicEventsFolder = join(process.cwd(), 'uploads', 'events');
-  app.useStaticAssets(publicEventsFolder, {
-    prefix: '/uploads/events/',
+  const uploadsFolder = join(process.cwd(), 'uploads');
+  app.useStaticAssets(uploadsFolder, {
+    prefix: '/uploads/',
   });
 
   await app.listen(process.env.PORT ?? 3000);

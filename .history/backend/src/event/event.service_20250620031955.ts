@@ -117,7 +117,7 @@ export class EventService {
 
   /** Suppression */
   async remove(id: string) {
-    const regs = await this.prisma.eventRegistration.findMany({ where: { eventId: id }, include: { parentProfile: true, event: true } });
+    const regs = await this.prisma.eventRegistration.findMany({ where: { eventId: id } });
 
     // rembourse Stripe si besoin
     for (const r of regs) {

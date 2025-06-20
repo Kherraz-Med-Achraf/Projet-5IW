@@ -89,7 +89,7 @@ import {
         .filter(ec => ec.entry.semesterId === semesterId)
         .map(ec => this.mapToDto(ec.entry));
 
-      // Ajout des événements uniques du samedi (inscription parent payée)
+      // Ajoute les événements spéciaux (samedi) si inscription payée
       const sem = await this.prisma.semester.findUnique({ where: { id: semesterId } });
       if (sem) {
         const regs = await this.prisma.eventRegistrationChild.findMany({
@@ -108,17 +108,15 @@ import {
 
         regs.forEach(rc => {
           const ev = rc.registration.event;
-          const start = this._toIsoLocal(ev.startTime);
-          const end   = this._toIsoLocal(ev.endTime);
-          const dateStr = ev.date.toISOString().substring(0,10);
-
+          const date = new Date(ev.date);
+          const dow = ((date.getDay() || 7)); // 1-7
           base.push({
             id: `evt-${rc.registrationId}`,
             staffId: '',
             semesterId,
-            dayOfWeek: ((ev.date.getDay() || 7)),
-            startTime: `${dateStr}T${start.substring(11)}`,
-            endTime:   `${dateStr}T${end.substring(11)}`,
+            dayOfWeek: dow,
+            startTime: this._toIsoLocal(ev.startTime),
+            endTime: this._toIsoLocal(ev.endTime),
             activity: ev.title,
             children: [{ id: rc.child.id, firstName: rc.child.firstName, lastName: rc.child.lastName }],
           });

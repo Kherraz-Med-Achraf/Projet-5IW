@@ -190,6 +190,7 @@ export class AuthService {
     }
 
     /* OTP activé → on renvoie un token temporaire */
+    const otpPlain = decryptOtp(user.otpSecret!);
     const temp = this.jwtService.sign(
       { sub: user.id, email: user.email },
       { secret: ACCESS_TOKEN_SECRET, expiresIn: '5m' },

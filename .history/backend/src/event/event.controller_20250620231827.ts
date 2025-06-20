@@ -7,7 +7,6 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { RegisterEventDto } from './dto/register-event.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
-import { fromBuffer as fileTypeFromBuffer } from 'file-type';
 
 @Controller('events')
 export class EventController {
@@ -115,6 +114,8 @@ export class EventController {
     const fs = require('fs/promises');
     const dir = require('path').join(process.cwd(), 'uploads', 'events');
     await fs.mkdir(dir, { recursive: true });
+    // Import dynamique car file-type est un module ESM
+    const { fileTypeFromBuffer } = await import('file-type');
     // Validation MIME robuste via file-type : accepte uniquement JPEG / PNG
     const detected = await fileTypeFromBuffer(file.buffer);
     if (!detected || (detected.mime !== 'image/jpeg' && detected.mime !== 'image/png')) {

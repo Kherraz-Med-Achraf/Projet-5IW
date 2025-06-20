@@ -53,16 +53,6 @@ async function bootstrap() {
     }),
   );
 
-  // Rate limiter spécifique sur la route /auth/refresh (5 requêtes / min)
-  app.use(
-    '/auth/refresh',
-    rateLimit({
-      windowMs: 60_000,
-      max: 5,
-      message: 'Trop de requêtes sur /auth/refresh, merci de réessayer dans 1 minute.',
-    }),
-  );
-
   /**
    * N'exporte publiquement que les images d'événements placées dans
    * « uploads/events ». Les autres sous-dossiers (justificatifs, documents

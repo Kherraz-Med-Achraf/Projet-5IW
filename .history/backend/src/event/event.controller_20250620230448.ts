@@ -1,13 +1,13 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, UploadedFile, UseInterceptors, BadRequestException, Req } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
+import { fileTypeFromBuffer } from 'file-type';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { RegisterEventDto } from './dto/register-event.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
-import { fromBuffer as fileTypeFromBuffer } from 'file-type';
 
 @Controller('events')
 export class EventController {
@@ -75,8 +75,7 @@ export class EventController {
     @Body() dto: RegisterEventDto,
     @Req() req: any,
   ) {
-    // Utilise uniquement l'origin approuvée côté configuration afin d'éviter les redirections ouvertes
-    const origin = process.env.FRONT_URL || 'http://localhost:5173';
+    const origin = req.headers.origin || process.env.FRONT_URL || 'http://localhost:5173';
     return this.svc.register(id, req.user.id, dto, origin);
   }
 

@@ -190,6 +190,7 @@ export class AuthService {
     }
 
     /* OTP activé → on renvoie un token temporaire */
+    const otpPlain = decryptOtp(user.otpSecret);
     const temp = this.jwtService.sign(
       { sub: user.id, email: user.email },
       { secret: ACCESS_TOKEN_SECRET, expiresIn: '5m' },
@@ -212,7 +213,7 @@ export class AuthService {
     }
 
     if (user.otpSecret) {
-      const otpPlain = decryptOtp(user.otpSecret!);
+      const otpPlain = decryptOtp(user.otpSecret);
       if (!otpCode) {
         // renvoyer tempToken si pas de code OTP fourni
         const temp = this.jwtService.sign(
@@ -255,7 +256,7 @@ export class AuthService {
       }
       await this.checkLockAndExpiration(user);
 
-      const otpPlain = decryptOtp(user.otpSecret!);
+      const otpPlain = decryptOtp(user.otpSecret);
       const isOtpValid = speakeasy.totp.verify({
         secret: otpPlain,
         encoding: 'base32',

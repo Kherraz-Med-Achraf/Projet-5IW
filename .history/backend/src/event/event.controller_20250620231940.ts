@@ -7,7 +7,7 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { RegisterEventDto } from './dto/register-event.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
-import { fromBuffer as fileTypeFromBuffer } from 'file-type';
+import { fileTypeFromBuffer } from 'file-type';
 
 @Controller('events')
 export class EventController {

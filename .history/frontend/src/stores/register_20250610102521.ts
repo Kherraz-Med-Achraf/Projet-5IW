@@ -83,16 +83,14 @@ export const useRegisterStore = defineStore("register", () => {
       form.address.country.trim() &&
       form.legalResponsibility.trim();
 
-    // Contacts d'urgence facultatifs : s'ils existent, au moins un doit être complet
-    const emergencyContactValid =
-      form.emergencyContacts.length === 0 ||
-      form.emergencyContacts.some(
-        (contact: any) =>
-          contact.firstName?.trim() &&
-          contact.lastName?.trim() &&
-          contact.phone?.trim() &&
-          contact.relation?.trim()
-      );
+    // Au moins un contact d'urgence complet
+    const emergencyContactValid = form.emergencyContacts.some(
+      (contact: any) =>
+        contact.firstName?.trim() &&
+        contact.lastName?.trim() &&
+        contact.phone?.trim() &&
+        contact.relation?.trim()
+    );
 
     return parentValid && emergencyContactValid;
   };

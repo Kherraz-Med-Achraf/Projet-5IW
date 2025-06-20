@@ -119,7 +119,7 @@ import {
             dayOfWeek: ((ev.date.getDay() || 7)),
             startTime: `${dateStr}T${start.substring(11)}`,
             endTime:   `${dateStr}T${end.substring(11)}`,
-            activity: this._sanitize(ev.title),
+            activity: ev.title,
             children: [{ id: rc.child.id, firstName: rc.child.firstName, lastName: rc.child.lastName }],
           });
         });
@@ -185,7 +185,7 @@ import {
         dayOfWeek: e.dayOfWeek,
         startTime: e.startTime.toISOString(),
         endTime: e.endTime.toISOString(),
-        activity: this._sanitize(e.activity),
+        activity: e.activity,
         children: e.entryChildren.map((ec: any) => ({
           id: ec.child.id,
           firstName: ec.child.firstName,

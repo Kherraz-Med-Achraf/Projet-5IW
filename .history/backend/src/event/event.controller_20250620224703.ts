@@ -113,14 +113,14 @@ export class EventController {
     const fs = require('fs/promises');
     const dir = require('path').join(process.cwd(), 'uploads', 'events');
     await fs.mkdir(dir, { recursive: true });
-    // Validation MIME via magic bytes (JPEG/PNG uniquement)
-    const isJpeg = file.buffer[0] === 0xff && file.buffer[1] === 0xd8;
-    const isPng = file.buffer[0] === 0x89 && file.buffer[1] === 0x50 && file.buffer[2] === 0x4e && file.buffer[3] === 0x47;
-    if (!isJpeg && !isPng) {
+    // Validation MIME réelle (magic bytes)
+    const FileType = require('file-type');
+    const type = await FileType.fromBuffer(file.buffer);
+    if (!type || !['image/jpeg', 'image/png'].includes(type.mime)) {
       throw new BadRequestException('Format d\'image non supporté');
     }
-    const ext = isJpeg ? 'jpg' : 'png';
-    const filename = `${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`;
+    const ext = type.ext === 'jpeg' ? '.jpg' : `.${type.ext}`;
+    const filename = `${Date.now()}-${Math.random().toString(36).substring(2)}${ext}`;
     const full = path.join(dir, filename);
     await fs.writeFile(full, file.buffer);
     return `/uploads/events/${filename}`; // chemin statique

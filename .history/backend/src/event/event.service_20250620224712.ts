@@ -175,42 +175,28 @@ export class EventService {
       throw new BadRequestException('Événement passé');
     }
 
+    // capacité
+    if (ev.capacity) {
+      const countChildren = await this.prisma.eventRegistrationChild.count({
+        where: { registration: { eventId } },
+      });
+      if (countChildren + dto.childIds.length > ev.capacity) {
+        throw new BadRequestException('Capacité maximale atteinte');
+      }
+    }
+
     // Vérifie doublon même parent
     const existing = await this.prisma.eventRegistration.findUnique({
       where: { eventId_parentProfileId: { eventId, parentProfileId } },
     });
     if (existing) throw new BadRequestException('Vous êtes déjà inscrit');
 
-    // Validation paiement : au moins un enfant requis (déjà validé par DTO)
-    if (dto.childIds.length === 0) {
-      throw new BadRequestException('Au moins un enfant doit être inscrit');
-    }
-
-    // Empêche le mode FREE sur un événement payant
-    if (ev.priceCt > 0 && dto.paymentMethod === PaymentMethod.FREE) {
-      throw new BadRequestException('Le mode de paiement gratuit n\'est pas autorisé pour cet événement');
-    }
-
     const amountCt = ev.priceCt * dto.childIds.length;
-    if (ev.priceCt > 0 && amountCt === 0) {
-      throw new BadRequestException('Montant invalide');
-    }
-
     const payMethod = ev.priceCt === 0 ? PaymentMethod.FREE : dto.paymentMethod;
-    const payStatus: PaymentStatus = ev.priceCt === 0 ? PaymentStatus.FREE : (payMethod === PaymentMethod.CHEQUE ? PaymentStatus.PENDING : PaymentStatus.PENDING);
+    const payStatus: PaymentStatus = ev.priceCt === 0 ? PaymentStatus.FREE : (payMethod === 'CHEQUE' ? PaymentStatus.PENDING : PaymentStatus.PENDING);
 
-    // Transaction atomique avec re-vérification de capacité et verrouillage pessimiste
+    // Transaction : création registration + enfants
     const result = await this.prisma.$transaction(async tx => {
-      // Recompte sous transaction pour éviter les races
-      if (ev.capacity) {
-        const count = await tx.eventRegistrationChild.count({
-          where: { registration: { eventId } },
-        });
-        if (count + dto.childIds.length > ev.capacity) {
-          throw new BadRequestException('Capacité maximale atteinte');
-        }
-      }
-
       const reg = await tx.eventRegistration.create({
         data: {
           eventId,
@@ -225,7 +211,7 @@ export class EventService {
         data: dto.childIds.map(id => ({ registrationId: reg.id, childId: id })),
       });
 
-      // lock event une fois pleine
+      // lock event
       await tx.event.update({ where: { id: eventId }, data: { isLocked: true } });
 
       return reg;

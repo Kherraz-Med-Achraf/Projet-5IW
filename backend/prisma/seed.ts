@@ -78,6 +78,8 @@ async function main() {
       },
     });
     console.log('✅ Director créé →', usr.email);
+  } else {
+    console.log('ℹ️  Director déjà présent, pas recréé');
   }
 
   /* ---------------------------------------------------------------------- */
@@ -105,6 +107,8 @@ async function main() {
         },
       });
       console.log('✅ Service-manager créé →', usr.email);
+    } else {
+      console.log('ℹ️  Service-manager déjà présent →', mail);
     }
   }
 
@@ -132,6 +136,8 @@ async function main() {
       },
     });
     console.log('✅ Secretary créé →', usr.email);
+  } else {
+    console.log('ℹ️  Secretary déjà présent, pas recréé');
   }
 
   /* ---------------------------------------------------------------------- */
@@ -147,77 +153,101 @@ async function main() {
   ];
 
   for (const { qty, discipline } of staffSpecs) {
-    for (let i = 0; i < qty; i++) {
-      const first = faker.person.firstName();
-      const last = faker.person.lastName();
-      const email = await uniqueStaffEmail(first, last);
+    // Vérifier combien de staff de cette discipline existent déjà
+    const existingStaffCount = await prisma.user.count({
+      where: {
+        role: Role.STAFF,
+        staffProfile: { discipline }
+      }
+    });
+    
+    const staffToCreate = Math.max(0, qty - existingStaffCount);
+    
+    if (staffToCreate > 0) {
+      for (let i = 0; i < staffToCreate; i++) {
+        const first = faker.person.firstName();
+        const last = faker.person.lastName();
+        const email = await uniqueStaffEmail(first, last);
 
-      await prisma.user.create({
-        data: {
-          email,
-          password: await hash(DEFAULT_PWD),
-          role: Role.STAFF,
-          emailVerified: true,
-          staffProfile: {
-            create: {
-              firstName: first,
-              lastName: last,
-              phone: '06' + faker.string.numeric(8),
-              birthDate: faker.date.birthdate({ min: 25, max: 55, mode: 'age' }),
-              discipline,
-              specialty: discipline === Discipline.EDUCATOR ? 'Général' : undefined,
+        await prisma.user.create({
+          data: {
+            email,
+            password: await hash(DEFAULT_PWD),
+            role: Role.STAFF,
+            emailVerified: true,
+            staffProfile: {
+              create: {
+                firstName: first,
+                lastName: last,
+                phone: '06' + faker.string.numeric(8),
+                birthDate: faker.date.birthdate({ min: 25, max: 55, mode: 'age' }),
+                discipline,
+                specialty: discipline === Discipline.EDUCATOR ? 'Général' : undefined,
+              },
             },
           },
-        },
-      });
+        });
+      }
+      console.log(`✅ ${staffToCreate} nouveaux staff ${discipline} créés (total: ${existingStaffCount + staffToCreate})`);
+    } else {
+      console.log(`ℹ️  ${existingStaffCount} staff ${discipline} déjà présents`);
     }
-    console.log(`✅ ${qty} staff ${discipline} créés`);
   }
 
   /* ---------------------------------------------------------------------- */
   /* 6. PARENTS + CHILDREN                                                  */
   /* ---------------------------------------------------------------------- */
   const totalParents = 40; // 35 with 1 child, 5 with 2
-  for (let p = 0; p < totalParents; p++) {
-    const firstP = faker.person.firstName();
-    const lastP = faker.person.lastName();
-    const email = `parent${p + 1}@example.com`;
+  
+  // Vérifier combien de parents existent déjà
+  const existingParentCount = await prisma.user.count({ where: { role: Role.PARENT } });
+  const parentsToCreate = Math.max(0, totalParents - existingParentCount);
+  
+  if (parentsToCreate > 0) {
+    for (let p = 0; p < parentsToCreate; p++) {
+      const parentIndex = existingParentCount + p + 1;
+      const firstP = faker.person.firstName();
+      const lastP = faker.person.lastName();
+      const email = `parent${parentIndex}@example.com`;
 
-    const childCount = p < 35 ? 1 : 2;
-    const childrenData = Array.from({ length: childCount }).map(() => ({
-      firstName: faker.person.firstName(),
-      lastName: lastP,
-      birthDate: faker.date.birthdate({ min: 9, max: 14, mode: 'age' }),
-    }));
+      const childCount = p < 35 ? 1 : 2;
+      const childrenData = Array.from({ length: childCount }).map(() => ({
+        firstName: faker.person.firstName(),
+        lastName: lastP,
+        birthDate: faker.date.birthdate({ min: 9, max: 14, mode: 'age' }),
+      }));
 
-    await prisma.user.create({
-      data: {
-        email,
-        password: await hash(DEFAULT_PWD),
-        role: Role.PARENT,
-        emailVerified: true,
-        parentProfile: {
-          create: {
-            firstName: firstP,
-            lastName: lastP,
-            phone: '06' + faker.string.numeric(8),
-            address: faker.location.streetAddress(),
-            legalResponsibility: 'Père/Mère',
-            notificationPrefs: {},
-            emergencyContacts: {
-              create: [{
-                name: faker.person.fullName(),
-                phone: '06' + faker.string.numeric(8),
-                relation: 'Tante',
-              }],
+      await prisma.user.create({
+        data: {
+          email,
+          password: await hash(DEFAULT_PWD),
+          role: Role.PARENT,
+          emailVerified: true,
+          parentProfile: {
+            create: {
+              firstName: firstP,
+              lastName: lastP,
+              phone: '06' + faker.string.numeric(8),
+              address: faker.location.streetAddress(),
+              legalResponsibility: 'Père/Mère',
+              notificationPrefs: {},
+              emergencyContacts: {
+                create: [{
+                  name: faker.person.fullName(),
+                  phone: '06' + faker.string.numeric(8),
+                  relation: 'Tante',
+                }],
+              },
+              children: { create: childrenData },
             },
-            children: { create: childrenData },
           },
         },
-      },
-    });
+      });
+    }
+    console.log(`✅ ${parentsToCreate} nouveaux parents + enfants créés (total: ${existingParentCount + parentsToCreate})`);
+  } else {
+    console.log(`ℹ️  ${existingParentCount} parents déjà présents, aucun nouveau parent créé`);
   }
-  console.log('✅ Parents + enfants créés');
 
   /* ---------------------------------------------------------------------- */
   /* 7. ANNÉES SCOLAIRES                                                    */
@@ -278,25 +308,37 @@ async function main() {
   /* ---------------------------------------------------------------------- */
   /* 8. RÉFÉRENTS                                                            */
   /* ---------------------------------------------------------------------- */
-  const allChildren = await prisma.child.findMany({ select: { id: true } });
+  const allChildren = await prisma.child.findMany({ 
+    select: { id: true, referents: { select: { id: true } } } 
+  });
   const allStaff = await prisma.user.findMany({ where: { role: Role.STAFF }, select: { id: true } });
 
-  let staffIndex = 0;
-  let countForCurrent = 0;
-  const maxPerStaff = 5;
+  // Assigner uniquement aux enfants qui n'ont pas encore de référent
+  const childrenWithoutReferent = allChildren.filter(child => child.referents.length === 0);
+  
+  if (childrenWithoutReferent.length > 0) {
+    let staffIndex = 0;
+    let countForCurrent = 0;
+    const maxPerStaff = 5;
 
-  for (const child of allChildren) {
-    const referentId = allStaff[staffIndex]?.id;
-    if (referentId) {
-      await prisma.child.update({ where: { id: child.id }, data: { referents: { connect: { id: referentId } } } });
-      countForCurrent++;
-      if (countForCurrent >= maxPerStaff) {
-        staffIndex = Math.min(staffIndex + 1, allStaff.length - 1);
-        countForCurrent = 0;
+    for (const child of childrenWithoutReferent) {
+      const referentId = allStaff[staffIndex]?.id;
+      if (referentId) {
+        await prisma.child.update({ 
+          where: { id: child.id }, 
+          data: { referents: { connect: { id: referentId } } } 
+        });
+        countForCurrent++;
+        if (countForCurrent >= maxPerStaff) {
+          staffIndex = Math.min(staffIndex + 1, allStaff.length - 1);
+          countForCurrent = 0;
+        }
       }
     }
+    console.log(`✅ Référents assignés à ${childrenWithoutReferent.length} enfants`);
+  } else {
+    console.log('ℹ️  Tous les enfants ont déjà des référents');
   }
-  console.log('✅ Référents assignés');
 
   /* ---------------------------------------------------------------------- */
   /* 9. PRÉSENCES & JUSTIFICATIONS (janvier → juin 2025)                    */
@@ -308,19 +350,71 @@ async function main() {
   const start = new Date('2025-01-01');
   const end = new Date('2025-06-30');
 
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    const weekday = d.getDay(); if (weekday === 0 || weekday === 6) continue;
-    const sheet = await prisma.presenceSheet.upsert({ where: { date: d }, create: { date: d, staffId: nextStaffId(), status: 'PENDING_SECRETARY', validatedAtStaff: faker.date.between({ from: new Date(d.getTime() - 2*3600000), to: new Date(d.getTime() - 1800000) }) }, update: {} });
-    for (const { id: childId } of allChildren) {
-      const isPresent = faker.number.float({ min: 0, max: 1, fractionDigits: 2 }) < 0.7;
-      const record = await prisma.presenceRecord.create({ data: { sheetId: sheet.id, childId, present: isPresent } });
-      if (!isPresent && faker.datatype.boolean()) {
-        const type = faker.helpers.arrayElement(['ABSENCE','LATENESS'] as const);
-        await prisma.absenceJustification.create({ data: { recordId: record.id, type, justificationDate: d, motif: type==='ABSENCE' ? faker.helpers.arrayElement(['Certificat médical','RDV familial','Congé exceptionnel']) : '', filePath: faker.datatype.boolean() ? `uploads/justifications/${faker.string.uuid()}.pdf` : null } });
+  // Vérifier s'il y a déjà des données de présence
+  const existingPresenceCount = await prisma.presenceSheet.count({
+    where: {
+      date: {
+        gte: start,
+        lte: end
       }
     }
+  });
+
+  if (existingPresenceCount === 0) {
+    const finalAllChildren = await prisma.child.findMany({ select: { id: true } });
+    
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const weekday = d.getDay(); 
+      if (weekday === 0 || weekday === 6) continue;
+      
+      const sheet = await prisma.presenceSheet.create({
+        data: {
+          date: new Date(d),
+          staffId: nextStaffId(),
+          status: 'PENDING_SECRETARY',
+          validatedAtStaff: faker.date.between({ 
+            from: new Date(d.getTime() - 2*3600000), 
+            to: new Date(d.getTime() - 1800000) 
+          })
+        }
+      });
+      
+      for (const { id: childId } of finalAllChildren) {
+        const isPresent = faker.number.float({ min: 0, max: 1, fractionDigits: 2 }) < 0.7;
+        const record = await prisma.presenceRecord.create({ 
+          data: { sheetId: sheet.id, childId, present: isPresent } 
+        });
+        
+        if (!isPresent && faker.datatype.boolean()) {
+          const type = faker.helpers.arrayElement(['ABSENCE','LATENESS'] as const);
+          await prisma.absenceJustification.create({ 
+            data: { 
+              recordId: record.id, 
+              type, 
+              justificationDate: new Date(d), 
+              motif: type==='ABSENCE' ? faker.helpers.arrayElement(['Certificat médical','RDV familial','Congé exceptionnel']) : '', 
+              filePath: faker.datatype.boolean() ? `uploads/justifications/${faker.string.uuid()}.pdf` : null 
+            } 
+          });
+        }
+      }
+    }
+    console.log('✅ Présences & justifications générées (janv → juin 2025)');
+  } else {
+    console.log(`ℹ️  ${existingPresenceCount} fiches de présence déjà existantes, génération skippée`);
   }
-  console.log('✅ Présences & justifications générées (janv → juin 2025)');
 }
 
-main().then(() => console.log('🌱 Seed terminé')).catch((e) => { console.error(e); process.exit(1); }).finally(async () => { await prisma.$disconnect(); });
+main()
+  .then(() => console.log('🌱 Seed terminé'))
+  .catch((e) => {
+    console.error('❌ Erreur lors du seed:', e);
+    if (e.code === 'P2002') {
+      console.error('💡 Contrainte unique violée. La base de données contient peut-être déjà des données.');
+      console.error('💡 Vous pouvez essayer de vider la base avant de redémarrer.');
+    }
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

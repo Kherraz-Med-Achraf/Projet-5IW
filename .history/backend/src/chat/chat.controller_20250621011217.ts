@@ -16,8 +16,6 @@ import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { GetMessagesQueryDto } from './dto/get-messages-query.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
-import { ParseObjectIdPipe } from '../common/pipes/parse-objectid.pipe';
-import { Throttle } from '@nestjs/throttler';
 
 @Controller('chats')
 @UseGuards(JwtAuthGuard)
@@ -35,14 +33,13 @@ export class ChatController {
   }
 
   @Post()
-  @Throttle({ createChat: { limit: 5, ttl: 60 } })
   createChat(@Body() dto: CreateChatDto, @Request() req) {
     return this.chatService.createChat(dto.participants, req.user.id, req.user.role);
   }
 
   @Get(':id/messages')
   async getMessages(
-    @Param('id', ParseObjectIdPipe) chatId: string,
+    @Param('id') chatId: string,
     @Query() query: GetMessagesQueryDto,
     @Request() req,
   ) {
@@ -54,8 +51,8 @@ export class ChatController {
 
   @Patch(':chatId/messages/:msgId')
   async updateMessage(
-    @Param('chatId', ParseObjectIdPipe) chatId: string,
-    @Param('msgId', ParseObjectIdPipe) msgId: string,
+    @Param('chatId') chatId: string,
+    @Param('msgId') msgId: string,
     @Body() body: UpdateMessageDto,
     @Request() req,
   ) {
@@ -64,8 +61,8 @@ export class ChatController {
 
   @Delete(':chatId/messages/:msgId')
   async deleteMessage(
-    @Param('chatId', ParseObjectIdPipe) chatId: string,
-    @Param('msgId', ParseObjectIdPipe) msgId: string,
+    @Param('chatId') chatId: string,
+    @Param('msgId') msgId: string,
     @Request() req,
   ) {
     return this.chatService.deleteMessage(chatId, msgId, req.user.id);

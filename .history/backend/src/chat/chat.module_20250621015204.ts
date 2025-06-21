@@ -7,7 +7,7 @@ import { ChatService } from './chat.service';
 import { ChatGateway } from './chat.gateway';
 import { ChatController } from './chat.controller';
 import { AuthModule } from '../auth/auth.module';
-import { WsThrottlerGuard } from '../common/guards/ws-throttler.guard';
+import { WsThrottlerGuard } from '../ws-throttler/ws-throttler.guard';
 
 @Module({
   imports: [

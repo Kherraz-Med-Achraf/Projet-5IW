@@ -2,14 +2,13 @@ import {
     Injectable,
     ForbiddenException,
     NotFoundException,
-    BadRequestException,
   } from '@nestjs/common';
   import { InjectModel } from '@nestjs/mongoose';
   import { Model, Types } from 'mongoose';
   import { PrismaService } from '../prisma/prisma.service';
   import { Chat } from './schemas/chat.schema';
   import { Message } from './schemas/message.schema';
-  import * as sanitizeHtml from 'sanitize-html';
+  import sanitize from 'sanitize-html';
   
   type Contact = { id: string; name: string; role: string };
   
@@ -40,21 +39,7 @@ import {
     }
    
     async createChat(participants: string[], userId: string, role: string) {
-      // Assure que l'appelant est présent
-      if (!participants.includes(userId)) {
-        participants.push(userId);
-      }
-  
-      // Enlève doublons et trie pour uniformiser la clé d'unicité
-      const uniquePart = Array.from(new Set(participants)).sort();
-  
-      // Le chat doit impérativement être entre deux personnes exactement
-      if (uniquePart.length !== 2) {
-        throw new ForbiddenException('Conversation non autorisée');
-      }
-  
-      // Vérifie les autorisations pour chaque destinataire
-      for (const targetId of uniquePart) {
+      for (const targetId of participants) {
         if (targetId === userId) continue;
         const tgt = await this.prisma.user.findUnique({
           where: { id: targetId },
@@ -64,12 +49,7 @@ import {
           throw new ForbiddenException('Conversation non autorisée');
         }
       }
-  
-      // Empêche les doublons : recherche d'un chat existant avec exactement ces participants
-      const existing = await this.chatModel.findOne({ participants: uniquePart }).exec();
-      if (existing) return existing;
-  
-      return this.chatModel.create({ participants: uniquePart });
+      return this.chatModel.create({ participants });
     }
   
     findAllForUser(userId: string) {
@@ -78,9 +58,7 @@ import {
   
     async canAccessChat(userId: string, chatId: string) {
       const chat = await this.chatModel.findById(chatId).exec();
-      if (!chat) {
-        return false; // Évite la fuite d'information sur l'existence des salons
-      }
+      if (!chat) throw new NotFoundException('Chat introuvable');
       return chat.participants.some((p: any) => p.toString() === userId);
     }
     
@@ -88,21 +66,11 @@ import {
       if (!(await this.canAccessChat(authorId, chatId))) {
         throw new ForbiddenException('Accès refusé');
       }
-      const clean = sanitizeHtml(content, {
-        allowedTags: [],
-        allowedAttributes: {},
-        allowedSchemes: ['http', 'https', 'mailto'],
-      })
-        .replace(/[\u202A-\u202E\u2066-\u2069]/g, '')
-        .slice(0, 1000);
-      const trimmed = clean.trim();
-      if (!trimmed) {
-        throw new BadRequestException('Message vide');
-      }
+      const clean = sanitize(content, { allowedTags: [], allowedAttributes: {} }).slice(0, 1000);
       const msg = await this.msgModel.create({
         chat: new Types.ObjectId(chatId),
         author: authorId,
-        content: trimmed,
+        content: clean,
       });
       await this.chatModel.findByIdAndUpdate(chatId, { updatedAt: msg.sentAt });
       return msg;
@@ -125,18 +93,7 @@ import {
       if (msg.chat.toString() !== chatId) {
         throw new ForbiddenException('Message hors de ce chat');
       }
-      const cleanContent = sanitizeHtml(content, {
-        allowedTags: [],
-        allowedAttributes: {},
-        allowedSchemes: ['http', 'https', 'mailto'],
-      })
-        .replace(/[\u202A-\u202E\u2066-\u2069]/g, '')
-        .slice(0, 1000);
-      const trimmedUpd = cleanContent.trim();
-      if (!trimmedUpd) {
-        throw new BadRequestException('Message vide');
-      }
-      msg.content = trimmedUpd;
+      msg.content = sanitize(content, { allowedTags: [], allowedAttributes: {} }).slice(0, 1000);
       (msg as any).editedAt = new Date();
       await msg.save();
       return msg;

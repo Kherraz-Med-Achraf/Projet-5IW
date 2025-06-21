@@ -51,7 +51,6 @@
     "date-fns": "^4.1.0",
     "date-holidays": "^3.24.3",
     "express-rate-limit": "^7.5.0",
-    "file-type": "16.5.4",
     "mongoose": "^8.15.1",
     "nodemailer": "^6.10.0",
     "openai": "^5.1.1",
@@ -62,13 +61,14 @@
     "qrcode": "^1.5.4",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "sanitize-html": "^2.17.0",
     "socket.io": "^4.8.1",
     "speakeasy": "^2.0.0",
-    "stripe": "^14.24.0",
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.21",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "stripe": "^14.24.0",
+    "file-type": "16.5.4",
+    "sanitize-html": "^2.12.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -85,7 +85,6 @@
     "@types/multer": "^1.4.12",
     "@types/node": "^22.15.29",
     "@types/passport-jwt": "^4.0.1",
-    "@types/sanitize-html": "^2.16.0",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
@@ -100,7 +99,8 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.20.0",
+    "@types/sanitize-html": "^2.12.0"
   },
   "jest": {
     "moduleFileExtensions": [

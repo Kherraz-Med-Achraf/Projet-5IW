@@ -53,6 +53,13 @@ import {
         throw new ForbiddenException('Conversation non autorisée');
       }
   
+      // Vérifie que chaque identifiant est un ObjectId valide
+      for (const id of uniquePart) {
+        if (!Types.ObjectId.isValid(id)) {
+          throw new BadRequestException('Identifiant participant invalide');
+        }
+      }
+  
       // Vérifie les autorisations pour chaque destinataire
       for (const targetId of uniquePart) {
         if (targetId === userId) continue;

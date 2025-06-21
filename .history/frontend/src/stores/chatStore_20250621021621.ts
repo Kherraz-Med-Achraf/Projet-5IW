@@ -124,7 +124,7 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   async function init() {
-    initSocket(auth.token ?? '');
+    initSocket(auth.token);
 
     socket.on('newMessage', (msg: any) => {
       if (!messages[msg.chatId]) messages[msg.chatId] = [];

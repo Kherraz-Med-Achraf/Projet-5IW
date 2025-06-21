@@ -35,7 +35,7 @@ export class ChatController {
   }
 
   @Post()
-  @Throttle({ createChat: { limit: 5, ttl: 60 } })
+  @Throttle(5, 60)
   createChat(@Body() dto: CreateChatDto, @Request() req) {
     return this.chatService.createChat(dto.participants, req.user.id, req.user.role);
   }

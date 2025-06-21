@@ -17,7 +17,6 @@ import { CreateChatDto } from './dto/create-chat.dto';
 import { GetMessagesQueryDto } from './dto/get-messages-query.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { ParseObjectIdPipe } from '../common/pipes/parse-objectid.pipe';
-import { Throttle } from '@nestjs/throttler';
 
 @Controller('chats')
 @UseGuards(JwtAuthGuard)
@@ -35,7 +34,6 @@ export class ChatController {
   }
 
   @Post()
-  @Throttle({ createChat: { limit: 5, ttl: 60 } })
   createChat(@Body() dto: CreateChatDto, @Request() req) {
     return this.chatService.createChat(dto.participants, req.user.id, req.user.role);
   }

@@ -2,7 +2,6 @@ import {
     Injectable,
     ForbiddenException,
     NotFoundException,
-    BadRequestException,
   } from '@nestjs/common';
   import { InjectModel } from '@nestjs/mongoose';
   import { Model, Types } from 'mongoose';
@@ -48,11 +47,6 @@ import {
       // Enlève doublons et trie pour uniformiser la clé d'unicité
       const uniquePart = Array.from(new Set(participants)).sort();
   
-      // Le chat doit impérativement être entre deux personnes exactement
-      if (uniquePart.length !== 2) {
-        throw new ForbiddenException('Conversation non autorisée');
-      }
-  
       // Vérifie les autorisations pour chaque destinataire
       for (const targetId of uniquePart) {
         if (targetId === userId) continue;
@@ -78,9 +72,7 @@ import {
   
     async canAccessChat(userId: string, chatId: string) {
       const chat = await this.chatModel.findById(chatId).exec();
-      if (!chat) {
-        return false; // Évite la fuite d'information sur l'existence des salons
-      }
+      if (!chat) throw new NotFoundException('Chat introuvable');
       return chat.participants.some((p: any) => p.toString() === userId);
     }
     
@@ -88,21 +80,11 @@ import {
       if (!(await this.canAccessChat(authorId, chatId))) {
         throw new ForbiddenException('Accès refusé');
       }
-      const clean = sanitizeHtml(content, {
-        allowedTags: [],
-        allowedAttributes: {},
-        allowedSchemes: ['http', 'https', 'mailto'],
-      })
-        .replace(/[\u202A-\u202E\u2066-\u2069]/g, '')
-        .slice(0, 1000);
-      const trimmed = clean.trim();
-      if (!trimmed) {
-        throw new BadRequestException('Message vide');
-      }
+      const clean = sanitizeHtml(content, { allowedTags: [], allowedAttributes: {} }).slice(0, 1000);
       const msg = await this.msgModel.create({
         chat: new Types.ObjectId(chatId),
         author: authorId,
-        content: trimmed,
+        content: clean,
       });
       await this.chatModel.findByIdAndUpdate(chatId, { updatedAt: msg.sentAt });
       return msg;
@@ -125,18 +107,7 @@ import {
       if (msg.chat.toString() !== chatId) {
         throw new ForbiddenException('Message hors de ce chat');
       }
-      const cleanContent = sanitizeHtml(content, {
-        allowedTags: [],
-        allowedAttributes: {},
-        allowedSchemes: ['http', 'https', 'mailto'],
-      })
-        .replace(/[\u202A-\u202E\u2066-\u2069]/g, '')
-        .slice(0, 1000);
-      const trimmedUpd = cleanContent.trim();
-      if (!trimmedUpd) {
-        throw new BadRequestException('Message vide');
-      }
-      msg.content = trimmedUpd;
+      msg.content = sanitizeHtml(content, { allowedTags: [], allowedAttributes: {} }).slice(0, 1000);
       (msg as any).editedAt = new Date();
       await msg.save();
       return msg;

@@ -53,6 +53,13 @@ import {
         throw new ForbiddenException('Conversation non autorisée');
       }
   
+      // Vérifie que chaque identifiant est un ObjectId valide
+      for (const id of uniquePart) {
+        if (!Types.ObjectId.isValid(id)) {
+          throw new BadRequestException('Identifiant participant invalide');
+        }
+      }
+  
       // Vérifie les autorisations pour chaque destinataire
       for (const targetId of uniquePart) {
         if (targetId === userId) continue;
@@ -125,18 +132,13 @@ import {
       if (msg.chat.toString() !== chatId) {
         throw new ForbiddenException('Message hors de ce chat');
       }
-      const cleanContent = sanitizeHtml(content, {
+      msg.content = sanitizeHtml(content, {
         allowedTags: [],
         allowedAttributes: {},
         allowedSchemes: ['http', 'https', 'mailto'],
       })
         .replace(/[\u202A-\u202E\u2066-\u2069]/g, '')
         .slice(0, 1000);
-      const trimmedUpd = cleanContent.trim();
-      if (!trimmedUpd) {
-        throw new BadRequestException('Message vide');
-      }
-      msg.content = trimmedUpd;
       (msg as any).editedAt = new Date();
       await msg.save();
       return msg;

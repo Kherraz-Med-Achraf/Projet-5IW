@@ -5,7 +5,7 @@ import { socket, initSocket } from '@/plugins/socket';
 import router from '@/router';
 import { useAuthStore } from './auth';
 
-/* URL racine de l'API Nest */
+/* URL racine de l’API Nest */
 const API = import.meta.env.VITE_NEST_API_URL ?? '';
 
 interface Chat {
@@ -80,9 +80,8 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   async function createChatWith(userId: string) {
-    const myId = auth.user?.id ?? '';
     const existing = chats.value.find(c =>
-      c.participants.includes(myId) && c.participants.includes(userId),
+      c.participants.includes(auth.user.id) && c.participants.includes(userId),
     );
     if (existing) {
       router.push({ name: 'Chat', params: { id: existing.id } });
@@ -92,7 +91,7 @@ export const useChatStore = defineStore('chat', () => {
       const res = await fetchJSON<{ id?: string; _id?: string }>(`${API}/chats`, {
         method: 'POST',
         headers: authHeaders(),
-        body: JSON.stringify({ participants: [myId, userId] }),
+        body: JSON.stringify({ participants: [auth.user.id, userId] }),
       });
       const chatId = res.id ?? res._id;
       if (!chatId) throw new Error('id manquant dans la réponse createChat');
@@ -124,7 +123,7 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   async function init() {
-    initSocket(auth.token ?? '');
+    initSocket(auth.token);
 
     socket.on('newMessage', (msg: any) => {
       if (!messages[msg.chatId]) messages[msg.chatId] = [];

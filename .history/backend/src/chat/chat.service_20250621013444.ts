@@ -2,7 +2,6 @@ import {
     Injectable,
     ForbiddenException,
     NotFoundException,
-    BadRequestException,
   } from '@nestjs/common';
   import { InjectModel } from '@nestjs/mongoose';
   import { Model, Types } from 'mongoose';
@@ -88,21 +87,11 @@ import {
       if (!(await this.canAccessChat(authorId, chatId))) {
         throw new ForbiddenException('Accès refusé');
       }
-      const clean = sanitizeHtml(content, {
-        allowedTags: [],
-        allowedAttributes: {},
-        allowedSchemes: ['http', 'https', 'mailto'],
-      })
-        .replace(/[\u202A-\u202E\u2066-\u2069]/g, '')
-        .slice(0, 1000);
-      const trimmed = clean.trim();
-      if (!trimmed) {
-        throw new BadRequestException('Message vide');
-      }
+      const clean = sanitizeHtml(content, { allowedTags: [], allowedAttributes: {} }).slice(0, 1000);
       const msg = await this.msgModel.create({
         chat: new Types.ObjectId(chatId),
         author: authorId,
-        content: trimmed,
+        content: clean,
       });
       await this.chatModel.findByIdAndUpdate(chatId, { updatedAt: msg.sentAt });
       return msg;
@@ -125,18 +114,7 @@ import {
       if (msg.chat.toString() !== chatId) {
         throw new ForbiddenException('Message hors de ce chat');
       }
-      const cleanContent = sanitizeHtml(content, {
-        allowedTags: [],
-        allowedAttributes: {},
-        allowedSchemes: ['http', 'https', 'mailto'],
-      })
-        .replace(/[\u202A-\u202E\u2066-\u2069]/g, '')
-        .slice(0, 1000);
-      const trimmedUpd = cleanContent.trim();
-      if (!trimmedUpd) {
-        throw new BadRequestException('Message vide');
-      }
-      msg.content = trimmedUpd;
+      msg.content = sanitizeHtml(content, { allowedTags: [], allowedAttributes: {} }).slice(0, 1000);
       (msg as any).editedAt = new Date();
       await msg.save();
       return msg;

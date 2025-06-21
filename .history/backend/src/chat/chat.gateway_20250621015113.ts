@@ -1,6 +1,6 @@
 import {
     WebSocketGateway, WebSocketServer, SubscribeMessage,
-    OnGatewayConnection, OnGatewayDisconnect, MessageBody, ConnectedSocket,
+    OnGatewayConnection, MessageBody, ConnectedSocket,
   } from '@nestjs/websockets';
   import { Server, Socket } from 'socket.io';
   import { JwtService } from '@nestjs/jwt';
@@ -19,10 +19,8 @@ import {
       credentials: true,
     },
   })
-  export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  export class ChatGateway implements OnGatewayConnection {
     @WebSocketServer() server: Server;
-  
-    private readonly userRoomCount = new Map<string, number>();
   
     constructor(
       private readonly jwtService: JwtService,
@@ -40,55 +38,26 @@ import {
         // Vérification supplémentaire en base pour s'assurer que l'utilisateur existe encore
         const user = await this.prisma.user.findUnique({
           where: { id: payload.sub },
-          select: { id: true, role: true, passwordChangedAt: true },
+          select: { id: true, role: true },
         });
   
         if (!user) return socket.disconnect();
   
-        // Invalide le token si le mot de passe a été changé après son émission
-        if (
-          user.passwordChangedAt &&
-          payload.iat * 1000 < new Date(user.passwordChangedAt).getTime()
-        ) {
-          return socket.disconnect();
-        }
-  
         socket.data.user = { id: user.id, role: user.role };
-  
-        // Initialiser le compteur s'il n'existe pas encore
-        if (!this.userRoomCount.has(user.id)) {
-          this.userRoomCount.set(user.id, 0);
-        }
       } catch {
         return socket.disconnect();
       }
     }
   
-    handleDisconnect(@ConnectedSocket() socket: Socket) {
-      const userId = socket?.data?.user?.id;
-      if (!userId) return;
-  
-      // Décrémenter du nombre de rooms (hors room par défaut)
-      const roomsLeft = Array.from(socket.rooms).filter((r) => r !== socket.id)
-        .length;
-      const current = this.userRoomCount.get(userId) ?? 0;
-      this.userRoomCount.set(userId, Math.max(current - roomsLeft, 0));
-    }
-  
-    @Throttle({ join: { limit: 20, ttl: 60 } })
     @SubscribeMessage('joinChat')
     async onJoin(@ConnectedSocket() s: Socket, @MessageBody() chatId: string) {
       // Validation ObjectId
       if (!Types.ObjectId.isValid(chatId)) return;
-      const userId = s.data.user.id;
+      // Limite : 50 salons (+ la room par défaut = 51)
+      if (s.rooms.size >= 51) return;
   
-      // Compte global par utilisateur (toutes connexions)
-      const current = this.userRoomCount.get(userId) ?? 0;
-      if (current >= 50) return; // limite atteinte
-  
-      if (await this.chatService.canAccessChat(userId, chatId)) {
+      if (await this.chatService.canAccessChat(s.data.user.id, chatId)) {
         s.join(chatId);
-        this.userRoomCount.set(userId, current + 1);
       }
     }
   

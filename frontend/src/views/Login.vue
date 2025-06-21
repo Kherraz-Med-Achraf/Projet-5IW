@@ -104,6 +104,8 @@ function closeOtpModal() {
 </script>
 
 <style scoped lang="scss">
+@use "sass:color";
+
 .login {
   width: 100%;
   height: 100vh;
@@ -171,7 +173,7 @@ function closeOtpModal() {
           cursor: not-allowed;
         }
         &:hover:not(:disabled) {
-          background-color: lighten($primary-color, 10%);
+          background-color: color.adjust($primary-color, $lightness: 10%);
         }
       }
     }

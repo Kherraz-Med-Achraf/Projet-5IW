@@ -9,6 +9,7 @@ import StepTwo from "../views/register/steps/StepTwo.vue";
 import StepThree from "../views/register/steps/StepThree.vue";
 import Login from "../views/Login.vue";
 import Home from "@/views/Home.vue";
+import Dashboard from "@/views/Dashboard.vue";
 import ForgotPassword from "@/views/ForgotPassword.vue";
 import ResetPassword from "@/views/ResetPassword.vue";
 import OtpActivation from "@/views/OtpActivation.vue";
@@ -74,6 +75,12 @@ const routes: Array<RouteRecordRaw> = [
     path: "/home",
     name: "Home",
     component: Home,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/dashboard",
+    name: "Dashboard",
+    component: Dashboard,
     meta: { requiresAuth: true },
   },
   {

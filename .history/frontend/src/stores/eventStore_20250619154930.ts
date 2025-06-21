@@ -1,0 +1,68 @@
+import { defineStore } from 'pinia'
+import { useAuthStore } from './auth'
+
+const API = import.meta.env.VITE_NEST_API_URL ?? ''
+
+export interface Event {
+  id: string
+  title: string
+  description?: string
+  date: string
+  startTime: string
+  endTime: string
+  priceCt: number
+  capacity?: number
+  imageUrl?: string
+  isLocked: boolean
+}
+
+export interface RegistrationResult {
+  registrationId: string
+  stripeUrl: string | null
+}
+
+export const useEventStore = defineStore('eventStore', {
+  state: () => ({
+    events: [] as Event[],
+    loading: false,
+    error: null as string | null,
+  }),
+  actions: {
+    async fetchEvents() {
+      this.loading = true; this.error = null
+      const auth = useAuthStore()
+      try {
+        const res = await fetch(`${API}/events`, {
+          headers: { Authorization: `Bearer ${auth.token}` },
+        })
+        if (!res.ok) throw new Error(await res.text())
+        this.events = await res.json()
+      } catch (e:any) {
+        this.error = e.message
+      } finally {
+        this.loading = false
+      }
+    },
+    async register(eventId: string, childIds: number[], paymentMethod: 'CHEQUE' | 'STRIPE'): Promise<RegistrationResult|null> {
+      this.loading = true; this.error = null
+      const auth = useAuthStore()
+      try {
+        const res = await fetch(`${API}/events/${eventId}/register`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${auth.token}`,
+          },
+          body: JSON.stringify({ childIds, paymentMethod }),
+        })
+        if (!res.ok) throw new Error(await res.text())
+        return await res.json()
+      } catch (e:any) {
+        this.error = e.message
+        return null
+      } finally {
+        this.loading = false
+      }
+    },
+  },
+}) 

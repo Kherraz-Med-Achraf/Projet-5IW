@@ -24,6 +24,8 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { InvitationService } from '../../invitation/invitation.service';
 import { Public } from '../../common/decorators/public.decorator';
+import { CsrfGuard } from '../../common/guards/csrf.guard';
+import { randomToken } from '../../utils/random-token';
 
 @Controller('auth')
 export class AuthController {
@@ -44,15 +46,15 @@ export class AuthController {
   @Public()
   @Post('register-by-invite')
   async registerByInvite(@Body() dto: RegisterByInviteDto) {
-    // 1. Valider le token d’invitation
+    // 1. Valider le token d'invitation
     const invitation = await this.invitationService.validateToken(dto.token);
 
-    // 2. Vérifier que l’e-mail fourni correspond à celui de l’invitation
+    // 2. Vérifier que l'e-mail fourni correspond à celui de l'invitation
     if (dto.email !== invitation.email) {
-      throw new BadRequestException('L’adresse e-mail ne correspond pas à l’invitation.');
+      throw new BadRequestException("L'adresse e-mail ne correspond pas à l'invitation.");
     }
 
-    // 3. Créer l’utilisateur avec le rôle défini par invitation.roleToAssign
+    // 3. Créer l'utilisateur avec le rôle défini par invitation.roleToAssign
     await this.authService.registerWithRole(dto, invitation.roleToAssign);
 
     // 4. Marquer le token comme utilisé
@@ -71,14 +73,24 @@ export class AuthController {
     const { access_token, refresh_token, user } =
       await this.authService.login(dto.email, dto.password, dto.otpCode);
 
+    const prod = process.env.NODE_ENV === 'production';
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: prod,
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 2 * 24 * 60 * 60 * 1000,
     });
 
-    return { access_token, user };
+    // Génère un token CSRF aléatoire et le place dans un cookie accessible au front
+    const csrf = randomToken(16);
+    res.cookie('csrf_token', csrf, {
+      httpOnly: false,
+      secure: prod,
+      sameSite: 'strict',
+      maxAge: 2 * 24 * 60 * 60 * 1000,
+    });
+
+    return { access_token, user, csrf_token: csrf };
   }
 
   /* ──────────────── 2FA (initiate / verify) ──────────────── */
@@ -97,44 +109,40 @@ export class AuthController {
     const { access_token, refresh_token, user } =
       await this.authService.verifyOtp(body.tempToken, body.otpCode);
 
+    const prod = process.env.NODE_ENV === 'production';
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: prod,
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 2 * 24 * 60 * 60 * 1000,
     });
 
-    return { access_token, user };
+    const csrf = randomToken(16);
+    res.cookie('csrf_token', csrf, {
+      httpOnly: false,
+      secure: prod,
+      sameSite: 'strict',
+      maxAge: 2 * 24 * 60 * 60 * 1000,
+    });
+
+    return { access_token, user, csrf_token: csrf };
   }
 
   /* ──────────────── LOGOUT / REFRESH ──────────────── */
-  @UseGuards(JwtAuthGuard)
+  /*
+   * Aucun access-token requis : l'authentification passe uniquement par le cookie refresh
+   */
+  @UseGuards(CsrfGuard)
   @Post('logout')
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const token = req.cookies['refresh_token'];
     await this.authService.logout(token);
     res.clearCookie('refresh_token', { sameSite: 'strict', secure: true });
+    res.clearCookie('csrf_token', { sameSite: 'strict', secure: true });
     return { message: 'Logout successful' };
   }
 
-  /* ──────────────── VERIFY TOKEN ──────────────── */
-  @UseGuards(JwtAuthGuard)
-  @Get('verify-token')
-  async verifyToken(@Req() req: Request) {
-    const user = req.user as { id?: string; email?: string; role?: string };
-    if (!user?.id) throw new UnauthorizedException('Token invalide');
-    
-    return { 
-      valid: true, 
-      user: { 
-        id: user.id, 
-        email: user.email, 
-        role: user.role 
-      } 
-    };
-  }
-
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(CsrfGuard)
   @Post('refresh')
   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const token = req.cookies['refresh_token'];
@@ -143,13 +151,23 @@ export class AuthController {
     const { access_token, refresh_token } =
       await this.authService.refreshToken(token);
 
+    const prod = process.env.NODE_ENV === 'production';
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: prod,
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 2 * 24 * 60 * 60 * 1000,
     });
-    return { access_token };
+
+    const csrf = randomToken(16);
+    res.cookie('csrf_token', csrf, {
+      httpOnly: false,
+      secure: prod,
+      sameSite: 'strict',
+      maxAge: 2 * 24 * 60 * 60 * 1000,
+    });
+
+    return { access_token, csrf_token: csrf };
   }
 
   /* ──────────────── MOT DE PASSE OUBLIÉ / RESET ──────────────── */
@@ -190,7 +208,7 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 2 * 24 * 60 * 60 * 1000,
     });
     return { access_token };
   }

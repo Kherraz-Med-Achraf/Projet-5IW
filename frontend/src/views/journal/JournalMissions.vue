@@ -356,311 +356,252 @@ function cancelLeave() {
 }
 </script>
 
-<style lang="scss" scoped>
-@use "sass:color";
-
+<style scoped lang="scss">
 .journal-missions {
-  padding: 2rem;
-  max-width: 48rem;
+  max-width: 64rem;
   margin: 0 auto;
-  background-color: $bg-secondary;
-  color: $text-primary;
-  min-height: 100vh;
+  padding: 2rem;
 
-  &__title {
-    font-size: 2.25rem;
-    font-weight: 700;
-    margin-bottom: 2rem;
-    color: $text-primary;
+  .journal-missions__title {
     text-align: center;
-    background: linear-gradient(135deg, $accent-primary, $accent-hover);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    position: relative;
-
-    &::after {
-      content: "";
-      position: absolute;
-      bottom: -0.5rem;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 4rem;
-      height: 3px;
-      background: linear-gradient(135deg, $accent-primary, $accent-hover);
-      border-radius: 2px;
-    }
-  }
-
-  &__loading {
-    text-align: center;
-    color: $text-muted;
+    margin-bottom: 3rem;
     padding: 2rem;
-    font-size: 1.125rem;
-    background-color: $bg-primary;
-    border-radius: 0.75rem;
-    border: 1px solid $border;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  &__content {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-
-  &__mission-item {
-    background-color: $bg-primary;
-    padding: 1.5rem;
-    border-radius: 0.75rem;
-    border: 1px solid $border;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
-
-    &:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      border-color: $accent-primary;
-    }
-  }
-
-  &__mission-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  &__input {
-    flex: 1;
-    padding: 0.75rem;
-    border: 2px solid $border;
-    border-radius: 0.5rem;
-    background-color: $bg-secondary;
-    color: $text-primary;
-    font-size: 1rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-
-    &:focus {
-      outline: none;
-      border-color: $accent-primary;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-      background-color: $bg-primary;
-    }
-
-    &:hover {
-      border-color: $accent-primary;
-      background-color: $bg-primary;
-    }
-
-    &::placeholder {
-      color: $text-muted;
-    }
-  }
-
-  &__btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    color: white;
+    font-size: 2rem;
     font-weight: 600;
-    transition: all 0.2s ease;
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-    position: relative;
-    overflow: hidden;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
+    line-height: 1.2;
+  }
 
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+  .journal-missions__loading {
+    text-align: center;
+    padding: 4rem;
+    color: #6b7280;
+    font-size: 1.1rem;
+  }
+
+  .journal-missions__content {
+    .journal-missions__mission-item {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.2);
+      }
+
+      .journal-missions__mission-row {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 1.5rem;
+
+        .journal-missions__input {
+          flex: 1;
+          padding: 0.75rem 1rem;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          font-size: 1rem;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+          &:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+          }
+
+          &::placeholder {
+            color: #9ca3af;
+          }
+        }
+
+        .journal-missions__btn--danger {
+          background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+          color: white;
+          border: none;
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+
+          &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+        }
+      }
+
+      .journal-missions__ai-section {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+
+        .journal-missions__checkbox {
+          width: 1.25rem;
+          height: 1.25rem;
+          accent-color: #667eea;
+        }
+
+        .journal-missions__label {
+          color: #374151;
+          font-weight: 500;
+          margin: 0;
+        }
+
+        .journal-missions__generating {
+          color: #667eea;
+          font-style: italic;
+          font-size: 0.9rem;
+        }
+      }
+
+      .journal-missions__proposal {
+        background: linear-gradient(
+          135deg,
+          rgba(102, 126, 234, 0.1),
+          rgba(118, 75, 162, 0.1)
+        );
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+
+        .journal-missions__proposal-text {
+          margin: 0 0 1rem 0;
+          color: #374151;
+          line-height: 1.6;
+
+          strong {
+            color: #111827;
+          }
+        }
+
+        .journal-missions__btn--success {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 6px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          font-size: 0.9rem;
+
+          &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+          }
+        }
+
+        .journal-missions__btn--small {
+          font-size: 0.875rem;
+          padding: 0.5rem 1rem;
+        }
+      }
     }
 
-    &--primary {
-      background: linear-gradient(135deg, $accent-primary, $accent-hover);
+    .journal-missions__add-btn {
+      display: block;
+      margin: 2rem auto;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-
-      &:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
-      }
-
-      &:focus {
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-      }
-    }
-
-    &--success {
-      background: linear-gradient(
-        135deg,
-        $success,
-        color.adjust($success, $lightness: -5%)
-      );
-      color: white;
-      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-
-      &:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
-      }
-
-      &:focus {
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
-      }
-    }
-
-    &--danger {
-      background: linear-gradient(
-        135deg,
-        $error,
-        color.adjust($error, $lightness: -5%)
-      );
-      color: white;
-      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-      height: 2.25rem;
-
-      &:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
-      }
-
-      &:focus {
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
-      }
-    }
-
-    &--small {
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
-    }
-  }
-
-  &__ai-section {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
-  }
-
-  &__checkbox {
-    width: 1.25rem;
-    height: 1.25rem;
-    accent-color: $accent-primary;
-    cursor: pointer;
-  }
-
-  &__label {
-    font-size: 0.875rem;
-    color: $text-secondary;
-    font-weight: 500;
-    cursor: pointer;
-  }
-
-  &__generating {
-    font-size: 0.75rem;
-    color: $text-muted;
-    font-style: italic;
-  }
-
-  &__proposal {
-    margin-top: 1rem;
-    background: linear-gradient(
-      135deg,
-      rgba($success, 0.05),
-      rgba($accent-primary, 0.05)
-    );
-    padding: 1.5rem;
-    border-radius: 0.75rem;
-    border: 1px solid rgba($success, 0.2);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  }
-
-  &__proposal-text {
-    margin-bottom: 1rem;
-    color: $text-secondary;
-    font-size: 0.875rem;
-    line-height: 1.6;
-
-    strong {
-      color: $text-primary;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-size: 1.1rem;
       font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(102, 126, 234, 0.4);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
     }
-  }
 
-  &__add-btn {
-    margin-bottom: 1.5rem;
-    padding: 1rem 2rem;
-    font-size: 1.125rem;
-    align-self: flex-start;
-  }
+    .journal-missions__actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 3rem;
+      padding: 2rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 
-  &__actions {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 1.5rem;
-    background-color: $bg-primary;
-    border-radius: 0.75rem;
-    border: 1px solid $border;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
+      .journal-missions__back-btn {
+        color: #6b7280;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
 
-  &__save-btn {
-    padding: 1rem 2rem;
-    font-size: 1.125rem;
+        &:hover {
+          color: #374151;
+          background-color: #f3f4f6;
+        }
+      }
 
-    &::before {
-      content: "💾";
-      margin-right: 0.5rem;
+      .journal-missions__save-btn {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+        }
+      }
     }
-  }
 
-  &__back-btn {
-    color: $text-muted;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    transition: all 0.2s ease;
-
-    &:hover {
-      color: $text-primary;
-      background-color: $bg-secondary;
-      text-decoration: underline;
-    }
-  }
-
-  &__error {
-    color: $error;
-    background: linear-gradient(135deg, rgba($error, 0.1), rgba($error, 0.05));
-    border: 2px solid rgba($error, 0.3);
-    padding: 1.5rem;
-    border-radius: 0.75rem;
-    margin-top: 1.5rem;
-    font-weight: 600;
-    font-size: 1rem;
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
-    position: relative;
-
-    &::before {
-      content: "⚠️";
-      margin-right: 0.75rem;
-      font-size: 1.25rem;
+    .journal-missions__error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      padding: 1rem;
+      border-radius: 12px;
+      margin-top: 1rem;
+      font-weight: 500;
     }
   }
 
   // Modal de confirmation
-  &__modal-overlay {
+  .journal-missions__modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -675,99 +616,120 @@ function cancelLeave() {
     animation: fadeIn 0.3s ease;
   }
 
-  &__modal {
-    background: $bg-primary;
-    border-radius: 1rem;
+  .journal-missions__modal {
+    background: white;
+    border-radius: 12px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     max-width: 28rem;
     width: 90%;
     overflow: hidden;
     animation: slideIn 0.3s ease;
-    border: 1px solid $border;
-  }
 
-  &__modal-header {
-    background: linear-gradient(
-      135deg,
-      rgba($warning, 0.1),
-      rgba($error, 0.05)
-    );
-    padding: 1.5rem;
-    border-bottom: 1px solid rgba($warning, 0.2);
-  }
+    .journal-missions__modal-header {
+      background: linear-gradient(
+        135deg,
+        rgba(245, 158, 11, 0.1),
+        rgba(239, 68, 68, 0.05)
+      );
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(245, 158, 11, 0.2);
 
-  &__modal-title {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: $text-primary;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
+      .journal-missions__modal-title {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
 
-  &__modal-icon {
-    font-size: 1.5rem;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-  }
-
-  &__modal-content {
-    padding: 1.5rem;
-  }
-
-  &__modal-text {
-    margin: 0 0 1rem 0;
-    color: $text-secondary;
-    font-size: 1rem;
-    line-height: 1.5;
-  }
-
-  &__modal-warning {
-    margin: 0 0 1rem 0;
-    padding: 1rem;
-    background: linear-gradient(
-      135deg,
-      rgba($warning, 0.1),
-      rgba($error, 0.05)
-    );
-    border: 1px solid rgba($warning, 0.3);
-    border-radius: 0.5rem;
-    color: $text-primary;
-    font-size: 0.875rem;
-    line-height: 1.4;
-
-    strong {
-      color: $error;
-      font-weight: 600;
+        .journal-missions__modal-icon {
+          font-size: 1.5rem;
+        }
+      }
     }
-  }
 
-  &__modal-question {
-    margin: 0;
-    color: $text-primary;
-    font-size: 1rem;
-    font-weight: 500;
-    text-align: center;
-  }
+    .journal-missions__modal-content {
+      padding: 1.5rem;
 
-  &__modal-actions {
-    padding: 1.5rem;
-    border-top: 1px solid $border;
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-    background-color: $bg-secondary;
-  }
+      .journal-missions__modal-text {
+        margin: 0 0 1rem 0;
+        color: #6b7280;
+        font-size: 1rem;
+        line-height: 1.5;
+      }
 
-  &__modal-btn {
-    min-width: 140px;
-    justify-content: center;
-    height: unset;
-  }
+      .journal-missions__modal-warning {
+        margin: 0 0 1rem 0;
+        padding: 1rem;
+        background: linear-gradient(
+          135deg,
+          rgba(245, 158, 11, 0.1),
+          rgba(239, 68, 68, 0.05)
+        );
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        border-radius: 8px;
+        color: #111827;
+        font-size: 0.875rem;
+        line-height: 1.4;
 
-  &__btn-icon {
-    margin-right: 0.5rem;
-    font-size: 1rem;
+        strong {
+          color: #dc2626;
+          font-weight: 600;
+        }
+      }
+
+      .journal-missions__modal-question {
+        margin: 0;
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 500;
+        text-align: center;
+      }
+    }
+
+    .journal-missions__modal-actions {
+      padding: 1.5rem;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      background-color: #f9fafb;
+
+      .journal-missions__modal-btn {
+        min-width: 140px;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+
+        &.journal-missions__btn--primary {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+
+          &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+          }
+
+          .journal-missions__btn-icon {
+            margin-right: 0.5rem;
+          }
+        }
+
+        &.journal-missions__btn--danger {
+          background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+          color: white;
+
+          &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+          }
+        }
+      }
+    }
   }
 }
 
@@ -797,23 +759,34 @@ function cancelLeave() {
   .journal-missions {
     padding: 1rem;
 
-    &__title {
+    .journal-missions__title {
       font-size: 1.5rem;
+      padding: 1.5rem;
     }
 
-    &__mission-row {
-      flex-direction: column;
-      gap: 0.75rem;
-    }
+    .journal-missions__content {
+      .journal-missions__mission-item {
+        padding: 1.5rem;
 
-    &__actions {
-      flex-direction: column;
-      align-items: stretch;
-    }
+        .journal-missions__mission-row {
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+      }
 
-    &__back-btn {
-      margin-left: 0;
-      margin-top: 1rem;
+      .journal-missions__actions {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+
+        .journal-missions__back-btn {
+          order: 2;
+        }
+
+        .journal-missions__save-btn {
+          order: 1;
+        }
+      }
     }
   }
 }

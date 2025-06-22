@@ -624,12 +624,6 @@ export class AuthService {
 
   /** Projection publique d'un utilisateur vers le front */
   private _publicUser(u: any) {
-    return {
-      id: u.id,
-      email: u.email,
-      role: u.role,
-      otpEnabled: !!u.otpSecret,
-      otpSecret: u.otpSecret ? '***' : null,
-    };
+    return { id: u.id, email: u.email, role: u.role, otpEnabled: !!u.otpSecret };
   }
 }

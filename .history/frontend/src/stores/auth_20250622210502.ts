@@ -5,8 +5,6 @@ interface User {
   id: string
   email: string
   role: string
-  otpEnabled?: boolean
-  otpSecret?: string | null
   // ... autres champs si nécessaire
 }
 

@@ -164,35 +164,30 @@ function wouf() {
   console.log('wouf 🐶')
 }
 
-async function toggleOtp(evt: Event) {
-  const checked = (evt.target as HTMLInputElement).checked
-
+async function toggleOtp() {
   loading.value = true
   try {
-    const endpoint = checked ? 'enable-otp' : 'disable-otp'
-    const token: string = localStorage.getItem('token') || ''
-
-    const res   = await fetch(`http://localhost:3000/auth/${endpoint}`, {
+    const endpoint = otpEnabled.value ? 'disable-otp' : 'enable-otp'
+    const token    = localStorage.getItem('token') || ''
+    const res      = await fetch(`http://localhost:3000/auth/${endpoint}`, {
       method : 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
     })
     const data = await res.json()
     if (!res.ok) throw new Error(data.message)
 
-    otpEnabled.value = checked
-    if (checked) {
-      secret.value        = data.secret
+    otpEnabled.value = !otpEnabled.value
+    if (otpEnabled.value) {
+      secret.value       = data.secret
       qrCodeDataUrl.value = data.qrCodeDataUrl
-      toast.success(data.message || 'OTP activé')
+      toast.success('OTP activé')
     } else {
-      secret.value        = ''
+      secret.value       = ''
       qrCodeDataUrl.value = ''
-      toast.info(data.message || 'OTP désactivé')
+      toast.info('OTP désactivé')
     }
   } catch (e) {
     toast.error((e as Error).message)
-    // on rétablit l'état visuel précédent en cas d'erreur
-    otpEnabled.value = !checked
   } finally {
     loading.value = false
   }
@@ -206,7 +201,7 @@ async function sendInvitation() {
   }
   inviteLoading.value = true
   try {
-    const token: string = localStorage.getItem('token') || ''
+    const token = localStorage.getItem('token') || ''
     const res = await fetch('http://localhost:3000/invitations', {
       method : 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },

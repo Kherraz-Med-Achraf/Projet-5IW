@@ -206,7 +206,7 @@ async function sendInvitation() {
   }
   inviteLoading.value = true
   try {
-    const token: string = localStorage.getItem('token') || ''
+    const token = localStorage.getItem('token') || ''
     const res = await fetch('http://localhost:3000/invitations', {
       method : 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },

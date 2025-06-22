@@ -11,7 +11,7 @@ import { EmailVerificationController } from './controllers/email-verification.co
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailModule } from '../mail/mail.module';
-import { ChildModule } from '../child/child.module'; 
+import { ChildModule } from '../child/child.module';
 
 // ← IMPORTER le module Invitation ici
 import { InvitationModule } from '../invitation/invitation.module';
@@ -21,7 +21,7 @@ import { CsrfGuard } from '../common/guards/csrf.guard';
   imports: [
     // Installe la stratégie JWT comme stratégie par défaut
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    ChildModule,  
+    ChildModule,
 
     JwtModule.register({
       secret: process.env.ACCESS_TOKEN_SECRET,
@@ -33,17 +33,8 @@ import { CsrfGuard } from '../common/guards/csrf.guard';
     // ← On importe InvitationModule pour que InvitationService soit "injectable"
     InvitationModule,
   ],
-  providers: [
-    AuthService,
-    PrismaService,
-    JwtStrategy,
-    CsrfGuard,
-  ],
-  controllers: [
-    AuthController,
-    OtpController,
-    EmailVerificationController,
-  ],
+  providers: [AuthService, PrismaService, JwtStrategy, CsrfGuard],
+  controllers: [AuthController, OtpController, EmailVerificationController],
   exports: [
     // Permettre aux autres modules de réutiliser JwtGuard, etc.
     PassportModule,

@@ -302,7 +302,7 @@ function validateForm() {
 }
 
 function goToStep2() {
-  router.push("/register/step-two");
+  router.push({ path: "/register/step-two", query: route.query });
 }
 
 // Gestion de la soumission

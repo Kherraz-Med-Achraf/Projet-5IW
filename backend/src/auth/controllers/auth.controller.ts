@@ -1,7 +1,6 @@
 import {
   Controller,
   Post,
-  Get,
   Body,
   Req,
   Res,
@@ -11,11 +10,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from '../auth.service';
-import {
-  LoginDto,
-  ForgotPasswordDto,
-  ResetPasswordDto,
-} from '../dto/auth.dto';
+import { LoginDto, ForgotPasswordDto, ResetPasswordDto } from '../dto/auth.dto';
 import { RegisterParentDto } from '../dto/register-parent.dto';
 import { RegisterByInviteDto } from '../dto/register-by-invite.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -51,7 +46,9 @@ export class AuthController {
 
     // 2. Vérifier que l'e-mail fourni correspond à celui de l'invitation
     if (dto.email !== invitation.email) {
-      throw new BadRequestException("L'adresse e-mail ne correspond pas à l'invitation.");
+      throw new BadRequestException(
+        "L'adresse e-mail ne correspond pas à l'invitation.",
+      );
     }
 
     // 3. Créer l'utilisateur avec le rôle défini par invitation.roleToAssign
@@ -60,7 +57,9 @@ export class AuthController {
     // 4. Marquer le token comme utilisé
     await this.invitationService.markAsUsed(dto.token);
 
-    return { message: 'Inscription réussie. Vous pouvez maintenant vous connecter.' };
+    return {
+      message: 'Inscription réussie. Vous pouvez maintenant vous connecter.',
+    };
   }
 
   /* ──────────────── CONNEXION ──────────────── */
@@ -70,8 +69,11 @@ export class AuthController {
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { access_token, refresh_token, user } =
-      await this.authService.login(dto.email, dto.password, dto.otpCode);
+    const { access_token, refresh_token, user } = await this.authService.login(
+      dto.email,
+      dto.password,
+      dto.otpCode,
+    );
 
     const prod = process.env.NODE_ENV === 'production';
     res.cookie('refresh_token', refresh_token, {
@@ -144,7 +146,10 @@ export class AuthController {
 
   @UseGuards(CsrfGuard)
   @Post('refresh')
-  async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const token = req.cookies['refresh_token'];
     if (!token) throw new UnauthorizedException('Refresh token manquant');
 
@@ -201,8 +206,9 @@ export class AuthController {
     const user = req.user as { id?: string };
     if (!user?.id) throw new UnauthorizedException('Utilisateur invalide');
 
-    const { access_token, refresh_token } =
-      await this.authService.disableOtp(user.id);
+    const { access_token, refresh_token } = await this.authService.disableOtp(
+      user.id,
+    );
 
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,

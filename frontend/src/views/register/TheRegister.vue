@@ -1,19 +1,13 @@
 <template>
   <div class="register-container">
     <TheStepper
-      :currentStep
+      :currentStep="currentStep"
       :steps="[
-        {
-          title: 'Informations du parent',
-        },
-        {
-          title: 'Informations de l’enfant',
-        },
-        {
-          title: 'Création du compte',
-        },
+        { title: 'Informations du parent' },
+        { title: 'Informations de l\'enfant' },
+        { title: 'Création du compte' },
       ]"
-      @update:currentStep="(step) => handleStepChange(step)"
+      @update:currentStep="handleStepChange"
     />
     <RouterView v-slot="{ Component }">
       <transition name="step" mode="out-in">
@@ -26,12 +20,13 @@
 <script setup>
 import TheStepper from "../ui/TheStepper.vue";
 import { ref, onMounted, watch } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { useRegisterStore } from "@/stores/register";
 import { useToast } from "vue-toastification";
 
 const currentStep = ref(1);
 const router = useRouter();
+const route = useRoute();
 const registerStore = useRegisterStore();
 const toast = useToast();
 
@@ -46,7 +41,7 @@ const updateCurrentStepFromRoute = () => {
       currentStep.value = 2;
     } else {
       toast.error("Veuillez d'abord compléter l'étape 1");
-      router.push("/register/step-one");
+      router.push({ path: "/register/step-one", query: route.query });
       currentStep.value = 1;
     }
   } else if (path.includes("step-three")) {
@@ -55,11 +50,11 @@ const updateCurrentStepFromRoute = () => {
       currentStep.value = 3;
     } else if (registerStore.canAccessStep(2)) {
       toast.error("Veuillez d'abord compléter l'étape 2");
-      router.push("/register/step-two");
+      router.push({ path: "/register/step-two", query: route.query });
       currentStep.value = 2;
     } else {
       toast.error("Veuillez d'abord compléter l'étape 1");
-      router.push("/register/step-one");
+      router.push({ path: "/register/step-one", query: route.query });
       currentStep.value = 1;
     }
   }
@@ -71,7 +66,7 @@ onMounted(() => {
 
   // Si on est sur /register sans étape spécifique, aller à step-one
   if (router.currentRoute.value.path === "/register") {
-    router.push("/register/step-one");
+    router.push({ path: "/register/step-one", query: route.query });
   }
 });
 
@@ -97,13 +92,21 @@ const handleStepChange = (step) => {
   const routes = {
     1: "/register/step-one",
     2: "/register/step-two",
-    3: "/register/step-three",
+    3: "/register/step-three"
   };
 
   if (routes[step]) {
-    router.push(routes[step]);
+    router.push({ path: routes[step], query: route.query });
   }
 };
+
+// Vérifier la présence d'un token d'invitation à l'arrivée sur la page
+onMounted(async () => {
+  const token = route.query.token;
+  if (token) {
+    await registerStore.validateToken(token);
+  }
+});
 </script>
 
 <style lang="scss" scoped>

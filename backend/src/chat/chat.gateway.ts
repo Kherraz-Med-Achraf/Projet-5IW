@@ -123,10 +123,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     // Notification pour les participants qui n'ont pas rejoint la room
     const chat = await this.chatService.chatModel
-      .findById(chatId, { participants: 1, updatedAt: 1 })
+      .findById(chatId, { participants: 1 })
       .lean();
+
     if (chat) {
+      // Récupère les utilisateurs déjà présents dans la room (donc qui recevront déjà newMessage)
+      const socketsInRoom = await this.server.in(chatId).fetchSockets();
+      const userIdsInRoom = new Set<string>(
+        socketsInRoom
+          .map((sock) => sock?.data?.user?.id as string | undefined)
+          .filter(Boolean) as string[],
+      );
+
       chat.participants.forEach((uid: string) => {
+        // Pas de notification pour l'auteur ou pour ceux déjà dans la room
+        if (uid === s.data.user.id || userIdsInRoom.has(uid)) return;
+
         this.server.to(uid).emit('chatUpdated', {
           chatId,
           lastMessage: msg.content,

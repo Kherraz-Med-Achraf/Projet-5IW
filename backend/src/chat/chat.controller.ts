@@ -18,11 +18,15 @@ import { GetMessagesQueryDto } from './dto/get-messages-query.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { ParseObjectIdPipe } from '../common/pipes/parse-objectid.pipe';
 import { Throttle } from '@nestjs/throttler';
+import { ChatGateway } from './chat.gateway';
 
 @Controller('chats')
 @UseGuards(JwtAuthGuard)
 export class ChatController {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly gateway: ChatGateway,
+  ) {}
 
   @Get()
   listChats(@Request() req) {
@@ -36,8 +40,28 @@ export class ChatController {
 
   @Post()
   @Throttle({ createChat: { limit: 5, ttl: 60 } })
-  createChat(@Body() dto: CreateChatDto, @Request() req) {
-    return this.chatService.createChat(dto.participants, req.user.id, req.user.role);
+  async createChat(@Body() dto: CreateChatDto, @Request() req) {
+    const chat = await this.chatService.createChat(
+      dto.participants,
+      req.user.id,
+      req.user.role,
+    );
+
+    // transformer si besoin
+    const plain: any = (chat as any).toObject ? (chat as any).toObject() : chat;
+
+    // notifier les deux participants
+    plain.participants.forEach((uid: string) => {
+      this.gateway.server.to(uid).emit('newChat', {
+        id: plain.id ?? plain._id,
+        participants: plain.participants,
+        updatedAt: plain.updatedAt,
+        lastMessage: plain.lastMessage ?? null,
+        createdAt: plain.createdAt,
+      });
+    });
+
+    return chat;
   }
 
   @Get(':id/messages')
@@ -49,7 +73,11 @@ export class ChatController {
     if (!(await this.chatService.canAccessChat(req.user.id, chatId))) {
       throw new ForbiddenException('Accès refusé à ce chat');
     }
-    return this.chatService.getMessages(chatId, query.limit, query.before ? new Date(query.before) : undefined);
+    return this.chatService.getMessages(
+      chatId,
+      query.limit,
+      query.before ? new Date(query.before) : undefined,
+    );
   }
 
   @Patch(':chatId/messages/:msgId')
@@ -59,7 +87,12 @@ export class ChatController {
     @Body() body: UpdateMessageDto,
     @Request() req,
   ) {
-    return this.chatService.updateMessage(chatId, msgId, req.user.id, body.content);
+    return this.chatService.updateMessage(
+      chatId,
+      msgId,
+      req.user.id,
+      body.content,
+    );
   }
 
   @Delete(':chatId/messages/:msgId')

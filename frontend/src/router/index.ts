@@ -1,6 +1,6 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import type { RouteRecordRaw } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { createRouter, createWebHistory } from "vue-router";
+import type { RouteRecordRaw } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
 
 import Register from "../views/Register.vue";
 import TheRegister from "../views/register/TheRegister.vue";
@@ -14,20 +14,19 @@ import ForgotPassword from "@/views/ForgotPassword.vue";
 import ResetPassword from "@/views/ResetPassword.vue";
 import OtpActivation from "@/views/OtpActivation.vue";
 import VerifyEmail from "@/views/VerifyEmail.vue";
-import ChatView from '@/views/chat/ChatView.vue'
-import ChatListView from '@/views/chat/ChatListView.vue'
+import ChatView from "@/views/chat/ChatView.vue";
 
-import StaffPresenceView from '@/views/presence/StaffPresenceView.vue'
-import SecretaryAbsenceView from '@/views/presence/SecretaryAbsenceView.vue'
-import PresenceReportView from '@/views/presence/PresenceReportView.vue'
+import StaffPresenceView from "@/views/presence/StaffPresenceView.vue";
+import SecretaryAbsenceView from "@/views/presence/SecretaryAbsenceView.vue";
+import PresenceReportView from "@/views/presence/PresenceReportView.vue";
 
-import PlanningUploadView from '@/views/planning/PlanningUploadView.vue'
+import PlanningUploadView from "@/views/planning/PlanningUploadView.vue";
 
 // Ajout des vues du journal (éducateur et parent)
-import JournalHome from '@/views/journal/JournalHome.vue'
-import JournalMonth from '@/views/journal/JournalMonth.vue'
-import JournalHomeParent from '@/views/journal/JournalHomeParent.vue'
-import JournalMissions from '@/views/journal/JournalMissions.vue'
+import JournalHome from "@/views/journal/JournalHome.vue";
+import JournalMonth from "@/views/journal/JournalMonth.vue";
+import JournalHomeParent from "@/views/journal/JournalHomeParent.vue";
+import JournalMissions from "@/views/journal/JournalMissions.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -108,104 +107,98 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/chat',
-    name: 'ChatList',
-    component: ChatListView,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/chat/:id',
-    name: 'Chat',
+    path: "/chat/:id?",
+    name: "Chat",
     component: ChatView,
     props: true,
     meta: { requiresAuth: true },
   },
   {
-    path: '/presence/staff',
-    name: 'StaffPresence',
+    path: "/presence/staff",
+    name: "StaffPresence",
     component: StaffPresenceView,
-    meta: { requiresAuth: true, requiredRole: 'STAFF' }, // ← chaîne
+    meta: { requiresAuth: true, requiredRole: "STAFF" }, // ← chaîne
   },
-  
-     // Présence – gestion absences (secrétaire)
-     {
-       path: '/presence/secretary',
-       name: 'SecretaryAbsence',
-       component: SecretaryAbsenceView,
-       props: true,
-       meta: { requiresAuth: true, requiredRole: 'SECRETARY' },
-     },
-     // Présence – rapport (direction & chef de service)
-     {
-       path: '/presence/report',
-       name: 'PresenceReport',
-       component: PresenceReportView,
-       props: true,
-       meta: {
-                requiresAuth: true,
-                requiredRoles: ['DIRECTOR', 'SERVICE_MANAGER'],
-             },
-     },
 
-     {
-      path: '/planning/upload',
-      name: 'PlanningUpload',
-      component: PlanningUploadView,
-      meta: {
-        requiresAuth: true,
-        requiredRoles: ['DIRECTOR', 'SERVICE_MANAGER'],
-      },
+  // Présence – gestion absences (secrétaire)
+  {
+    path: "/presence/secretary",
+    name: "SecretaryAbsence",
+    component: SecretaryAbsenceView,
+    props: true,
+    meta: { requiresAuth: true, requiredRole: "SECRETARY" },
+  },
+  // Présence – rapport (direction & chef de service)
+  {
+    path: "/presence/report",
+    name: "PresenceReport",
+    component: PresenceReportView,
+    props: true,
+    meta: {
+      requiresAuth: true,
+      requiredRoles: ["DIRECTOR", "SERVICE_MANAGER"],
     },
-    
-    {
-      path: '/planning/staff',
-      name: 'StaffSchedule',
-      component: () => import('@/views/planning/StaffScheduleView.vue'),
-      meta: {
-        requiresAuth: true,
-        requiredRole: 'STAFF',
-      },
-    },
+  },
 
-    {
-      path: '/planning/child',
-      name: 'ChildSchedule',
-      component: () => import('@/views/planning/ChildScheduleView.vue'),
-      meta: {
-        requiresAuth: true,
-        requiredRole: 'PARENT',
-      },
+  {
+    path: "/planning/upload",
+    name: "PlanningUpload",
+    component: PlanningUploadView,
+    meta: {
+      requiresAuth: true,
+      requiredRoles: ["DIRECTOR", "SERVICE_MANAGER"],
     },
+  },
 
-    {
-      path: '/planning/manage',
-      name: 'PlanningManage',
-      component: () => import('@/views/planning/PlanningManageView.vue'),
-      meta: {
-        requiresAuth: true,
-        requiredRoles: ['DIRECTOR', 'SERVICE_MANAGER'],
-      },
+  {
+    path: "/planning/staff",
+    name: "StaffSchedule",
+    component: () => import("@/views/planning/StaffScheduleView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiredRole: "STAFF",
     },
+  },
+
+  {
+    path: "/planning/child",
+    name: "ChildSchedule",
+    component: () => import("@/views/planning/ChildScheduleView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiredRole: "PARENT",
+    },
+  },
+
+  {
+    path: "/planning/manage",
+    name: "PlanningManage",
+    component: () => import("@/views/planning/PlanningManageView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiredRoles: ["DIRECTOR", "SERVICE_MANAGER"],
+    },
+  },
 
   // Route principale du journal pour le staff
   {
-    path: '/journal',
-    name: 'JournalHome',
+    path: "/journal",
+    name: "JournalHome",
     component: JournalHome,
-    meta: { requiresAuth: true, requiredRole: 'STAFF' },
+    meta: { requiresAuth: true, requiredRole: "STAFF" },
   },
   // Écriture des missions annuelles (accessible au staff seulement)
   {
-    path: '/journal/:childId/:yearId/missions',
-    name: 'JournalMissions',
+    path: "/journal/:childId/:yearId/missions",
+    name: "JournalMissions",
     component: JournalMissions,
     props: true,
-    meta: { requiresAuth: true, requiredRole: 'STAFF' },
+    meta: { requiresAuth: true, requiredRole: "STAFF" },
   },
   // Détail/édition d'un mois pour un enfant et une année (accessible au staff et au parent)
   {
-    path: '/journal/:childId/:yearId/:month',
-    name: 'JournalMonth',
+    path: "/journal/:childId/:yearId/:month",
+    name: "JournalMonth",
     component: JournalMonth,
     props: true,
     meta: { requiresAuth: true },
@@ -213,49 +206,55 @@ const routes: Array<RouteRecordRaw> = [
 
   // Vue principale du journal pour le parent
   {
-    path: '/journal-parent',
-    name: 'JournalHomeParent',
+    path: "/journal-parent",
+    name: "JournalHomeParent",
     component: JournalHomeParent,
-    meta: { requiresAuth: true, requiredRole: 'PARENT' },
+    meta: { requiresAuth: true, requiredRole: "PARENT" },
   },
 
   {
-    path: '/events/admin',
-    name: 'EventAdmin',
-    component: () => import('@/views/events/EventAdminView.vue'),
-    meta: { requiresAuth: true, requiredRoles: ['DIRECTOR', 'SERVICE_MANAGER'] },
+    path: "/events/admin",
+    name: "EventAdmin",
+    component: () => import("@/views/events/EventAdminView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiredRoles: ["DIRECTOR", "SERVICE_MANAGER"],
+    },
   },
   {
-    path: '/events',
-    name: 'EventList',
-    component: () => import('@/views/events/EventListView.vue'),
-    meta: { requiresAuth: true, requiredRole: 'PARENT' },
+    path: "/events",
+    name: "EventList",
+    component: () => import("@/views/events/EventListView.vue"),
+    meta: { requiresAuth: true, requiredRole: "PARENT" },
   },
   {
-    path: '/events/success',
-    name: 'EventStripeSuccess',
-    component: () => import('@/views/events/EventStripeSuccess.vue'),
-    meta: { requiresAuth: true, requiredRole: 'PARENT' },
+    path: "/events/success",
+    name: "EventStripeSuccess",
+    component: () => import("@/views/events/EventStripeSuccess.vue"),
+    meta: { requiresAuth: true, requiredRole: "PARENT" },
   },
   {
-    path: '/events/cancel',
-    name: 'EventStripeCancel',
-    component: () => import('@/views/events/EventStripeCancel.vue'),
-    meta: { requiresAuth: true, requiredRole: 'PARENT' },
+    path: "/events/cancel",
+    name: "EventStripeCancel",
+    component: () => import("@/views/events/EventStripeCancel.vue"),
+    meta: { requiresAuth: true, requiredRole: "PARENT" },
   },
   {
-    path: '/events/mine',
-    name: 'MyEventRegistrations',
-    component: () => import('@/views/events/MyEventRegistrations.vue'),
-    meta: { requiresAuth: true, requiredRole: 'PARENT' },
+    path: "/events/mine",
+    name: "MyEventRegistrations",
+    component: () => import("@/views/events/MyEventRegistrations.vue"),
+    meta: { requiresAuth: true, requiredRole: "PARENT" },
   },
   {
-    path: '/events/:eventId/registrations',
-    name: 'EventRegistrationsAdmin',
-    component: () => import('@/views/events/EventRegistrationsAdmin.vue'),
-    meta: { requiresAuth: true, requiredRoles: ['DIRECTOR', 'SERVICE_MANAGER', 'SECRETARY'] },
+    path: "/events/:eventId/registrations",
+    name: "EventRegistrationsAdmin",
+    component: () => import("@/views/events/EventRegistrationsAdmin.vue"),
+    meta: {
+      requiresAuth: true,
+      requiredRoles: ["DIRECTOR", "SERVICE_MANAGER", "SECRETARY"],
+    },
   },
-]
+];
 
 const router = createRouter({
   history: createWebHistory(),
@@ -264,22 +263,27 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const auth = useAuthStore();
-  const { requiresAuth, requiresGuest, requiredRole, requiredRoles, requiresInvite } =
-    to.meta as {
-      requiresAuth?: boolean;
-      requiresGuest?: boolean;
-      requiredRole?: string;
-      requiredRoles?: string[];
-      requiresInvite?: boolean;
-    };
+  const {
+    requiresAuth,
+    requiresGuest,
+    requiredRole,
+    requiredRoles,
+    requiresInvite,
+  } = to.meta as {
+    requiresAuth?: boolean;
+    requiresGuest?: boolean;
+    requiredRole?: string;
+    requiredRoles?: string[];
+    requiresInvite?: boolean;
+  };
 
   // 1) Si la page requiert un token d'invitation (ex. /register)
   if (requiresInvite) {
-    const token = (to.query.token as string) || ''
+    const token = (to.query.token as string) || "";
     if (!token) {
       return next({ name: "Login" });
     }
-    return next()
+    return next();
   }
 
   // 2) Routes pour « guests »
@@ -297,11 +301,11 @@ router.beforeEach((to, from, next) => {
     return next({ name: "Home" });
   }
 
-  if (requiredRoles && !requiredRoles.includes(auth.user?.role || '')) {
+  if (requiredRoles && !requiredRoles.includes(auth.user?.role || "")) {
     return next({ name: "Home" });
   }
 
-  next()
-})
+  next();
+});
 
 export default router;

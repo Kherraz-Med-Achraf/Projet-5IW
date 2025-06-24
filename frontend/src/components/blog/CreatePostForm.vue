@@ -1,321 +1,380 @@
 <template>
-  <div class="create-post-form">
-    <h3>✨ Créer un nouveau post</h3>
-    
-    <form @submit.prevent="handleSubmit" class="post-form">
-      <!-- Titre -->
-      <div class="form-group">
-        <label for="title">Titre du post</label>
-        <div class="input-with-ai">
-          <input
-            id="title"
-            v-model="form.title"
-            type="text"
-            placeholder="Saisissez le titre..."
-            required
-            maxlength="200"
-          />
-          <label class="ai-checkbox">
-            <input type="checkbox" v-model="titlePropose" @change="onProposeTitle" />
-            <span class="ai-label">🤖 Proposer une amélioration via IA</span>
-            <span v-if="titleGenerating" class="generating">(génération…)</span>
-          </label>
-        </div>
-        
-        <!-- Proposition IA pour le titre -->
-        <div v-if="titleProposal && !titleGenerating" class="ai-proposal">
-          <p class="proposal-text">
-            <strong>Proposition :</strong> {{ titleProposal }}
-          </p>
-          <button type="button" @click="acceptTitleProposal" class="btn-accept">
-            Utiliser cette proposition
-          </button>
-        </div>
-      </div>
+  <transition name="modal">
+    <div v-if="visible" class="modal-overlay" @click.self="handleClose">
+      <div class="modal-content create-post-form">
+        <h3>✨ Créer un nouveau post</h3>
 
-      <!-- Description -->
-      <div class="form-group">
-        <label for="description">Description</label>
-        <div class="input-with-ai">
-          <textarea
-            id="description"
-            v-model="form.description"
-            placeholder="Décrivez votre post..."
-            required
-            maxlength="2000"
-            rows="5"
-          ></textarea>
-          <label class="ai-checkbox">
-            <input type="checkbox" v-model="descriptionPropose" @change="onProposeDescription" />
-            <span class="ai-label">🤖 Proposer une amélioration via IA</span>
-            <span v-if="descriptionGenerating" class="generating">(génération…)</span>
-          </label>
-        </div>
-        
-        <!-- Proposition IA pour la description -->
-        <div v-if="descriptionProposal && !descriptionGenerating" class="ai-proposal">
-          <p class="proposal-text">
-            <strong>Proposition :</strong> {{ descriptionProposal }}
-          </p>
-          <button type="button" @click="acceptDescriptionProposal" class="btn-accept">
-            Utiliser cette proposition
-          </button>
-        </div>
-      </div>
+        <form @submit.prevent="handleSubmit" class="post-form">
+          <!-- Titre -->
+          <div class="form-group">
+            <label for="title">Titre du post</label>
+            <div class="input-with-ai">
+              <input
+                id="title"
+                v-model="form.title"
+                type="text"
+                placeholder="Saisissez le titre..."
+                required
+                maxlength="200"
+              />
+              <label class="ai-checkbox">
+                <input
+                  type="checkbox"
+                  v-model="titlePropose"
+                  @change="onProposeTitle"
+                />
+                <span class="ai-label"
+                  >🤖 Proposer une amélioration via IA</span
+                >
+                <span v-if="titleGenerating" class="generating"
+                  >(génération…)</span
+                >
+              </label>
+            </div>
 
-      <!-- Upload média -->
-      <div class="form-group">
-        <label for="media">Image ou vidéo (optionnel)</label>
-        <div class="file-upload">
-          <input
-            id="media"
-            type="file"
-            @change="handleFileChange"
-            accept="image/*,video/*"
-            ref="fileInput"
-          />
-          <div v-if="selectedFile" class="file-preview">
-            <span>{{ selectedFile.name }}</span>
-            <button type="button" @click="removeFile" class="remove-file">❌</button>
+            <!-- Proposition IA pour le titre -->
+            <div v-if="titleProposal && !titleGenerating" class="ai-proposal">
+              <p class="proposal-text">
+                <strong>Proposition :</strong> {{ titleProposal }}
+              </p>
+              <button
+                type="button"
+                @click="acceptTitleProposal"
+                class="btn-accept"
+              >
+                Utiliser cette proposition
+              </button>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Aperçu du média -->
-      <div v-if="mediaPreview" class="media-preview">
-        <img v-if="isImage" :src="mediaPreview" alt="Aperçu" class="preview-image" />
-        <video v-else-if="isVideo" :src="mediaPreview" controls class="preview-video"></video>
-      </div>
+          <!-- Description -->
+          <div class="form-group">
+            <label for="description">Description</label>
+            <div class="input-with-ai">
+              <textarea
+                id="description"
+                v-model="form.description"
+                placeholder="Décrivez votre post..."
+                required
+                maxlength="2000"
+                rows="5"
+              ></textarea>
+              <label class="ai-checkbox">
+                <input
+                  type="checkbox"
+                  v-model="descriptionPropose"
+                  @change="onProposeDescription"
+                />
+                <span class="ai-label"
+                  >🤖 Proposer une amélioration via IA</span
+                >
+                <span v-if="descriptionGenerating" class="generating"
+                  >(génération…)</span
+                >
+              </label>
+            </div>
 
-      <!-- Boutons -->
-      <div class="form-actions">
-        <button type="button" @click="resetForm" class="btn-secondary">
-          Annuler
-        </button>
-        <button type="submit" :disabled="loading || !form.title || !form.description" class="btn-primary">
-          {{ loading ? 'Création...' : 'Publier le post' }}
-        </button>
+            <!-- Proposition IA pour la description -->
+            <div
+              v-if="descriptionProposal && !descriptionGenerating"
+              class="ai-proposal"
+            >
+              <p class="proposal-text">
+                <strong>Proposition :</strong> {{ descriptionProposal }}
+              </p>
+              <button
+                type="button"
+                @click="acceptDescriptionProposal"
+                class="btn-accept"
+              >
+                Utiliser cette proposition
+              </button>
+            </div>
+          </div>
+
+          <!-- Upload média -->
+          <div class="form-group">
+            <label for="media">Image ou vidéo (optionnel)</label>
+            <div class="file-upload">
+              <input
+                id="media"
+                type="file"
+                @change="handleFileChange"
+                accept="image/*,video/*"
+                ref="fileInput"
+              />
+              <div v-if="selectedFile" class="file-preview">
+                <span>{{ selectedFile.name }}</span>
+                <button type="button" @click="removeFile" class="remove-file">
+                  ❌
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Aperçu du média -->
+          <div v-if="mediaPreview" class="media-preview">
+            <img
+              v-if="isImage"
+              :src="mediaPreview"
+              alt="Aperçu"
+              class="preview-image"
+            />
+            <video
+              v-else-if="isVideo"
+              :src="mediaPreview"
+              controls
+              class="preview-video"
+            ></video>
+          </div>
+
+          <!-- Boutons -->
+          <div class="form-actions">
+            <button type="button" @click="handleClose" class="btn-secondary">
+              Annuler
+            </button>
+            <button
+              type="submit"
+              :disabled="loading || !form.title || !form.description"
+              class="btn-primary"
+            >
+              {{ loading ? "Création..." : "Publier le post" }}
+            </button>
+          </div>
+        </form>
       </div>
-    </form>
-  </div>
+    </div>
+  </transition>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { useBlogStore } from '@/stores/blogStore'
+import { ref, computed, watch } from "vue";
+import { useBlogStore } from "@/stores/blogStore";
 
 // Props
 const emit = defineEmits<{
-  postCreated: []
-}>()
+  postCreated: [];
+  close: [];
+}>();
+
+const props = defineProps<{ visible: boolean }>();
 
 // Store
-const blogStore = useBlogStore()
+const blogStore = useBlogStore();
 
 // État local
 const form = ref({
-  title: '',
-  description: '',
-})
+  title: "",
+  description: "",
+});
 
-const selectedFile = ref<File | null>(null)
-const mediaPreview = ref<string | null>(null)
-const fileInput = ref<HTMLInputElement>()
-const loading = ref(false)
+const selectedFile = ref<File | null>(null);
+const mediaPreview = ref<string | null>(null);
+const fileInput = ref<HTMLInputElement>();
+const loading = ref(false);
 
 // États IA pour le titre
-const titlePropose = ref(false)
-const titleGenerating = ref(false)
-const titleProposal = ref<string | null>(null)
+const titlePropose = ref(false);
+const titleGenerating = ref(false);
+const titleProposal = ref<string | null>(null);
 
 // États IA pour la description
-const descriptionPropose = ref(false)
-const descriptionGenerating = ref(false)
-const descriptionProposal = ref<string | null>(null)
+const descriptionPropose = ref(false);
+const descriptionGenerating = ref(false);
+const descriptionProposal = ref<string | null>(null);
 
 // Computed
 const isImage = computed(() => {
-  return selectedFile.value?.type.startsWith('image/') ?? false
-})
+  return selectedFile.value?.type.startsWith("image/") ?? false;
+});
 
 const isVideo = computed(() => {
-  return selectedFile.value?.type.startsWith('video/') ?? false
-})
+  return selectedFile.value?.type.startsWith("video/") ?? false;
+});
 
 // Watchers
 watch(selectedFile, (newFile) => {
   if (newFile) {
-    const reader = new FileReader()
+    const reader = new FileReader();
     reader.onload = (e) => {
-      mediaPreview.value = e.target?.result as string
-    }
-    reader.readAsDataURL(newFile)
+      mediaPreview.value = e.target?.result as string;
+    };
+    reader.readAsDataURL(newFile);
   } else {
-    mediaPreview.value = null
+    mediaPreview.value = null;
   }
-})
+});
 
 // Méthodes
 const handleFileChange = (event: Event) => {
-  const target = event.target as HTMLInputElement
+  const target = event.target as HTMLInputElement;
   if (target.files && target.files[0]) {
-    const file = target.files[0]
-    
+    const file = target.files[0];
+
     // Vérifier la taille (50MB max)
     if (file.size > 50 * 1024 * 1024) {
-      alert('Le fichier ne peut pas dépasser 50MB')
-      return
+      alert("Le fichier ne peut pas dépasser 50MB");
+      return;
     }
-    
-    selectedFile.value = file
+
+    selectedFile.value = file;
   }
-}
+};
 
 const removeFile = () => {
-  selectedFile.value = null
+  selectedFile.value = null;
   if (fileInput.value) {
-    fileInput.value.value = ''
+    fileInput.value.value = "";
   }
-}
+};
 
 // Méthodes IA
 const onProposeTitle = async () => {
   if (!titlePropose.value) {
-    titleProposal.value = null
-    titleGenerating.value = false
-    return
+    titleProposal.value = null;
+    titleGenerating.value = false;
+    return;
   }
-  
+
   if (!form.value.title.trim()) {
-    alert('Veuillez d\'abord saisir un titre avant de demander une amélioration.')
-    titlePropose.value = false
-    return
+    alert(
+      "Veuillez d'abord saisir un titre avant de demander une amélioration."
+    );
+    titlePropose.value = false;
+    return;
   }
-  
-  titleGenerating.value = true
-  titleProposal.value = null
-  
+
+  titleGenerating.value = true;
+  titleProposal.value = null;
+
   try {
-    const response = await fetch('http://localhost:3000/ai/mission-improve', {
-      method: 'POST',
+    const response = await fetch("http://localhost:3000/ai/mission-improve", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
-      body: JSON.stringify({ 
-        prompt: `Améliore ce titre de post pour un blog d'école spécialisée : "${form.value.title}"` 
+      body: JSON.stringify({
+        prompt: `Améliore ce titre de post pour un blog d'école spécialisée : "${form.value.title}"`,
       }),
-    })
-    
+    });
+
     if (!response.ok) {
-      throw new Error('Erreur lors de la génération de l\'amélioration')
+      throw new Error("Erreur lors de la génération de l'amélioration");
     }
-    
-    const data = await response.json()
-    titleProposal.value = data.suggestion
+
+    const data = await response.json();
+    titleProposal.value = data.suggestion;
   } catch (error: any) {
-    alert('Erreur lors de la génération de l\'amélioration : ' + error.message)
-    titlePropose.value = false
+    alert("Erreur lors de la génération de l'amélioration : " + error.message);
+    titlePropose.value = false;
   } finally {
-    titleGenerating.value = false
+    titleGenerating.value = false;
   }
-}
+};
 
 const acceptTitleProposal = () => {
   if (titleProposal.value) {
-    form.value.title = titleProposal.value
-    titlePropose.value = false
-    titleProposal.value = null
+    form.value.title = titleProposal.value;
+    titlePropose.value = false;
+    titleProposal.value = null;
   }
-}
+};
 
 const onProposeDescription = async () => {
   if (!descriptionPropose.value) {
-    descriptionProposal.value = null
-    descriptionGenerating.value = false
-    return
+    descriptionProposal.value = null;
+    descriptionGenerating.value = false;
+    return;
   }
-  
+
   if (!form.value.description.trim()) {
-    alert('Veuillez d\'abord saisir une description avant de demander une amélioration.')
-    descriptionPropose.value = false
-    return
+    alert(
+      "Veuillez d'abord saisir une description avant de demander une amélioration."
+    );
+    descriptionPropose.value = false;
+    return;
   }
-  
-  descriptionGenerating.value = true
-  descriptionProposal.value = null
-  
+
+  descriptionGenerating.value = true;
+  descriptionProposal.value = null;
+
   try {
-    const response = await fetch('http://localhost:3000/ai/mission-improve', {
-      method: 'POST',
+    const response = await fetch("http://localhost:3000/ai/mission-improve", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
-      body: JSON.stringify({ 
-        prompt: `Améliore cette description de post pour un blog d'école spécialisée : "${form.value.description}"` 
+      body: JSON.stringify({
+        prompt: `Améliore cette description de post pour un blog d'école spécialisée : "${form.value.description}"`,
       }),
-    })
-    
+    });
+
     if (!response.ok) {
-      throw new Error('Erreur lors de la génération de l\'amélioration')
+      throw new Error("Erreur lors de la génération de l'amélioration");
     }
-    
-    const data = await response.json()
-    descriptionProposal.value = data.suggestion
+
+    const data = await response.json();
+    descriptionProposal.value = data.suggestion;
   } catch (error: any) {
-    alert('Erreur lors de la génération de l\'amélioration : ' + error.message)
-    descriptionPropose.value = false
+    alert("Erreur lors de la génération de l'amélioration : " + error.message);
+    descriptionPropose.value = false;
   } finally {
-    descriptionGenerating.value = false
+    descriptionGenerating.value = false;
   }
-}
+};
 
 const acceptDescriptionProposal = () => {
   if (descriptionProposal.value) {
-    form.value.description = descriptionProposal.value
-    descriptionPropose.value = false
-    descriptionProposal.value = null
+    form.value.description = descriptionProposal.value;
+    descriptionPropose.value = false;
+    descriptionProposal.value = null;
   }
-}
+};
 
 const handleSubmit = async () => {
-  loading.value = true
-  
+  loading.value = true;
+
   try {
     await blogStore.createPost({
       title: form.value.title,
       description: form.value.description,
       media: selectedFile.value || undefined,
-    })
-    
-    resetForm()
-    emit('postCreated')
+    });
+
+    resetForm();
+    emit("postCreated");
   } catch (error) {
     // L'erreur est gérée dans le store
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const resetForm = () => {
   form.value = {
-    title: '',
-    description: '',
-  }
-  selectedFile.value = null
+    title: "",
+    description: "",
+  };
+  selectedFile.value = null;
   if (fileInput.value) {
-    fileInput.value.value = ''
+    fileInput.value.value = "";
   }
-  
+
   // Reset IA states
-  titlePropose.value = false
-  titleGenerating.value = false
-  titleProposal.value = null
-  descriptionPropose.value = false
-  descriptionGenerating.value = false
-  descriptionProposal.value = null
-}
+  titlePropose.value = false;
+  titleGenerating.value = false;
+  titleProposal.value = null;
+  descriptionPropose.value = false;
+  descriptionGenerating.value = false;
+  descriptionProposal.value = null;
+};
+
+const handleClose = () => {
+  resetForm();
+  emit("close");
+};
 </script>
 
 <style scoped lang="scss">
@@ -348,7 +407,8 @@ const resetForm = () => {
   .input-with-ai {
     position: relative;
 
-    input, textarea {
+    input,
+    textarea {
       width: 100%;
       padding: 12px;
       border: 2px solid #e1e8ed;
@@ -518,4 +578,41 @@ const resetForm = () => {
     }
   }
 }
-</style> 
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 650px;
+  margin: 0 1rem;
+  animation: modalFade 0.3s ease;
+}
+
+@keyframes modalFade {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.2s ease;
+}
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+</style>

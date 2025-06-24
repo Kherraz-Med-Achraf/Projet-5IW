@@ -4,20 +4,35 @@
     <header class="blog-header">
       <div class="header-content">
         <h1>📝 Blog de l'école</h1>
-        <p class="header-subtitle">Suivez l'actualité et les moments forts de notre établissement</p>
+        <p class="header-subtitle">
+          Suivez l'actualité et les moments forts de notre établissement
+        </p>
       </div>
     </header>
 
     <div class="blog-container">
-      <!-- Formulaire de création pour les secrétaires -->
-      <CreatePostForm
+      <!-- Bouton pour ouvrir la modal de création -->
+      <button
         v-if="canCreatePost"
-        @post-created="handlePostCreated"
+        class="create-post-btn"
+        @click="showCreateModal = true"
+      >
+        ✏️ Créer un post
+      </button>
+
+      <!-- Modal de création de post -->
+      <CreatePostForm
+        :visible="showCreateModal"
+        @close="showCreateModal = false"
+        @post-created="handlePostCreatedModal"
       />
 
       <!-- Message d'information pour les autres rôles -->
-      <div v-else-if="authStore.user" class="info-message">
-        <p>👋 Bienvenue sur le blog ! Vous pouvez consulter les posts et laisser des réactions.</p>
+      <div v-if="!canCreatePost && authStore.user" class="info-message">
+        <p>
+          👋 Bienvenue sur le blog ! Vous pouvez consulter les posts et laisser
+          des réactions.
+        </p>
       </div>
 
       <!-- États de chargement et erreur -->
@@ -33,11 +48,7 @@
 
       <!-- Liste des posts -->
       <div v-else-if="posts.length > 0" class="posts-list">
-        <BlogPost
-          v-for="post in posts"
-          :key="post.id"
-          :post="post"
-        />
+        <BlogPost v-for="post in posts" :key="post.id" :post="post" />
       </div>
 
       <!-- Message si aucun post -->
@@ -52,41 +63,53 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useBlogStore } from '@/stores/blogStore'
-import CreatePostForm from '@/components/blog/CreatePostForm.vue'
-import BlogPost from '@/components/blog/BlogPost.vue'
+import { computed, onMounted, ref } from "vue";
+import { useAuthStore } from "@/stores/auth";
+import { useBlogStore } from "@/stores/blogStore";
+import CreatePostForm from "@/components/blog/CreatePostForm.vue";
+import BlogPost from "@/components/blog/BlogPost.vue";
 
 // Stores
-const authStore = useAuthStore()
-const blogStore = useBlogStore()
+const authStore = useAuthStore();
+const blogStore = useBlogStore();
+
+// State
+const showCreateModal = ref(false);
 
 // Computed
 const canCreatePost = computed(() => {
-  const userRole = authStore.user?.role
-  return userRole === 'SECRETARY' || userRole === 'DIRECTOR' || userRole === 'SERVICE_MANAGER'
-})
+  const userRole = authStore.user?.role;
+  return (
+    userRole === "SECRETARY" ||
+    userRole === "DIRECTOR" ||
+    userRole === "SERVICE_MANAGER"
+  );
+});
 
 const posts = computed(() => {
-  return blogStore.sortedPosts
-})
+  return blogStore.sortedPosts;
+});
 
 // Méthodes
 const reloadPosts = async () => {
-  await blogStore.fetchPosts()
-}
+  await blogStore.fetchPosts();
+};
 
 const handlePostCreated = () => {
   // Le post est déjà ajouté au store, on peut faire un scroll vers le haut
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+const handlePostCreatedModal = () => {
+  handlePostCreated();
+  showCreateModal.value = false;
+};
 
 // Lifecycle
 onMounted(() => {
   // Charger les posts au montage du composant
-  blogStore.fetchPosts()
-})
+  blogStore.fetchPosts();
+});
 </script>
 
 <style scoped lang="scss">
@@ -96,7 +119,7 @@ onMounted(() => {
 }
 
 .blog-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4444ac 0%, #2c2c78 100%);
   color: white;
   padding: 60px 0 80px;
   text-align: center;
@@ -104,7 +127,7 @@ onMounted(() => {
   overflow: hidden;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -148,7 +171,7 @@ onMounted(() => {
   padding: 20px;
   margin-bottom: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid #3498db;
+  border-left: 4px solid #4444ac;
 
   p {
     margin: 0;
@@ -170,7 +193,7 @@ onMounted(() => {
     width: 40px;
     height: 40px;
     border: 4px solid #e1e8ed;
-    border-top: 4px solid #3498db;
+    border-top: 4px solid #4444ac;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 16px;
@@ -198,22 +221,22 @@ onMounted(() => {
 
   .retry-btn {
     padding: 10px 20px;
-    background: #3498db;
+    background: linear-gradient(135deg, #4444ac 0%, #2c2c78 100%);
     color: white;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     font-weight: 600;
-    transition: background-color 0.3s;
+    transition: transform 0.2s ease;
 
     &:hover {
-      background: #2980b9;
+      transform: translateY(-2px);
     }
   }
 }
 
 .posts-list {
-  margin-top: 0;
+  margin-top: 32px;
 }
 
 .empty-state {
@@ -242,9 +265,38 @@ onMounted(() => {
   }
 }
 
+.create-post-btn {
+  display: block;
+  width: 100%;
+  margin-bottom: 24px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+  color: #2c2c78;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+
+  &:hover {
+    background: linear-gradient(135deg, #f0f4ff 0%, #c7d2fe 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -5px rgba(44, 44, 120, 0.12);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 // Responsive
@@ -272,4 +324,4 @@ onMounted(() => {
     padding: 40px 16px;
   }
 }
-</style> 
+</style>

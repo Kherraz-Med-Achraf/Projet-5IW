@@ -77,23 +77,43 @@ export class ChatService {
   async findAllForUser(userId: string) {
     const chats = await this.chatModel.find({ participants: userId }).exec();
 
-    // Pour chaque chat, récupérer le dernier message
-    const chatsWithLastMessage = await Promise.all(
+    const results = await Promise.all(
       chats.map(async (chat) => {
+        // Dernier message pour l'aperçu et la date de mise à jour
         const lastMessage = await this.msgModel
           .findOne({ chat: chat._id })
           .sort({ sentAt: -1 })
           .exec();
 
+        // Date de dernière lecture stockée (par défaut 1970 si non lue)
+        let lastRead: Date = new Date(0);
+        const lrField: any = (chat as any).lastReads;
+        if (lrField) {
+          // Le champ est un Map ou un objet simple selon mongoose
+          if (typeof lrField.get === 'function') {
+            lastRead = lrField.get(userId) ?? new Date(0);
+          } else if (lrField[userId]) {
+            lastRead = lrField[userId] as Date;
+          }
+        }
+
+        // Nombre de messages non lus (hors messages de l'utilisateur)
+        const unreadCount = await this.msgModel.countDocuments({
+          chat: chat._id,
+          author: { $ne: userId },
+          sentAt: { $gt: lastRead },
+        });
+
         return {
           ...chat.toObject(),
           lastMessage: lastMessage?.content || null,
           updatedAt: lastMessage?.sentAt || chat.updatedAt,
+          unreadCount,
         };
       }),
     );
 
-    return chatsWithLastMessage;
+    return results;
   }
 
   async canAccessChat(userId: string, chatId: string) {
@@ -321,5 +341,15 @@ export class ChatService {
       CHILD: [],
     };
     return M[senderRole]?.includes(receiverRole) ?? false;
+  }
+
+  async markAsRead(chatId: string, userId: string) {
+    if (!(await this.canAccessChat(userId, chatId))) {
+      throw new ForbiddenException('Accès refusé');
+    }
+
+    await this.chatModel.findByIdAndUpdate(chatId, {
+      [`lastReads.${userId}`]: new Date(),
+    });
   }
 }

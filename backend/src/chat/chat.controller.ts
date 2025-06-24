@@ -103,4 +103,14 @@ export class ChatController {
   ) {
     return this.chatService.deleteMessage(chatId, msgId, req.user.id);
   }
+
+  /* Marquer toutes les informations comme lues pour l'utilisateur courant */
+  @Patch(':chatId/read')
+  async markRead(
+    @Param('chatId', ParseObjectIdPipe) chatId: string,
+    @Request() req,
+  ) {
+    await this.chatService.markAsRead(chatId, req.user.id);
+    return { ok: true };
+  }
 }

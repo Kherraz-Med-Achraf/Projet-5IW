@@ -225,6 +225,9 @@ watch(
   messages,
   () => {
     scrollToBottom();
+    if (activeId.value) {
+      chatStore.markAsRead(activeId.value);
+    }
   },
   { deep: true }
 );

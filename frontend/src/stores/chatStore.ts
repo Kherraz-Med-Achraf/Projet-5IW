@@ -66,7 +66,7 @@ export const useChatStore = defineStore("chat", () => {
       updatedAt: c.updatedAt,
       lastMessage: c.lastMessage,
       createdAt: c.createdAt,
-      unreadCount: 0,
+      unreadCount: c.unreadCount ?? 0,
     }));
   }
 
@@ -191,10 +191,21 @@ export const useChatStore = defineStore("chat", () => {
     socket.emit("deleteMessage", { chatId, msgId });
   }
 
-  function markAsRead(chatId: string) {
+  async function markAsRead(chatId: string) {
     const chat = chats.value.find((c) => c.id === chatId);
-    if (chat) {
-      chat.unreadCount = 0;
+    if (!chat) return;
+
+    // Réinitialise localement
+    chat.unreadCount = 0;
+
+    // Signale au backend pour persistance
+    try {
+      await fetch(`${API}/chats/${chatId}/read`, {
+        method: "PATCH",
+        headers: authHeaders(),
+      });
+    } catch (err) {
+      console.error("Erreur markAsRead", err);
     }
   }
 

@@ -13,6 +13,10 @@ export class Chat extends Document {
 
   @Prop()
   updatedAt?: Date;
+
+  // Date de dernière lecture par utilisateur { [userId]: Date }
+  @Prop({ type: Map, of: Date, default: {} })
+  lastReads: Map<string, Date>;
 }
 
 export const ChatSchema = SchemaFactory.createForClass(Chat);

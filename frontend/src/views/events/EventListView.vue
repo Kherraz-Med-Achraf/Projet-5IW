@@ -5,7 +5,7 @@
       <p class="subtitle">
         Découvrez et inscrivez-vous aux prochains événements du samedi
       </p>
-      <router-link to="/events/mine" class="btn-primary my-events-link">       
+      <router-link to="/events/mine" class="btn-primary my-events-link">
         Mes inscriptions
       </router-link>
     </div>

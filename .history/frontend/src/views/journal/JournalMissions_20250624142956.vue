@@ -74,7 +74,7 @@
           Retour
         </button>
         
-        <div class="journal-missions__main-actions">
+        <div class="journal-missions__right-actions">
           <button
             @click="addMission"
             class="journal-missions__btn journal-missions__btn--primary journal-missions__add-btn"
@@ -972,12 +972,12 @@ function cancelLeave() {
         gap: 1rem;
         align-items: stretch;
 
-        .journal-missions__add-btn {
-          order: 1;
+        .journal-missions__back-btn {
+          order: 2;
         }
 
         .journal-missions__save-btn {
-          order: 2;
+          order: 1;
         }
       }
     }

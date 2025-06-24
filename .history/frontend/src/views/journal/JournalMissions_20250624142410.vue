@@ -68,27 +68,26 @@
         </div>
       </div>
 
-      <!-- actions principales - tous les boutons au même niveau -->
-      <div class="journal-missions__all-actions">
+      <!-- ajouter mission -->
+      <button
+        @click="addMission"
+        class="journal-missions__btn journal-missions__btn--primary journal-missions__add-btn"
+      >
+        + Ajouter une mission
+      </button>
+
+      <!-- actions principales -->
+      <div class="journal-missions__actions">
         <button @click="onBack" class="journal-missions__back-btn">
-          Retour
+          ← Retour
         </button>
-        
-        <div class="journal-missions__main-actions">
-          <button
-            @click="addMission"
-            class="journal-missions__btn journal-missions__btn--primary journal-missions__add-btn"
-          >
-            + Ajouter une mission
-          </button>
-          <button
-            @click="onSave"
-            :disabled="saving"
-            class="journal-missions__btn journal-missions__btn--success journal-missions__save-btn"
-          >
-            {{ saving ? "Enregistrement…" : "Enregistrer les missions" }}
-          </button>
-        </div>
+        <button
+          @click="onSave"
+          :disabled="saving"
+          class="journal-missions__btn journal-missions__btn--success journal-missions__save-btn"
+        >
+          {{ saving ? "Enregistrement…" : "Enregistrer les missions" }}
+        </button>
       </div>
 
       <div v-if="error" class="journal-missions__error">{{ error }}</div>
@@ -669,90 +668,78 @@ function cancelLeave() {
       }
     }
 
-    .journal-missions__all-actions {
+    .journal-missions__add-btn {
+      display: block;
+      margin: 2rem auto;
+      background: linear-gradient(135deg, #4444ac 0%, #2c2c78 100%);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(68, 68, 172, 0.4);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+
+    .journal-missions__actions {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin: 2rem 0;
-      gap: 1rem;
-    }
-
-    .journal-missions__add-btn {
-      background: linear-gradient(135deg, #4444ac 0%, #2c2c78 100%);
-      color: white;
-      border: none;
-      padding: 1rem 2rem;
+      margin-top: 3rem;
+      padding: 2rem;
+      background: white;
       border-radius: 12px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(68, 68, 172, 0.4);
+      .journal-missions__back-btn {
+        color: #6b7280;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+
+        &:hover {
+          color: #374151;
+          background-color: #f3f4f6;
+        }
       }
 
-      &:active {
-        transform: translateY(0);
-      }
-    }
+      .journal-missions__save-btn {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
 
-    .journal-missions__main-actions {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
 
-    .journal-missions__back-btn {
-      background: linear-gradient(135deg, #4444ac 0%, #2c2c78 100%);
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 1.1rem;
-      font-weight: 600;
-      padding: 1rem 2rem;
-      border-radius: 12px;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(68, 68, 172, 0.4);
-      }
-
-      &:active {
-        transform: translateY(0);
-      }
-    }
-
-    .journal-missions__save-btn {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-      border: none;
-      padding: 1rem 2rem;
-      border-radius: 12px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(16, 185, 129, 0.4);
-      }
-
-      &:active {
-        transform: translateY(0);
-      }
-
-      &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+        }
       }
     }
 
@@ -961,23 +948,17 @@ function cancelLeave() {
         }
       }
 
-      .journal-missions__all-actions {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: stretch;
-      }
-
-      .journal-missions__main-actions {
+      .journal-missions__actions {
         flex-direction: column;
         gap: 1rem;
         align-items: stretch;
 
-        .journal-missions__add-btn {
-          order: 1;
+        .journal-missions__back-btn {
+          order: 2;
         }
 
         .journal-missions__save-btn {
-          order: 2;
+          order: 1;
         }
       }
     }

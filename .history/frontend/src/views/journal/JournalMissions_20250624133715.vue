@@ -68,27 +68,26 @@
         </div>
       </div>
 
-      <!-- actions principales - tous les boutons au même niveau -->
-      <div class="journal-missions__all-actions">
+      <!-- ajouter mission -->
+      <button
+        @click="addMission"
+        class="journal-missions__btn journal-missions__btn--primary journal-missions__add-btn"
+      >
+        + Ajouter une mission
+      </button>
+
+      <!-- actions principales -->
+      <div class="journal-missions__actions">
         <button @click="onBack" class="journal-missions__back-btn">
-          Retour
+          ← Retour
         </button>
-        
-        <div class="journal-missions__main-actions">
-          <button
-            @click="addMission"
-            class="journal-missions__btn journal-missions__btn--primary journal-missions__add-btn"
-          >
-            + Ajouter une mission
-          </button>
-          <button
-            @click="onSave"
-            :disabled="saving"
-            class="journal-missions__btn journal-missions__btn--success journal-missions__save-btn"
-          >
-            {{ saving ? "Enregistrement…" : "Enregistrer les missions" }}
-          </button>
-        </div>
+        <button
+          @click="onSave"
+          :disabled="saving"
+          class="journal-missions__btn journal-missions__btn--success journal-missions__save-btn"
+        >
+          {{ saving ? "Enregistrement…" : "Enregistrer les missions" }}
+        </button>
       </div>
 
       <div v-if="error" class="journal-missions__error">{{ error }}</div>
@@ -380,44 +379,26 @@ async function onPropose(index: number) {
     toast.success("Proposition d'amélioration générée avec succès !");
     
   } catch (e: any) {
-    let errorMessage = "Le service IA n'est pas disponible actuellement. Veuillez réessayer plus tard.";
+    let errorMessage = "Erreur de génération de la proposition.";
     
     if (e.message) {
-      // Messages d'erreur personnalisés selon le contenu
+      // Messages d'erreur personnalisés
       if (e.message.includes("n'a pas pu comprendre") || 
           e.message.includes("n'a pas pu générer")) {
         errorMessage = e.message;
-      } else if (e.message.includes("quota") || e.message.includes("limit")) {
-        errorMessage = "Le service IA a atteint sa limite d'utilisation. Veuillez réessayer plus tard ou contacter l'administrateur.";
-      } else if (e.message.includes("authentification") || e.message.includes("authentication")) {
-        errorMessage = "Problème d'authentification avec le service IA. Contactez l'administrateur.";
-      } else if (e.message.includes("trop de requêtes") || e.message.includes("rate limit") || e.message.includes("429")) {
-        errorMessage = "Trop de requêtes simultanées. Attendez quelques instants avant de réessayer.";
-      } else if (e.message.includes("temporairement indisponible") || e.message.includes("503")) {
-        errorMessage = "Le service IA est temporairement indisponible. Réessayez dans quelques minutes.";
-      } else if (e.message.includes("Network") || e.message.includes("fetch") || e.message.includes("Failed to fetch")) {
+      } else if (e.message.includes("Network") || e.message.includes("fetch")) {
         errorMessage = "Erreur de connexion. Vérifiez votre connexion internet et réessayez.";
+      } else if (e.message.includes("429") || e.message.includes("rate limit")) {
+        errorMessage = "Trop de requêtes. Attendez quelques instants avant de réessayer.";
       } else if (e.message.includes("500") || e.message.includes("Internal Server")) {
-        errorMessage = "Erreur du serveur. Veuillez réessayer dans quelques instants.";
-      } else if (e.message.includes("400") || e.message.includes("Bad Request")) {
-        errorMessage = "La demande n'est pas valide. Vérifiez le contenu de votre mission et réessayez.";
-      } else if (e.message.includes("demande n'est pas valide")) {
-        errorMessage = e.message;
-      } else if (e.message.includes("service IA")) {
-        // Messages du backend déjà traduits
-        errorMessage = e.message;
+        errorMessage = "Erreur du serveur IA. Réessayez dans quelques instants.";
       } else {
-        // Message générique pour les autres erreurs
-        errorMessage = "Une erreur inattendue s'est produite. Veuillez réessayer plus tard.";
+        errorMessage = e.message;
       }
     }
     
     error.value = errorMessage;
-    toast.error(errorMessage, { 
-      timeout: 8000, // Plus de temps pour lire les messages d'erreur
-      closeOnClick: true,
-      pauseOnHover: true
-    });
+    toast.error(errorMessage, { timeout: 6000 });
     m.propose = false;
   } finally {
     m.generating = false;
@@ -518,12 +499,11 @@ function cancelLeave() {
     text-align: center;
     margin-bottom: 3rem;
     padding: 2rem;
-    background: linear-gradient(135deg, #4444ac 0%, #2c2c78 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 12px;
     color: white;
     font-size: 2rem;
-    font-weight: 700; /* Satoshi Bold */
-    font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 600;
     line-height: 1.2;
   }
 
@@ -579,7 +559,6 @@ function cancelLeave() {
           border: none;
           padding: 0.75rem 1.5rem;
           border-radius: 8px;
-          font-size: 1.1rem;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -669,90 +648,77 @@ function cancelLeave() {
       }
     }
 
-    .journal-missions__all-actions {
+    .journal-missions__add-btn {
+      display: block;
+      margin: 2rem auto;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(102, 126, 234, 0.4);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+
+    .journal-missions__actions {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin: 2rem 0;
-      gap: 1rem;
-    }
-
-    .journal-missions__add-btn {
-      background: linear-gradient(135deg, #4444ac 0%, #2c2c78 100%);
-      color: white;
-      border: none;
-      padding: 1rem 2rem;
+      margin-top: 3rem;
+      padding: 2rem;
+      background: white;
       border-radius: 12px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(68, 68, 172, 0.4);
+      .journal-missions__back-btn {
+        color: #6b7280;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+
+        &:hover {
+          color: #374151;
+          background-color: #f3f4f6;
+        }
       }
 
-      &:active {
-        transform: translateY(0);
-      }
-    }
+      .journal-missions__save-btn {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
 
-    .journal-missions__main-actions {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
 
-    .journal-missions__back-btn {
-      background: linear-gradient(135deg, #4444ac 0%, #2c2c78 100%);
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 1.1rem;
-      font-weight: 600;
-      padding: 1rem 2rem;
-      border-radius: 12px;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(68, 68, 172, 0.4);
-      }
-
-      &:active {
-        transform: translateY(0);
-      }
-    }
-
-    .journal-missions__save-btn {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-      border: none;
-      padding: 1rem 2rem;
-      border-radius: 12px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(16, 185, 129, 0.4);
-      }
-
-      &:active {
-        transform: translateY(0);
-      }
-
-      &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+        }
       }
     }
 
@@ -793,10 +759,8 @@ function cancelLeave() {
     animation: slideIn 0.3s ease;
 
     .journal-missions__modal-header {
-      background: linear-gradient(
-        135deg,
-        rgba(245, 158, 11, 0.1),
-        rgba(239, 68, 68, 0.05)
+      background:t(
+        rgba(39, 97, 223, 0.1)
       );
       padding: 1.5rem;
       border-bottom: 1px solid rgba(245, 158, 11, 0.2);
@@ -961,23 +925,17 @@ function cancelLeave() {
         }
       }
 
-      .journal-missions__all-actions {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: stretch;
-      }
-
-      .journal-missions__main-actions {
+      .journal-missions__actions {
         flex-direction: column;
         gap: 1rem;
         align-items: stretch;
 
-        .journal-missions__add-btn {
-          order: 1;
+        .journal-missions__back-btn {
+          order: 2;
         }
 
         .journal-missions__save-btn {
-          order: 2;
+          order: 1;
         }
       }
     }

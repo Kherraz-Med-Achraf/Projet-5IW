@@ -8,7 +8,7 @@
     <div v-if="!loaded" class="journal-missions__loading">Chargement…</div>
 
     <div v-else class="journal-missions__content">
-     
+      <!-- Liste des missions -->
       <div
         v-for="(mission, index) in missionsList"
         :key="mission.id ?? index"
@@ -68,74 +68,32 @@
         </div>
       </div>
 
-      <!-- actions principales - tous les boutons au même niveau -->
-      <div class="journal-missions__all-actions">
+      <!-- ajouter mission -->
+      <button
+        @click="addMission"
+        class="journal-missions__btn journal-missions__btn--primary journal-missions__add-btn"
+      >
+        + Ajouter une mission
+      </button>
+
+      <!-- actions principales -->
+      <div class="journal-missions__actions">
         <button @click="onBack" class="journal-missions__back-btn">
-          Retour
+          ← Retour
         </button>
-        
-        <div class="journal-missions__main-actions">
-          <button
-            @click="addMission"
-            class="journal-missions__btn journal-missions__btn--primary journal-missions__add-btn"
-          >
-            + Ajouter une mission
-          </button>
-          <button
-            @click="onSave"
-            :disabled="saving"
-            class="journal-missions__btn journal-missions__btn--success journal-missions__save-btn"
-          >
-            {{ saving ? "Enregistrement…" : "Enregistrer les missions" }}
-          </button>
-        </div>
+        <button
+          @click="onSave"
+          :disabled="saving"
+          class="journal-missions__btn journal-missions__btn--success journal-missions__save-btn"
+        >
+          {{ saving ? "Enregistrement…" : "Enregistrer les missions" }}
+        </button>
       </div>
 
       <div v-if="error" class="journal-missions__error">{{ error }}</div>
     </div>
 
-    <!-- Modal de confirmation de suppression -->
-    <div v-if="showDeleteModal" class="journal-missions__modal-overlay">
-      <div class="journal-missions__modal">
-        <div class="journal-missions__modal-header">
-          <h3 class="journal-missions__modal-title">
-            <span class="journal-missions__modal-icon">🗑️</span>
-            Confirmer la suppression
-          </h3>
-        </div>
-
-        <div class="journal-missions__modal-content">
-          <p class="journal-missions__modal-text">
-            Êtes-vous sûr de vouloir supprimer cette mission ?
-          </p>
-          <div class="journal-missions__modal-mission-preview">
-            <strong>Mission à supprimer :</strong><br>
-            "{{ missionToDelete?.mission.description || `Mission ${(missionToDelete?.index ?? 0) + 1}` }}"
-          </div>
-          <p class="journal-missions__modal-warning">
-            <strong>Cette action est irréversible.</strong>
-          </p>
-        </div>
-
-        <div class="journal-missions__modal-actions">
-          <button
-            @click="cancelDeleteMission"
-            class="journal-missions__btn journal-missions__btn--primary journal-missions__modal-btn"
-          >
-            <span class="journal-missions__btn-icon">↩️</span>
-            Annuler
-          </button>
-          <button
-            @click="confirmDeleteMission"
-            class="journal-missions__btn journal-missions__btn--danger journal-missions__modal-btn"
-          >
-            🗑️ Supprimer définitivement
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal de confirmation de navigation -->
+    <!-- Modal de confirmation -->
     <div v-if="showConfirmModal" class="journal-missions__modal-overlay">
       <div class="journal-missions__modal">
         <div class="journal-missions__modal-header">
@@ -202,8 +160,6 @@ const loaded = ref(false);
 const saving = ref(false);
 const error = ref<string>("");
 const showConfirmModal = ref(false);
-const showDeleteModal = ref(false);
-const missionToDelete = ref<{ index: number; mission: MissionVM } | null>(null);
 
 interface MissionVM {
   id?: number;
@@ -218,12 +174,7 @@ const missionsList = reactive<MissionVM[]>([]);
 
 /* libellés */
 const childName = computed(() => {
-  // Essayer d'abord avec childStore.referentChildren
-  let c = childStore.referentChildren.find((c) => c.id === childId);
-  // Si pas trouvé, essayer avec journalStore.childrenRefered
-  if (!c) {
-    c = journalStore.childrenRefered.find((c) => c.id === childId);
-  }
+  const c = childStore.referentChildren.find((c) => c.id === childId);
   return c ? `${c.firstName} ${c.lastName}` : "";
 });
 const yearLabel = computed(() => {
@@ -234,14 +185,7 @@ const yearLabel = computed(() => {
 /* chargement initial */
 onMounted(async () => {
   try {
-    // Charger les données nécessaires pour l'affichage du titre
-    await Promise.all([
-      childStore.fetchReferentChildren(),
-      journalStore.fetchReferentChildren(), // Charger aussi les enfants du journalStore
-      journalStore.fetchAcademicYears(),
-      journalStore.fetchMissions(childId, yearId)
-    ]);
-
+    await journalStore.fetchMissions(childId, yearId);
     missionsList.splice(
       0,
       missionsList.length,
@@ -273,45 +217,10 @@ function addMission() {
 }
 
 function removeMission(index: number) {
-  const mission = missionsList[index];
-  missionToDelete.value = { index, mission };
-  showDeleteModal.value = true;
-}
-
-async function confirmDeleteMission() {
-  if (!missionToDelete.value) return;
-  
-  const { index, mission } = missionToDelete.value;
-  const missionDescription = mission.description || `Mission ${index + 1}`;
-  
-  try {
-    // Si la mission a un ID, la supprimer en base
-    if (mission.id) {
-      await fetch(`http://localhost:3000/mission/${mission.id}`, {
-        method: 'DELETE',
-        headers: {
-          ...journalStore.getAuthHeaders(),
-          'Content-Type': 'application/json'
-        }
-      });
-    }
-    
-    // Supprimer de la liste locale
-    missionsList.splice(index, 1);
-    toast.success(`Mission "${missionDescription}" supprimée avec succès`);
-    
-  } catch (e: any) {
-    toast.error(`Erreur lors de la suppression : ${e.message}`);
-  }
-  
-  // Fermer la modal
-  showDeleteModal.value = false;
-  missionToDelete.value = null;
-}
-
-function cancelDeleteMission() {
-  showDeleteModal.value = false;
-  missionToDelete.value = null;
+  const missionDescription =
+    missionsList[index].description || `Mission ${index + 1}`;
+  missionsList.splice(index, 1);
+  toast.success(`Mission "${missionDescription}" supprimée`);
 }
 
 /* IA : génération de proposition */
@@ -337,87 +246,16 @@ async function onPropose(index: number) {
   toast.info("Génération d'une proposition d'amélioration en cours...");
 
   try {
+    /* appel au store — ajoutera la logique OpenAI dans un second temps */
     const suggestion = await journalStore.proposeMissionImprovement(
       m.description
     );
-
-    // Vérifier si l'IA a compris et peut répondre
-    if (!suggestion || suggestion.trim() === '') {
-      throw new Error("L'IA n'a pas pu générer de suggestion pour cette mission.");
-    }
-
-    // Détecter les réponses indiquant une incompréhension
-    const incomprehensionKeywords = [
-      "je ne comprends pas",
-      "je ne peux pas",
-      "impossible de",
-      "ne suis pas en mesure",
-      "trop vague",
-      "pas assez d'informations",
-      "précisez",
-      "clarifiez",
-      "je ne sais pas",
-      "désolé, mais",
-      "sorry",
-      "i don't understand",
-      "i cannot",
-      "unable to"
-    ];
-
-    const suggestionLower = suggestion.toLowerCase();
-    const hasIncomprehension = incomprehensionKeywords.some(keyword => 
-      suggestionLower.includes(keyword)
-    );
-
-    if (hasIncomprehension) {
-      throw new Error(
-        "L'IA n'a pas pu comprendre votre demande. Essayez de décrire la mission de manière plus détaillée et précise."
-      );
-    }
-
-    // Si tout va bien, afficher la suggestion
     m.proposal = suggestion;
     toast.success("Proposition d'amélioration générée avec succès !");
-    
   } catch (e: any) {
-    let errorMessage = "Le service IA n'est pas disponible actuellement. Veuillez réessayer plus tard.";
-    
-    if (e.message) {
-      // Messages d'erreur personnalisés selon le contenu
-      if (e.message.includes("n'a pas pu comprendre") || 
-          e.message.includes("n'a pas pu générer")) {
-        errorMessage = e.message;
-      } else if (e.message.includes("quota") || e.message.includes("limit")) {
-        errorMessage = "Le service IA a atteint sa limite d'utilisation. Veuillez réessayer plus tard ou contacter l'administrateur.";
-      } else if (e.message.includes("authentification") || e.message.includes("authentication")) {
-        errorMessage = "Problème d'authentification avec le service IA. Contactez l'administrateur.";
-      } else if (e.message.includes("trop de requêtes") || e.message.includes("rate limit") || e.message.includes("429")) {
-        errorMessage = "Trop de requêtes simultanées. Attendez quelques instants avant de réessayer.";
-      } else if (e.message.includes("temporairement indisponible") || e.message.includes("503")) {
-        errorMessage = "Le service IA est temporairement indisponible. Réessayez dans quelques minutes.";
-      } else if (e.message.includes("Network") || e.message.includes("fetch") || e.message.includes("Failed to fetch")) {
-        errorMessage = "Erreur de connexion. Vérifiez votre connexion internet et réessayez.";
-      } else if (e.message.includes("500") || e.message.includes("Internal Server")) {
-        errorMessage = "Erreur du serveur. Veuillez réessayer dans quelques instants.";
-      } else if (e.message.includes("400") || e.message.includes("Bad Request")) {
-        errorMessage = "La demande n'est pas valide. Vérifiez le contenu de votre mission et réessayez.";
-      } else if (e.message.includes("demande n'est pas valide")) {
-        errorMessage = e.message;
-      } else if (e.message.includes("service IA")) {
-        // Messages du backend déjà traduits
-        errorMessage = e.message;
-      } else {
-        // Message générique pour les autres erreurs
-        errorMessage = "Une erreur inattendue s'est produite. Veuillez réessayer plus tard.";
-      }
-    }
-    
+    const errorMessage = e.message || "Erreur de génération de la proposition.";
     error.value = errorMessage;
-    toast.error(errorMessage, { 
-      timeout: 8000, // Plus de temps pour lire les messages d'erreur
-      closeOnClick: true,
-      pauseOnHover: true
-    });
+    toast.error(errorMessage);
     m.propose = false;
   } finally {
     m.generating = false;
@@ -447,9 +285,11 @@ async function onSave() {
       .map((m) => ({ id: m.id, description: m.description.trim() }))
       .filter((m) => m.description !== "");
 
-    // Permettre la sauvegarde même avec 0 missions (pour supprimer toutes les missions existantes)
     if (payload.length === 0) {
-      toast.info("Suppression de toutes les missions...");
+      toast.warning(
+        "Aucune mission à sauvegarder. Veuillez ajouter au moins une mission."
+      );
+      return;
     }
 
     await journalStore.saveMissions(childId, yearId, payload);
@@ -464,15 +304,11 @@ async function onSave() {
       }))
     );
 
-    if (payload.length === 0) {
-      toast.success("Toutes les missions ont été supprimées avec succès !");
-    } else {
-      toast.success(
-        `${payload.length} mission${payload.length > 1 ? "s" : ""} sauvegardée${
-          payload.length > 1 ? "s" : ""
-        } avec succès !`
-      );
-    }
+    toast.success(
+      `${payload.length} mission${payload.length > 1 ? "s" : ""} sauvegardée${
+        payload.length > 1 ? "s" : ""
+      } avec succès !`
+    );
   } catch (e: any) {
     error.value = e.message;
     toast.error("Erreur lors de la sauvegarde des missions");
@@ -518,12 +354,11 @@ function cancelLeave() {
     text-align: center;
     margin-bottom: 3rem;
     padding: 2rem;
-    background: linear-gradient(135deg, #4444ac 0%, #2c2c78 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 12px;
     color: white;
     font-size: 2rem;
-    font-weight: 700; /* Satoshi Bold */
-    font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 600;
     line-height: 1.2;
   }
 
@@ -579,7 +414,6 @@ function cancelLeave() {
           border: none;
           padding: 0.75rem 1.5rem;
           border-radius: 8px;
-          font-size: 1.1rem;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -669,90 +503,77 @@ function cancelLeave() {
       }
     }
 
-    .journal-missions__all-actions {
+    .journal-missions__add-btn {
+      display: block;
+      margin: 2rem auto;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(102, 126, 234, 0.4);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+
+    .journal-missions__actions {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin: 2rem 0;
-      gap: 1rem;
-    }
-
-    .journal-missions__add-btn {
-      background: linear-gradient(135deg, #4444ac 0%, #2c2c78 100%);
-      color: white;
-      border: none;
-      padding: 1rem 2rem;
+      margin-top: 3rem;
+      padding: 2rem;
+      background: white;
       border-radius: 12px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(68, 68, 172, 0.4);
+      .journal-missions__back-btn {
+        color: #6b7280;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+
+        &:hover {
+          color: #374151;
+          background-color: #f3f4f6;
+        }
       }
 
-      &:active {
-        transform: translateY(0);
-      }
-    }
+      .journal-missions__save-btn {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
 
-    .journal-missions__main-actions {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
 
-    .journal-missions__back-btn {
-      background: linear-gradient(135deg, #4444ac 0%, #2c2c78 100%);
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 1.1rem;
-      font-weight: 600;
-      padding: 1rem 2rem;
-      border-radius: 12px;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(68, 68, 172, 0.4);
-      }
-
-      &:active {
-        transform: translateY(0);
-      }
-    }
-
-    .journal-missions__save-btn {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-      border: none;
-      padding: 1rem 2rem;
-      border-radius: 12px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(16, 185, 129, 0.4);
-      }
-
-      &:active {
-        transform: translateY(0);
-      }
-
-      &:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+        }
       }
     }
 
@@ -853,26 +674,6 @@ function cancelLeave() {
         font-weight: 500;
         text-align: center;
       }
-
-      .journal-missions__modal-mission-preview {
-        margin: 1rem 0;
-        padding: 1rem;
-        background: linear-gradient(
-          135deg,
-          rgba(59, 130, 246, 0.1),
-          rgba(147, 51, 234, 0.05)
-        );
-        border: 1px solid rgba(59, 130, 246, 0.3);
-        border-radius: 8px;
-        color: #111827;
-        font-size: 0.875rem;
-        line-height: 1.4;
-
-        strong {
-          color: #1f2937;
-          font-weight: 600;
-        }
-      }
     }
 
     .journal-missions__modal-actions {
@@ -961,23 +762,17 @@ function cancelLeave() {
         }
       }
 
-      .journal-missions__all-actions {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: stretch;
-      }
-
-      .journal-missions__main-actions {
+      .journal-missions__actions {
         flex-direction: column;
         gap: 1rem;
         align-items: stretch;
 
-        .journal-missions__add-btn {
-          order: 1;
+        .journal-missions__back-btn {
+          order: 2;
         }
 
         .journal-missions__save-btn {
-          order: 2;
+          order: 1;
         }
       }
     }

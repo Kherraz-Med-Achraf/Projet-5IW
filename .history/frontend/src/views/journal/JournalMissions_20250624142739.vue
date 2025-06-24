@@ -68,27 +68,26 @@
         </div>
       </div>
 
-      <!-- actions principales - tous les boutons au même niveau -->
-      <div class="journal-missions__all-actions">
+      <!-- ajouter mission -->
+      <button
+        @click="addMission"
+        class="journal-missions__btn journal-missions__btn--primary journal-missions__add-btn"
+      >
+        + Ajouter une mission
+      </button>
+
+      <!-- actions principales -->
+      <div class="journal-missions__main-actions">
         <button @click="onBack" class="journal-missions__back-btn">
           Retour
         </button>
-        
-        <div class="journal-missions__main-actions">
-          <button
-            @click="addMission"
-            class="journal-missions__btn journal-missions__btn--primary journal-missions__add-btn"
-          >
-            + Ajouter une mission
-          </button>
-          <button
-            @click="onSave"
-            :disabled="saving"
-            class="journal-missions__btn journal-missions__btn--success journal-missions__save-btn"
-          >
-            {{ saving ? "Enregistrement…" : "Enregistrer les missions" }}
-          </button>
-        </div>
+        <button
+          @click="onSave"
+          :disabled="saving"
+          class="journal-missions__btn journal-missions__btn--success journal-missions__save-btn"
+        >
+          {{ saving ? "Enregistrement…" : "Enregistrer les missions" }}
+        </button>
       </div>
 
       <div v-if="error" class="journal-missions__error">{{ error }}</div>
@@ -669,15 +668,9 @@ function cancelLeave() {
       }
     }
 
-    .journal-missions__all-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 2rem 0;
-      gap: 1rem;
-    }
-
     .journal-missions__add-btn {
+      display: block;
+      margin: 2rem auto;
       background: linear-gradient(135deg, #4444ac 0%, #2c2c78 100%);
       color: white;
       border: none;
@@ -700,7 +693,9 @@ function cancelLeave() {
 
     .journal-missions__main-actions {
       display: flex;
+      justify-content: space-between;
       align-items: center;
+      margin: 2rem 0;
       gap: 1rem;
     }
 
@@ -961,23 +956,17 @@ function cancelLeave() {
         }
       }
 
-      .journal-missions__all-actions {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: stretch;
-      }
-
       .journal-missions__main-actions {
         flex-direction: column;
         gap: 1rem;
         align-items: stretch;
 
-        .journal-missions__add-btn {
-          order: 1;
+        .journal-missions__back-btn {
+          order: 2;
         }
 
         .journal-missions__save-btn {
-          order: 2;
+          order: 1;
         }
       }
     }

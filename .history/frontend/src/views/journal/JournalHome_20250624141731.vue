@@ -60,6 +60,7 @@
     >
       <div class="journal-home__missions-header">
         <h2 class="journal-home__subtitle">
+          <span class="journal-home__subtitle-icon">🎯</span>
           Objectifs annuels de l'enfant
         </h2>
         <h2 class="journal-home__missions-count">
@@ -552,10 +553,17 @@ function onManageMissions() {
         border: 2px solid #e2e8f0;
         border-radius: 12px;
         padding: 1.5rem;
+        transition: all 0.3s ease;
         animation: fadeInUp 0.6s ease forwards;
         animation-delay: var(--delay);
         opacity: 0;
         transform: translateY(20px);
+
+        &:hover {
+          border-color: #4444ac;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px -5px rgba(68, 68, 172, 0.2);
+        }
 
         .journal-home__mission-content {
           display: flex;

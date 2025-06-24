@@ -8,6 +8,15 @@
     <div v-if="!loaded" class="journal-missions__loading">Chargement…</div>
 
     <div v-else class="journal-missions__content">
+      <!-- bouton ajouter mission en haut à droite -->
+      <div class="journal-missions__header-actions">
+        <button
+          @click="addMission"
+          class="journal-missions__btn journal-missions__btn--primary journal-missions__add-btn"
+        >
+          + Ajouter une mission
+        </button>
+      </div>
      
       <div
         v-for="(mission, index) in missionsList"
@@ -68,27 +77,19 @@
         </div>
       </div>
 
-      <!-- actions principales - tous les boutons au même niveau -->
-      <div class="journal-missions__all-actions">
+      <!-- actions principales -->
+      <div class="journal-missions__bottom-actions">
         <button @click="onBack" class="journal-missions__back-btn">
           Retour
         </button>
         
-        <div class="journal-missions__main-actions">
-          <button
-            @click="addMission"
-            class="journal-missions__btn journal-missions__btn--primary journal-missions__add-btn"
-          >
-            + Ajouter une mission
-          </button>
-          <button
-            @click="onSave"
-            :disabled="saving"
-            class="journal-missions__btn journal-missions__btn--success journal-missions__save-btn"
-          >
-            {{ saving ? "Enregistrement…" : "Enregistrer les missions" }}
-          </button>
-        </div>
+        <button
+          @click="onSave"
+          :disabled="saving"
+          class="journal-missions__btn journal-missions__btn--success journal-missions__save-btn"
+        >
+          {{ saving ? "Enregistrement…" : "Enregistrer les missions" }}
+        </button>
       </div>
 
       <div v-if="error" class="journal-missions__error">{{ error }}</div>
@@ -535,6 +536,12 @@ function cancelLeave() {
   }
 
   .journal-missions__content {
+    .journal-missions__header-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 2rem;
+    }
+
     .journal-missions__mission-item {
       background: white;
       border-radius: 12px;
@@ -698,7 +705,7 @@ function cancelLeave() {
       }
     }
 
-    .journal-missions__main-actions {
+    .journal-missions__right-actions {
       display: flex;
       align-items: center;
       gap: 1rem;
@@ -967,7 +974,7 @@ function cancelLeave() {
         align-items: stretch;
       }
 
-      .journal-missions__main-actions {
+      .journal-missions__right-actions {
         flex-direction: column;
         gap: 1rem;
         align-items: stretch;

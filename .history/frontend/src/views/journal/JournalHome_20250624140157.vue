@@ -60,6 +60,7 @@
     >
       <div class="journal-home__missions-header">
         <h2 class="journal-home__subtitle">
+          <span class="journal-home__subtitle-icon">🎯</span>
           Objectifs annuels de l'enfant
         </h2>
         <h2 class="journal-home__missions-count">
@@ -384,12 +385,6 @@ onMounted(async () => {
  */
 function onMonthClick(month: number) {
   if (!selectedChildId.value || !selectedYearId.value) return;
-  
-  // Empêcher la navigation si aucune mission n'est définie
-  if (missions.value.length === 0) {
-    return;
-  }
-  
   router.push({
     name: "JournalMonth",
     params: {
@@ -416,24 +411,22 @@ function onManageMissions() {
 </script>
 
 <style scoped lang="scss">
-@import url('https://fonts.googleapis.com/css2?family=Satoshi:wght@400;500;600;700;800;900&display=swap');
-
 .journal-home {
   max-width: 64rem;
   margin: 0 auto;
   padding: 0 2rem;
   .journal-home__title {
     text-align: center;
-    margin: 2rem auto 3rem auto;
+    margin-bottom: 3rem;
     padding: 2rem;
-    background: linear-gradient(135deg, #4444ac 0%, #2c2c78 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 12px;
     color: white;
-    font-size: 3rem;
-    font-weight: 700; /* Satoshi Bold */
-    font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 2.5rem;
+    font-weight: 600;
     width: 100%;
     max-width: 700px;
+    margin: 50px auto 0 auto;
   }
 
   .journal-home__section {
@@ -484,17 +477,16 @@ function onManageMissions() {
       border-radius: 12px;
       font-size: 1.1rem;
       font-weight: 600;
-
       cursor: pointer;
       transition: all 0.2s ease;
 
       &--primary {
-        background: linear-gradient(135deg, #4444ac 0%, #2c2c78 100%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
 
         &:hover {
           transform: translateY(-2px);
-          box-shadow: 0 8px 25px -5px rgba(68, 68, 172, 0.4);
+          box-shadow: 0 8px 25px -5px rgba(102, 126, 234, 0.4);
         }
 
         &:active {
@@ -532,7 +524,7 @@ function onManageMissions() {
       }
 
       .journal-home__missions-count {
-        background: linear-gradient(135deg, #4444ac 0%, #2c2c78 100%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         padding: 0.5rem 1rem;
         border-radius: 20px;
@@ -552,10 +544,17 @@ function onManageMissions() {
         border: 2px solid #e2e8f0;
         border-radius: 12px;
         padding: 1.5rem;
+        transition: all 0.3s ease;
         animation: fadeInUp 0.6s ease forwards;
         animation-delay: var(--delay);
         opacity: 0;
         transform: translateY(20px);
+
+        &:hover {
+          border-color: #667eea;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px -5px rgba(102, 126, 234, 0.2);
+        }
 
         .journal-home__mission-content {
           display: flex;
@@ -612,7 +611,7 @@ function onManageMissions() {
           ) {
           transform: translateY(-4px);
           box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.2);
-          border-color: #4444ac;
+          border-color: #667eea;
         }
 
         &:active:not(.journal-home__month-cell--disabled):not(
@@ -663,57 +662,9 @@ function onManageMissions() {
           }
         }
 
-        &--no-missions {
-          position: relative;
-          opacity: 0.6;
-          cursor: not-allowed;
-          background: #1f2937;
-          color: #9ca3af;
-          border-color: #374151;
-
-          &::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 12px;
-            pointer-events: none;
-          }
-
-          &::after {
-            content: '⚠️ Aucune mission définie';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(239, 68, 68, 0.9);
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            white-space: nowrap;
-            z-index: 1;
-          }
-
-          &:hover {
-            transform: none;
-            box-shadow: none;
-            border-color: #374151;
-            opacity: 0.6;
-          }
-
-          .journal-home__month-content {
-            opacity: 0.3;
-          }
-        }
-
         &--editable {
           &:hover {
-            background: linear-gradient(135deg, #4444ac 0%, #2c2c78 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
 
             .journal-home__month-icon {
@@ -749,7 +700,7 @@ function onManageMissions() {
             }
 
             &--editable {
-              color: #4444ac;
+              color: #667eea;
             }
 
             &--future {

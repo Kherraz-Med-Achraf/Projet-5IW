@@ -74,7 +74,7 @@
           Retour
         </button>
         
-        <div class="journal-missions__main-actions">
+        <div class="journal-missions__right-actions">
           <button
             @click="addMission"
             class="journal-missions__btn journal-missions__btn--primary journal-missions__add-btn"
@@ -698,7 +698,7 @@ function cancelLeave() {
       }
     }
 
-    .journal-missions__main-actions {
+    .journal-missions__right-actions {
       display: flex;
       align-items: center;
       gap: 1rem;
@@ -729,7 +729,7 @@ function cancelLeave() {
     }
 
     .journal-missions__save-btn {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      background: linear-gradient(135deg, #4444ac 0%, #2c2c78 100%);
       color: white;
       border: none;
       padding: 1rem 2rem;
@@ -741,7 +741,7 @@ function cancelLeave() {
 
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(16, 185, 129, 0.4);
+        box-shadow: 0 8px 25px -5px rgba(68, 68, 172, 0.4);
       }
 
       &:active {
@@ -967,7 +967,7 @@ function cancelLeave() {
         align-items: stretch;
       }
 
-      .journal-missions__main-actions {
+      .journal-missions__right-actions {
         flex-direction: column;
         gap: 1rem;
         align-items: stretch;

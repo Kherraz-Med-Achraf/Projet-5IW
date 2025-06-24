@@ -556,6 +556,7 @@ function onManageMissions() {
         animation-delay: var(--delay);
         opacity: 0;
         transform: translateY(20px);
+      }
 
         .journal-home__mission-content {
           display: flex;

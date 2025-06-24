@@ -27,7 +27,7 @@ onMounted(async () => {
   } catch (e:any) {
     toast.error('Erreur de confirmation de paiement')
   } finally {
-    router.replace('/home')
+    router.replace('/events/mine')
   }
 })
 </script> 

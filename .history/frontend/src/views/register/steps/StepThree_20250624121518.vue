@@ -134,7 +134,7 @@
 
         <!-- Politique de confidentialité (obligatoire) -->
         <div class="register-step__consent-block">
-          <h4 class="register-step__consent-title">Politique de Confidentialité</h4>
+          <h4 class="register-step__consent-title">📋 Politique de Confidentialité</h4>
           <div class="register-step__checkbox-container">
             <input 
               type="checkbox" 
@@ -163,7 +163,7 @@
         <!-- Informations RGPD -->
         <div class="register-step__rgpd-info">
           <p class="register-step__rgpd-text">
-            <strong>Vos droits RGPD :</strong> 
+            <strong>🛡️ Vos droits RGPD :</strong> 
             Vous disposez d'un droit d'accès, de rectification, d'effacement, de portabilité 
             et d'opposition concernant vos données personnelles.
           </p>
@@ -578,98 +578,6 @@ const handleSubmit = async () => {
 
   &__loading-path {
     opacity: 0.75;
-  }
-
-  // Styles pour la section RGPD
-  &__rgpd-section {
-    background-color: #f8fafc;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-  }
-
-  &__consent-block {
-    margin-bottom: 1.5rem;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-
-  &__consent-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 0.75rem;
-  }
-
-  &__checkbox-container {
-    display: flex;
-    gap: 0.75rem;
-    align-items: flex-start;
-  }
-
-  &__checkbox {
-    width: 18px;
-    height: 18px;
-    margin: 0;
-    cursor: pointer;
-    accent-color: #16a34a;
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-
-  &__checkbox-label {
-    cursor: pointer;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    color: #374151;
-    margin: 0;
-  }
-
-  &__checkbox-description {
-    color: #6b7280;
-    font-size: 0.8rem;
-    line-height: 1.4;
-    margin-top: 0.25rem;
-    display: block;
-  }
-
-  &__privacy-link {
-    color: #3b82f6;
-    text-decoration: underline;
-    font-weight: 500;
-
-    &:hover {
-      color: #1d4ed8;
-    }
-  }
-
-  &__rgpd-info {
-    background-color: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: 6px;
-    padding: 1rem;
-    margin-top: 1rem;
-  }
-
-  &__rgpd-text {
-    font-size: 0.8rem;
-    color: #1e40af;
-    margin: 0;
-    line-height: 1.4;
-
-    &:not(:last-child) {
-      margin-bottom: 0.5rem;
-    }
-  }
-
-  &__error {
-    color: #dc2626;
-    font-size: 0.8rem;
-    margin-top: 0.5rem;
-    font-weight: 500;
   }
 }
 

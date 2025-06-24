@@ -254,13 +254,6 @@ const routes: Array<RouteRecordRaw> = [
       requiredRoles: ["DIRECTOR", "SERVICE_MANAGER", "SECRETARY"],
     },
   },
-  // Politique de confidentialité - accessible à tous
-  {
-    path: "/privacy",
-    name: "Privacy",
-    component: () => import("@/views/PrivacyPolicy.vue"),
-  },
-  
   // Route 404 (catch-all)
   {
     path: "/:pathMatch(.*)*",

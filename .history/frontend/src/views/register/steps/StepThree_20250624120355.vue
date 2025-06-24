@@ -107,72 +107,6 @@
         </div>
       </div>
 
-      <!-- Section RGPD et Consentements -->
-      <div class="register-step__rgpd-section">
-        <h3 class="register-step__subtitle">🔒 Consentements et Protection des Données</h3>
-        
-        <!-- Droit à l'image (optionnel) -->
-        <div class="register-step__consent-block">
-          <h4 class="register-step__consent-title">📸 Droit à l'image</h4>
-          <div class="register-step__checkbox-container">
-            <input 
-              type="checkbox" 
-              id="consent-image-rights" 
-              v-model="form.consentImageRights"
-              class="register-step__checkbox"
-            />
-            <label for="consent-image-rights" class="register-step__checkbox-label">
-              <strong>J'autorise la prise et l'utilisation d'images de mon enfant</strong><br/>
-              <span class="register-step__checkbox-description">
-                Dans le cadre des activités éducatives, des photos peuvent être prises pour 
-                documenter le parcours de votre enfant ou illustrer les activités de l'établissement.
-                Cette autorisation est <em>optionnelle</em> et peut être modifiée à tout moment.
-              </span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Politique de confidentialité (obligatoire) -->
-        <div class="register-step__consent-block">
-          <h4 class="register-step__consent-title">Politique de Confidentialité</h4>
-          <div class="register-step__checkbox-container">
-            <input 
-              type="checkbox" 
-              id="consent-privacy-policy" 
-              v-model="form.consentPrivacyPolicy"
-              class="register-step__checkbox"
-              required
-            />
-            <label for="consent-privacy-policy" class="register-step__checkbox-label">
-              <strong>J'accepte la politique de confidentialité (Obligatoire)</strong><br/>
-              <span class="register-step__checkbox-description">
-                J'ai lu et j'accepte la 
-                <a href="/privacy" target="_blank" class="register-step__privacy-link">
-                  politique de confidentialité
-                </a> 
-                de l'APAJH concernant la collecte, le traitement et la protection de mes données personnelles 
-                et celles de mon enfant.
-              </span>
-            </label>
-          </div>
-          <div v-if="errors.consentPrivacyPolicy" class="register-step__error">
-            {{ errors.consentPrivacyPolicy }}
-          </div>
-        </div>
-
-        <!-- Informations RGPD -->
-        <div class="register-step__rgpd-info">
-          <p class="register-step__rgpd-text">
-            <strong>Vos droits RGPD :</strong> 
-            Vous disposez d'un droit d'accès, de rectification, d'effacement, de portabilité 
-            et d'opposition concernant vos données personnelles.
-          </p>
-          <p class="register-step__rgpd-text">
-            <strong>📞 Contact DPO :</strong> dpo@apajh.org | 01 23 45 67 89 (Délai de réponse : 72h maximum)
-          </p>
-        </div>
-      </div>
-
       <!-- Boutons de navigation -->
       <div class="register-step__nav-buttons">
         <button class="register-step__prev-btn" @click="goToStep2">
@@ -229,7 +163,6 @@ const errors = reactive({
   email: "",
   password: "",
   passwordConfirm: "",
-  consentPrivacyPolicy: "",
 });
 
 // Créer une variable reactive locale avec des valeurs par défaut
@@ -251,8 +184,6 @@ const form = reactive({
   email: "",
   password: "",
   passwordConfirm: "",
-  consentImageRights: false,
-  consentPrivacyPolicy: false,
 });
 
 // Synchroniser avec le store une fois qu'il est disponible
@@ -335,7 +266,6 @@ function validateForm() {
     email: "",
     password: "",
     passwordConfirm: "",
-    consentPrivacyPolicy: "",
   });
 
   let valid = true;
@@ -355,8 +285,8 @@ function validateForm() {
   if (!form.password || form.password.trim() === "") {
     errors.password = "Le mot de passe est requis";
     valid = false;
-  } else if (form.password.length < 12) {
-    errors.password = "Le mot de passe doit contenir au moins 12 caractères";
+  } else if (form.password.length < 6) {
+    errors.password = "Le mot de passe doit contenir au moins 6 caractères";
     valid = false;
   }
 
@@ -365,12 +295,6 @@ function validateForm() {
     valid = false;
   } else if (form.password !== form.passwordConfirm) {
     errors.passwordConfirm = "Les mots de passe ne correspondent pas";
-    valid = false;
-  }
-
-  // Validation obligatoire de la politique de confidentialité
-  if (!form.consentPrivacyPolicy) {
-    errors.consentPrivacyPolicy = "Vous devez accepter la politique de confidentialité pour continuer";
     valid = false;
   }
 
@@ -578,98 +502,6 @@ const handleSubmit = async () => {
 
   &__loading-path {
     opacity: 0.75;
-  }
-
-  // Styles pour la section RGPD
-  &__rgpd-section {
-    background-color: #f8fafc;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-  }
-
-  &__consent-block {
-    margin-bottom: 1.5rem;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-
-  &__consent-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 0.75rem;
-  }
-
-  &__checkbox-container {
-    display: flex;
-    gap: 0.75rem;
-    align-items: flex-start;
-  }
-
-  &__checkbox {
-    width: 18px;
-    height: 18px;
-    margin: 0;
-    cursor: pointer;
-    accent-color: #16a34a;
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-
-  &__checkbox-label {
-    cursor: pointer;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    color: #374151;
-    margin: 0;
-  }
-
-  &__checkbox-description {
-    color: #6b7280;
-    font-size: 0.8rem;
-    line-height: 1.4;
-    margin-top: 0.25rem;
-    display: block;
-  }
-
-  &__privacy-link {
-    color: #3b82f6;
-    text-decoration: underline;
-    font-weight: 500;
-
-    &:hover {
-      color: #1d4ed8;
-    }
-  }
-
-  &__rgpd-info {
-    background-color: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: 6px;
-    padding: 1rem;
-    margin-top: 1rem;
-  }
-
-  &__rgpd-text {
-    font-size: 0.8rem;
-    color: #1e40af;
-    margin: 0;
-    line-height: 1.4;
-
-    &:not(:last-child) {
-      margin-bottom: 0.5rem;
-    }
-  }
-
-  &__error {
-    color: #dc2626;
-    font-size: 0.8rem;
-    margin-top: 0.5rem;
-    font-weight: 500;
   }
 }
 

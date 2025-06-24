@@ -163,7 +163,7 @@
         <!-- Informations RGPD -->
         <div class="register-step__rgpd-info">
           <p class="register-step__rgpd-text">
-            <strong>Vos droits RGPD :</strong> 
+            <strong>🛡️ Vos droits RGPD :</strong> 
             Vous disposez d'un droit d'accès, de rectification, d'effacement, de portabilité 
             et d'opposition concernant vos données personnelles.
           </p>

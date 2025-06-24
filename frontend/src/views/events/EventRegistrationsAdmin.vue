@@ -56,7 +56,8 @@
                 >
                   Paiement reçu
                 </button>
-              </td>
+                <button v-if="r.paymentMethod==='CHEQUE' && r.paymentStatus==='PENDING'" @click="cancelReg(r)" class="danger">Désinscrire</button>
+          </td>
             </tr>
           </tbody>
         </table>
@@ -100,6 +101,20 @@ async function markPaid(r: any) {
   await eventStore.validateCheque(r.id);
   toast.success("Paiement enregistré");
   await load();
+}
+
+async function cancelReg(r:any){
+  if(!confirm(`Désinscrire ${r.parent} ? Un email sera envoyé pour notifier l'annulation.`)) return
+  await eventStore.adminCancelRegistration(r.id)
+  toast.info('Inscription annulée (email envoyé)')
+  await load()
+}
+
+async function cancelReg(r:any){
+  if(!confirm(`Désinscrire ${r.parent} ? Un email sera envoyé pour notifier l'annulation.`)) return
+  await eventStore.adminCancelRegistration(r.id)
+  toast.info('Inscription annulée (email envoyé)')
+  await load()
 }
 
 onMounted(load);
@@ -270,4 +285,6 @@ $shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
     }
   }
 }
+.danger{ background-color:#dc3545; color:white; border:none; padding:0.3rem 0.6rem; border-radius:3px; cursor:pointer; margin-left:0.5rem }
+.danger:hover{ background-color:#c82333 }
 </style>

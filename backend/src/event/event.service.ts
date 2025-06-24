@@ -18,10 +18,22 @@ const stripe = new Stripe(process.env.STRIPE_SECRET || '', {
 
 @Injectable()
 export class EventService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly mail: MailService,
-  ) {}
+  constructor(private readonly prisma: PrismaService, private readonly mail: MailService) {}
+
+  /** Helper pour compter les places réellement occupées */
+  private getValidatedRegistrationsQuery(eventId: string) {
+    return {
+      where: { 
+        registration: { 
+          eventId,
+          OR: [
+            { paymentStatus: { in: [PaymentStatus.PAID, PaymentStatus.FREE] } }, // Paiements confirmés
+            { paymentMethod: PaymentMethod.CHEQUE, paymentStatus: PaymentStatus.PENDING } // Chèques en attente (place réservée)
+          ]
+        } 
+      }
+    };
+  }
 
   /** Liste des événements à venir */
   async listUpcoming() {
@@ -30,21 +42,16 @@ export class EventService {
       orderBy: { date: 'asc' },
     });
 
-    // calc capacity left
-    const withCap = await Promise.all(
-      events.map(async (ev) => {
-        if (ev.capacity) {
-          const count = await this.prisma.eventRegistrationChild.count({
-            where: { registration: { eventId: ev.id } },
-          });
-          return {
-            ...ev,
-            capacityLeft: Math.max(ev.capacity - count, 0),
-          } as any;
-        }
-        return { ...ev, capacityLeft: null } as any;
-      }),
-    );
+    // calc capacity left - compte seulement les inscriptions payées/validées
+    const withCap = await Promise.all(events.map(async ev => {
+      if (ev.capacity) {
+        const count = await this.prisma.eventRegistrationChild.count(
+          this.getValidatedRegistrationsQuery(ev.id)
+        );
+        return { ...ev, capacityLeft: Math.max(ev.capacity - count, 0) } as any;
+      }
+      return { ...ev, capacityLeft: null } as any;
+    }));
     return withCap;
   }
 
@@ -292,9 +299,10 @@ export class EventService {
       if (evNow.isLocked) throw new BadRequestException('Événement complet');
 
       if (evNow.capacity) {
-        const count = await tx.eventRegistrationChild.count({
-          where: { registration: { eventId } },
-        });
+        // Compte les places prises : paiements confirmés + chèques en attente
+        const count = await tx.eventRegistrationChild.count(
+          this.getValidatedRegistrationsQuery(eventId)
+        );
         if (count + dto.childIds.length > evNow.capacity) {
           throw new BadRequestException('Capacité maximale atteinte');
         }
@@ -325,18 +333,11 @@ export class EventService {
         })),
       });
 
-      // Verrouille l'événement uniquement si plein après inscription
-      if (evNow.capacity) {
-        const finalCount = await tx.eventRegistrationChild.count({
-          where: { registration: { eventId } },
-        });
-        if (finalCount >= evNow.capacity) {
-          await tx.event.update({
-            where: { id: eventId },
-            data: { isLocked: true },
-          });
-        }
-      }
+      // Verrouille l'événement dès la première inscription (plus modifiable par admin)
+      await tx.event.update({ where: { id: eventId }, data: { isLocked: true } });
+      
+      // Note: L'ancien code ne verrouillait que si la capacité était atteinte
+      // Maintenant on verrouille systématiquement dès qu'il y a une inscription
 
       return reg;
     });
@@ -420,10 +421,70 @@ export class EventService {
         'Seules les inscriptions par chèque peuvent être modifiées manuellement',
       );
     }
-    return this.prisma.eventRegistration.update({
+    return this.prisma.eventRegistration.update({ where: { id: registrationId }, data: { paymentStatus: status } });
+  }
+
+  /** Désinscription d'un parent par l'admin (si chèque non reçu) */
+  async adminCancelRegistration(registrationId: string) {
+    const reg = await this.prisma.eventRegistration.findUnique({ 
       where: { id: registrationId },
-      data: { paymentStatus: status },
+      include: { 
+        event: true, 
+        parentProfile: { include: { user: true } },
+        children: { include: { child: true } }
+      }
     });
+    if (!reg) throw new NotFoundException('Inscription introuvable');
+
+    // Seuls les paiements par chèque PENDING peuvent être annulés par admin
+    if (reg.paymentMethod !== PaymentMethod.CHEQUE || reg.paymentStatus !== PaymentStatus.PENDING) {
+      throw new BadRequestException('Seules les inscriptions par chèque en attente peuvent être annulées');
+    }
+
+    // Suppression en transaction + déverrouillage si plus d'inscriptions
+    await this.prisma.$transaction(async tx => {
+      await tx.eventRegistrationChild.deleteMany({ where: { registrationId } });
+      await tx.eventRegistration.delete({ where: { id: registrationId } });
+      
+              // Vérifie s'il reste des inscriptions validées pour cet événement
+        const remainingValidatedChildren = await tx.eventRegistrationChild.count({
+          where: { 
+            registration: { 
+              eventId: reg.eventId,
+              OR: [
+                { paymentStatus: { in: [PaymentStatus.PAID, PaymentStatus.FREE] } },
+                { paymentMethod: PaymentMethod.CHEQUE, paymentStatus: PaymentStatus.PENDING }
+              ]
+            } 
+          }
+        });
+      
+      // Si plus aucune inscription validée, déverrouille l'événement
+      if (remainingValidatedChildren === 0) {
+        await tx.event.update({ 
+          where: { id: reg.eventId }, 
+          data: { isLocked: false } 
+        });
+      }
+    });
+
+    // Email de notification au parent
+    try {
+      const childrenNames = reg.children.map(c => `${c.child.firstName} ${c.child.lastName}`).join(', ');
+      await this.mail.sendMail(
+        reg.parentProfile.user.email,
+        `Annulation d'inscription : ${reg.event.title}`,
+        `<p>Bonjour,</p>
+         <p>Votre inscription à l'événement <strong>${reg.event.title}</strong> du ${reg.event.date.toLocaleDateString('fr-FR')} a été annulée par l'administration.</p>
+         <p>Enfants concernés : ${childrenNames}</p>
+         <p>Motif : Chèque non reçu dans les délais.</p>
+         <p>Pour toute question, contactez le secrétariat.</p>`
+      );
+    } catch (e) {
+      console.error('[admin cancel] mail error', e);
+    }
+
+    return { message: 'Inscription annulée avec succès' };
   }
 
   /** Annulation d'une inscription par le parent */
@@ -455,12 +516,31 @@ export class EventService {
     }
 
     try {
-      // suppression des enfants puis de la registration
-      await this.prisma.$transaction(async (tx) => {
-        await tx.eventRegistrationChild.deleteMany({
-          where: { registrationId },
-        });
+      // suppression des enfants puis de la registration + déverrouillage si besoin
+      await this.prisma.$transaction(async tx => {
+        await tx.eventRegistrationChild.deleteMany({ where: { registrationId } });
         await tx.eventRegistration.delete({ where: { id: registrationId } });
+        
+                  // Vérifie s'il reste des inscriptions validées pour cet événement
+          const remainingValidatedChildren = await tx.eventRegistrationChild.count({
+            where: { 
+              registration: { 
+                eventId: reg.event.id,
+                OR: [
+                  { paymentStatus: { in: [PaymentStatus.PAID, PaymentStatus.FREE] } },
+                  { paymentMethod: PaymentMethod.CHEQUE, paymentStatus: PaymentStatus.PENDING }
+                ]
+              } 
+            }
+          });
+        
+        // Si plus aucune inscription validée, déverrouille l'événement
+        if (remainingValidatedChildren === 0) {
+          await tx.event.update({ 
+            where: { id: reg.event.id }, 
+            data: { isLocked: false } 
+          });
+        }
       });
     } catch (e) {
       console.error('[cancel registration] delete error', e);

@@ -214,5 +214,18 @@ export const useEventStore = defineStore("eventStore", {
         this.loading = false;
       }
     },
+
+    /** Annulation d'inscription par l'admin (chèque non reçu) */
+    async adminCancelRegistration(regId:string){
+      this.loading=true; this.error=null
+      const auth=useAuthStore()
+      try{
+        const res=await fetch(`${API}/events/registrations/${regId}/admin`,{
+          method:'DELETE', headers:{ Authorization:`Bearer ${auth.token}` }
+        })
+        if(!res.ok) throw new Error(await res.text())
+        return await res.json()
+      }catch(e:any){ this.error=e.message; return null }finally{ this.loading=false }
+    },
   },
 });

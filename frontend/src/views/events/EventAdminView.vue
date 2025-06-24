@@ -137,11 +137,32 @@
           </div>
         </form>
 
-        <div v-if="eventStore.error" class="error-message">
-          {{ eventStore.error }}
-        </div>
-      </div>
-    </div>
+    <p v-if="eventStore.error" class="error">{{ eventStore.error }}</p>
+
+    <!-- ─── Liste des événements ─────────────────────────────────────── -->
+    <table v-if="eventStore.events.length" class="table">
+      <thead>
+        <tr>
+          <th>Titre</th><th>Date</th><th>Horaire</th><th>Prix</th><th>Capacité</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="ev in eventStore.events" :key="ev.id">
+          <td>{{ ev.title }}</td>
+          <td>{{ formatDate(ev.date) }}</td>
+          <td>{{ ev.startTime.slice(11,16) }} – {{ ev.endTime.slice(11,16) }}</td>
+          <td>{{ ev.priceCt === 0 ? 'Gratuit' : (ev.priceCt/100).toFixed(2)+' €' }}</td>
+          <td>{{ ev.capacity ?? '—' }}</td>
+          <td>
+            <button @click="edit(ev)" :disabled="ev.isLocked" :title="ev.isLocked ? 'Événement verrouillé (inscriptions reçues)' : ''">
+              {{ ev.isLocked ? '🔒 Verrouillé' : 'Éditer' }}
+            </button>
+            <button @click="remove(ev.id)">Supprimer</button>
+            <router-link :to="`/events/${ev.id}/registrations`">Inscriptions</router-link>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </template>
 

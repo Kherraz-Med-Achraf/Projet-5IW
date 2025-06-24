@@ -254,6 +254,12 @@ const routes: Array<RouteRecordRaw> = [
       requiredRoles: ["DIRECTOR", "SERVICE_MANAGER", "SECRETARY"],
     },
   },
+  // Route 404 (catch-all)
+  {
+    path: "/:pathMatch(.*)*",
+    name: "NotFound",
+    component: () => import("@/views/NotFound.vue"),
+  },
 ];
 
 const router = createRouter({

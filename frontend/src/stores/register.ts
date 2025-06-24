@@ -35,7 +35,16 @@ export const useRegisterStore = defineStore("register", () => {
   });
 
   // Helper functions
+  /**
+   * Ajoute un contact d'urgence si la limite de deux n'est pas dépassée.
+   * Affiche un toast d'erreur le cas échéant.
+   */
   const addEmergencyContact = () => {
+    if (form.emergencyContacts.length >= 2) {
+      toast.error("Vous ne pouvez ajouter que deux contacts d'urgence");
+      return;
+    }
+
     form.emergencyContacts.push({
       firstName: "",
       lastName: "",
@@ -61,11 +70,15 @@ export const useRegisterStore = defineStore("register", () => {
     form.children.splice(index, 1);
   };
 
+  /**
+   * Vérifie que chaque enfant a un âge compris entre 9 et 20 ans (inclus).
+   */
   const validateChildren = () => {
     const now = Date.now();
     return form.children.every((c: any) => {
       if (!c.birthDate) return false;
-      return (now - new Date(c.birthDate).getTime()) / 3.15576e10 >= 9;
+      const age = (now - new Date(c.birthDate).getTime()) / 3.15576e10;
+      return age >= 9 && age <= 20;
     });
   };
 
@@ -107,12 +120,12 @@ export const useRegisterStore = defineStore("register", () => {
       ) {
         return false;
       }
-      // Vérifier l'âge (minimum 9 ans)
+      // Vérifier l'âge (entre 9 et 20 ans)
       const birthDate = new Date(child.birthDate);
       const now = new Date();
       const age =
         (now.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 365);
-      return age >= 9;
+      return age >= 9 && age <= 20;
     });
 
     return hasValidChildren;
@@ -151,7 +164,7 @@ export const useRegisterStore = defineStore("register", () => {
 
       // Validation de l'âge des enfants
       if (form.children.length && !validateChildren()) {
-        toast.error("Chaque enfant doit avoir au moins 9 ans");
+        toast.error("Chaque enfant doit avoir entre 9 et 20 ans");
         return false;
       }
 

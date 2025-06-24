@@ -171,7 +171,8 @@
         </div>
         <button
           class="register-step__add-btn"
-          @click="registerStore.addEmergencyContact"
+          @click="handleAddEmergencyContact"
+          :disabled="form.emergencyContacts.length >= 2"
         >
           + Ajouter un contact d'urgence
         </button>
@@ -186,12 +187,13 @@
 <script setup>
 import { useRegisterStore } from "@/stores/register";
 import BaseInput from "@/components/BaseInput.vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { useToast } from "vue-toastification";
 import { ref, reactive, onMounted, watch } from "vue";
 
 const registerStore = useRegisterStore();
 const router = useRouter();
+const route = useRoute();
 const toast = useToast();
 
 const errors = reactive({
@@ -318,12 +320,14 @@ function validateForm() {
     errors.legalResponsibilityOther = "Précisez la responsabilité";
     valid = false;
   }
-  // Validation des contacts d'urgence (0 à 2) ; s'ils sont renseignés ils doivent être complets
+  // Validation des contacts d'urgence (maximum 2). S'ils sont renseignés ils doivent être complets
+  errors.emergencyContacts = [];
   if (f.emergencyContacts.length > 2) {
-    errors.emergencyContacts = "Maximum 2 contacts d'urgence";
+    toast.error("Vous ne pouvez ajouter que deux contacts d'urgence");
     valid = false;
-  } else {
-    errors.emergencyContacts = [];
+  }
+
+  if (f.emergencyContacts.length <= 2) {
     f.emergencyContacts.forEach((c, i) => {
       const contactErr = {};
 
@@ -360,7 +364,15 @@ function goToStep2() {
     toast.error("Veuillez remplir tous les champs obligatoires.");
     return;
   }
-  router.push("/register/step-two");
+  router.push({ path: "/register/step-two", query: route.query });
+}
+
+function handleAddEmergencyContact() {
+  if (form.emergencyContacts.length >= 2) {
+    toast.error("Vous ne pouvez ajouter que deux contacts d'urgence");
+    return;
+  }
+  registerStore.addEmergencyContact();
 }
 </script>
 
@@ -463,6 +475,10 @@ function goToStep2() {
     transition: background 0.2s;
     &:hover {
       background: #1d4ed8;
+    }
+    &:disabled {
+      background: #9ca3afa8;
+      cursor: not-allowed;
     }
   }
   &__select-wrapper {

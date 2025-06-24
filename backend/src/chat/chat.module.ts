@@ -11,15 +11,15 @@ import { WsThrottlerGuard } from '../common/guards/ws-throttler.guard';
 
 @Module({
   imports: [
-    forwardRef(() => AuthModule),      
+    forwardRef(() => AuthModule),
     PrismaModule,
     MongooseModule.forFeature([
-      { name: Chat.name,    schema: ChatSchema },
+      { name: Chat.name, schema: ChatSchema },
       { name: Message.name, schema: MessageSchema },
     ]),
   ],
   providers: [ChatService, ChatGateway, WsThrottlerGuard],
   controllers: [ChatController],
-  exports: [ChatService],
+  exports: [ChatService, ChatGateway],
 })
 export class ChatModule {}

@@ -190,17 +190,6 @@ async function checkInitialAuth() {
 
 let tokenCheckInterval: number | null = null;
 
-function startTokenCheck() {
-  tokenCheckInterval = setInterval(async () => {
-    if (auth.isAuthenticated) {
-      const isTokenValid = await verifyToken();
-      if (!isTokenValid) {
-        await handleInvalidToken();
-      }
-    }
-  }, 5 * 60 * 1000);
-}
-
 function stopTokenCheck() {
   if (tokenCheckInterval) {
     clearInterval(tokenCheckInterval);
@@ -208,10 +197,6 @@ function stopTokenCheck() {
   }
 }
 
-onMounted(async () => {
-  await checkInitialAuth();
-  startTokenCheck();
-});
 
 onUnmounted(() => {
   stopTokenCheck();

@@ -55,8 +55,8 @@
           <div class="register-step__info-text">
             <h3 class="register-step__info-title">Information importante</h3>
             <p class="register-step__info-description">
-              Chaque enfant doit avoir au moins 9 ans pour pouvoir s'inscrire au
-              service de garde.
+              Chaque enfant doit avoir un âge situé entre 9 et 20 ans pour
+              pouvoir s'inscrire au service de garde.
             </p>
           </div>
         </div>
@@ -96,12 +96,13 @@
 <script setup>
 import { useRegisterStore } from "@/stores/register";
 import BaseInput from "@/components/BaseInput.vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { useToast } from "vue-toastification";
 import { reactive, onMounted, watch } from "vue";
 
 const registerStore = useRegisterStore();
 const router = useRouter();
+const route = useRoute();
 const toast = useToast();
 
 const errors = reactive({
@@ -167,7 +168,7 @@ function validateForm() {
     if (!child.birthDate || child.birthDate.trim() === "") {
       childErr.birthDate = "Date de naissance requise";
     } else {
-      // Vérifier l'âge (au moins 9 ans)
+      // Vérifier l'âge (entre 9 et 20 ans)
       const birthDate = new Date(child.birthDate);
       const today = new Date();
       let age = today.getFullYear() - birthDate.getFullYear();
@@ -180,8 +181,8 @@ function validateForm() {
         age--;
       }
 
-      if (age < 9) {
-        childErr.birthDate = "L'enfant doit avoir au moins 9 ans";
+      if (age < 9 || age > 20) {
+        childErr.birthDate = "L'enfant doit avoir entre 9 et 20 ans";
       }
     }
 
@@ -193,7 +194,7 @@ function validateForm() {
 }
 
 function goToStep1() {
-  router.push("/register/step-one");
+  router.push({ path: "/register/step-one", query: route.query });
 }
 
 function goToStep3() {
@@ -203,11 +204,11 @@ function goToStep3() {
       return;
     }
     toast.error(
-      "Veuillez remplir tous les champs obligatoires et vérifier l'âge des enfants."
+      "Veuillez remplir tous les champs obligatoires et vérifier l'âge des enfants (entre 9 et 20 ans)."
     );
     return;
   }
-  router.push("/register/step-three");
+  router.push({ path: "/register/step-three", query: route.query });
 }
 </script>
 

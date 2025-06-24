@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from "vue-router";
+import { RouterView, useRoute } from "vue-router";
+import ChatWidget from "@/components/chat/ChatWidget.vue";
+
+const route = useRoute();
 </script>
 
 <template>
@@ -8,6 +11,7 @@ import { RouterLink, RouterView } from "vue-router";
       <component :is="Component" />
     </transition>
   </RouterView>
+  <ChatWidget v-if="route.name !== 'Chat'" />
 </template>
 
 <style scoped lang="scss">

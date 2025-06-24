@@ -260,7 +260,23 @@ const routes: Array<RouteRecordRaw> = [
     name: "NotFound",
     component: () => import("@/views/NotFound.vue"),
   },
-];
+  
+  // Blog - accessible à tous les utilisateurs connectés
+  {
+    path: '/blog',
+    name: 'Blog',
+    component: () => import('@/views/BlogView.vue'),
+    meta: { requiresAuth: true },
+  },
+  
+  // Blog Admin - accessible aux secrétaires, directeurs et service managers
+  {
+    path: '/blog/admin',
+    name: 'BlogAdmin',
+    component: () => import('@/views/blog/BlogAdminView.vue'),
+    meta: { requiresAuth: true, requiredRoles: ['SECRETARY', 'DIRECTOR', 'SERVICE_MANAGER'] },
+  },
+]
 
 const router = createRouter({
   history: createWebHistory(),

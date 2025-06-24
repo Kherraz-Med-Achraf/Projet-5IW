@@ -74,6 +74,4 @@ onMounted(load)
 .table{ width:100%; border-collapse:collapse }
 .table th,.table td{ border:1px solid #ccc; padding:0.4rem; text-align:center }
 .error{ color:red }
-.danger{ background-color:#dc3545; color:white; border:none; padding:0.3rem 0.6rem; border-radius:3px; cursor:pointer; margin-left:0.5rem }
-.danger:hover{ background-color:#c82333 }
 </style> 

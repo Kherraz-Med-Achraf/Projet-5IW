@@ -60,13 +60,6 @@ async function markPaid(r:any){
   await load()
 }
 
-async function cancelReg(r:any){
-  if(!confirm(`Désinscrire ${r.parent} ? Un email sera envoyé pour notifier l'annulation.`)) return
-  await eventStore.adminCancelRegistration(r.id)
-  toast.info('Inscription annulée (email envoyé)')
-  await load()
-}
-
 onMounted(load)
 </script>
 
@@ -74,6 +67,4 @@ onMounted(load)
 .table{ width:100%; border-collapse:collapse }
 .table th,.table td{ border:1px solid #ccc; padding:0.4rem; text-align:center }
 .error{ color:red }
-.danger{ background-color:#dc3545; color:white; border:none; padding:0.3rem 0.6rem; border-radius:3px; cursor:pointer; margin-left:0.5rem }
-.danger:hover{ background-color:#c82333 }
 </style> 

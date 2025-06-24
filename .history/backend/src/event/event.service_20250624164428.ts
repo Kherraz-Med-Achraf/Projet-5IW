@@ -423,18 +423,18 @@ export class EventService {
         await tx.eventRegistrationChild.deleteMany({ where: { registrationId } });
         await tx.eventRegistration.delete({ where: { id: registrationId } });
         
-                  // Vérifie s'il reste des inscriptions validées pour cet événement
-          const remainingValidatedChildren = await tx.eventRegistrationChild.count({
-            where: { 
-              registration: { 
-                eventId: reg.event.id,
-                OR: [
-                  { paymentStatus: { in: [PaymentStatus.PAID, PaymentStatus.FREE] } },
-                  { paymentMethod: PaymentMethod.CHEQUE, paymentStatus: PaymentStatus.PENDING }
-                ]
-              } 
-            }
-          });
+        // Vérifie s'il reste des inscriptions validées pour cet événement
+        const remainingValidatedChildren = await tx.eventRegistrationChild.count({
+          where: { 
+            registration: { 
+              eventId: reg.event.id,
+              OR: [
+                { paymentStatus: { in: ['PAID', 'FREE'] } },
+                { paymentMethod: 'CHEQUE', paymentStatus: 'PENDING' }
+              ]
+            } 
+          }
+        });
         
         // Si plus aucune inscription validée, déverrouille l'événement
         if (remainingValidatedChildren === 0) {

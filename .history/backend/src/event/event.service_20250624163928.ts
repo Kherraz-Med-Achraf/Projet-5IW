@@ -22,8 +22,8 @@ export class EventService {
         registration: { 
           eventId,
           OR: [
-            { paymentStatus: { in: [PaymentStatus.PAID, PaymentStatus.FREE] } }, // Paiements confirmés
-            { paymentMethod: PaymentMethod.CHEQUE, paymentStatus: PaymentStatus.PENDING } // Chèques en attente (place réservée)
+            { paymentStatus: { in: ['PAID', 'FREE'] } }, // Paiements confirmés
+            { paymentMethod: 'CHEQUE', paymentStatus: 'PENDING' } // Chèques en attente (place réservée)
           ]
         } 
       }
@@ -40,9 +40,17 @@ export class EventService {
     // calc capacity left - compte seulement les inscriptions payées/validées
     const withCap = await Promise.all(events.map(async ev => {
       if (ev.capacity) {
-        const count = await this.prisma.eventRegistrationChild.count(
-          this.getValidatedRegistrationsQuery(ev.id)
-        );
+        const count = await this.prisma.eventRegistrationChild.count({ 
+          where: { 
+            registration: { 
+              eventId: ev.id,
+              OR: [
+                { paymentStatus: { in: ['PAID', 'FREE'] } }, // Paiements confirmés
+                { paymentMethod: 'CHEQUE', paymentStatus: 'PENDING' } // Chèques en attente (place réservée)
+              ]
+            } 
+          } 
+        });
         return { ...ev, capacityLeft: Math.max(ev.capacity - count, 0) } as any;
       }
       return { ...ev, capacityLeft: null } as any;
@@ -238,9 +246,17 @@ export class EventService {
 
       if (evNow.capacity) {
         // Compte les places prises : paiements confirmés + chèques en attente
-        const count = await tx.eventRegistrationChild.count(
-          this.getValidatedRegistrationsQuery(eventId)
-        );
+        const count = await tx.eventRegistrationChild.count({
+          where: { 
+            registration: { 
+              eventId,
+              OR: [
+                { paymentStatus: { in: ['PAID', 'FREE'] } }, // Paiements confirmés
+                { paymentMethod: 'CHEQUE', paymentStatus: 'PENDING' } // Chèques en attente (place réservée)
+              ]
+            } 
+          },
+        });
         if (count + dto.childIds.length > evNow.capacity) {
           throw new BadRequestException('Capacité maximale atteinte');
         }
@@ -357,21 +373,11 @@ export class EventService {
       await tx.eventRegistrationChild.deleteMany({ where: { registrationId } });
       await tx.eventRegistration.delete({ where: { id: registrationId } });
       
-              // Vérifie s'il reste des inscriptions validées pour cet événement
-        const remainingValidatedChildren = await tx.eventRegistrationChild.count({
-          where: { 
-            registration: { 
-              eventId: reg.eventId,
-              OR: [
-                { paymentStatus: { in: [PaymentStatus.PAID, PaymentStatus.FREE] } },
-                { paymentMethod: PaymentMethod.CHEQUE, paymentStatus: PaymentStatus.PENDING }
-              ]
-            } 
-          }
-        });
+      // Vérifie s'il reste des inscriptions pour cet événement
+      const remainingRegs = await tx.eventRegistration.count({ where: { eventId: reg.eventId } });
       
-      // Si plus aucune inscription validée, déverrouille l'événement
-      if (remainingValidatedChildren === 0) {
+      // Si plus aucune inscription, déverrouille l'événement
+      if (remainingRegs === 0) {
         await tx.event.update({ 
           where: { id: reg.eventId }, 
           data: { isLocked: false } 
@@ -423,21 +429,11 @@ export class EventService {
         await tx.eventRegistrationChild.deleteMany({ where: { registrationId } });
         await tx.eventRegistration.delete({ where: { id: registrationId } });
         
-                  // Vérifie s'il reste des inscriptions validées pour cet événement
-          const remainingValidatedChildren = await tx.eventRegistrationChild.count({
-            where: { 
-              registration: { 
-                eventId: reg.event.id,
-                OR: [
-                  { paymentStatus: { in: [PaymentStatus.PAID, PaymentStatus.FREE] } },
-                  { paymentMethod: PaymentMethod.CHEQUE, paymentStatus: PaymentStatus.PENDING }
-                ]
-              } 
-            }
-          });
+        // Vérifie s'il reste des inscriptions pour cet événement
+        const remainingRegs = await tx.eventRegistration.count({ where: { eventId: reg.event.id } });
         
-        // Si plus aucune inscription validée, déverrouille l'événement
-        if (remainingValidatedChildren === 0) {
+        // Si plus aucune inscription, déverrouille l'événement
+        if (remainingRegs === 0) {
           await tx.event.update({ 
             where: { id: reg.event.id }, 
             data: { isLocked: false } 

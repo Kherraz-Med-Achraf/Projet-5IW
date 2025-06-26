@@ -21,6 +21,22 @@
 
       <nav class="sidebar-nav">
         <ul>
+          <!-- Lien retour vers Home -->
+          <li class="nav-back-home" @click="goToHome">
+            <div class="nav-item">
+              <span class="nav-icon">
+                <i class="material-icons">arrow_back</i>
+              </span>
+              <span v-if="!sidebarCollapsed" class="nav-text">
+                Retour à l'accueil
+              </span>
+            </div>
+          </li>
+
+          <!-- Séparateur -->
+          <li class="nav-separator" v-if="!sidebarCollapsed"></li>
+
+          <!-- Menu items existants -->
           <li
             v-for="item in menuItems"
             :key="item.name"
@@ -172,6 +188,10 @@ function toggleSidebar() {
   sidebarCollapsed.value = !sidebarCollapsed.value;
 }
 
+function goToHome() {
+  router.push("/home");
+}
+
 async function setActiveMenu(menuName: string) {
   activeMenu.value = menuName;
 }
@@ -196,7 +216,6 @@ function stopTokenCheck() {
     tokenCheckInterval = null;
   }
 }
-
 
 onUnmounted(() => {
   stopTokenCheck();
@@ -282,6 +301,31 @@ onUnmounted(() => {
 
         .nav-item {
           color: $primary-color;
+        }
+      }
+
+      &.nav-back-home {
+        border-bottom: 1px solid #e5e7eb;
+        margin-bottom: 0.5rem;
+
+        &:hover {
+          background-color: #f0f9ff;
+        }
+
+        .nav-item {
+          color: #3b82f6;
+          font-weight: 600;
+        }
+      }
+
+      &.nav-separator {
+        height: 1px;
+        background-color: #e5e7eb;
+        margin: 0.5rem 1rem;
+        cursor: default;
+
+        &:hover {
+          background-color: #e5e7eb;
         }
       }
 

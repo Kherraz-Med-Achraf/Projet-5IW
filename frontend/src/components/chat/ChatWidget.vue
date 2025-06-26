@@ -35,7 +35,7 @@
 
   <!-- Pop-up windows for opened chats -->
   <template v-for="(id, idx) in openPopups" :key="id">
-    <div class="chat-popup" :style="{ right: `${20 + idx * 320}px` }">
+    <div class="chat-popup" :style="{ left: `${20 + idx * 320}px` }">
       <header @click="toggleMinimize(id)">
         <span class="avatar-sm" :style="{ background: colorFromId(id) }">
           {{ initials(headerName(id)) }}

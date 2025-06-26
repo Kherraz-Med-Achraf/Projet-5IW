@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -54,13 +59,18 @@ export class EventService {
   async listRegistrations(eventId: string) {
     return this.prisma.eventRegistration.findMany({
       where: { eventId },
-      include: { parentProfile: { include: { user: true } }, children: { include: { child: true } } },
+      include: {
+        parentProfile: { include: { user: true } },
+        children: { include: { child: true } },
+      },
     });
   }
 
   /** Liste des événements auxquels le parent est inscrit */
   async listMyEvents(userId: string) {
-    const parent = await this.prisma.parentProfile.findUnique({ where: { userId } });
+    const parent = await this.prisma.parentProfile.findUnique({
+      where: { userId },
+    });
     if (!parent) return [];
 
     const regs = await this.prisma.eventRegistration.findMany({
@@ -72,12 +82,14 @@ export class EventService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return regs.map(r => ({
+    return regs.map((r) => ({
       registrationId: r.id,
       eventId: r.eventId,
       eventTitle: r.event.title,
       eventDate: r.event.date,
-      children: r.children.map(c => `${c.child.firstName} ${c.child.lastName}`),
+      children: r.children.map(
+        (c) => `${c.child.firstName} ${c.child.lastName}`,
+      ),
       paymentStatus: r.paymentStatus,
     }));
   }
@@ -89,7 +101,7 @@ export class EventService {
       throw new BadRequestException('La date doit être un samedi');
     }
     const start = new Date(`${dto.date}T${dto.startTime}:00`);
-    const end   = new Date(`${dto.date}T${dto.endTime}:00`);
+    const end = new Date(`${dto.date}T${dto.endTime}:00`);
     if (end <= start) throw new BadRequestException('Heure de fin invalide');
 
     return this.prisma.event.create({
@@ -108,10 +120,16 @@ export class EventService {
   }
 
   /** Mise à jour (si non verrouillé) */
-  async update(id: string, dto: UpdateEventDto, userRole: Role, imageUrl?: string) {
+  async update(
+    id: string,
+    dto: UpdateEventDto,
+    userRole: Role,
+    imageUrl?: string,
+  ) {
     const ev = await this.prisma.event.findUnique({ where: { id } });
     if (!ev) throw new NotFoundException('Événement introuvable');
-    if (ev.isLocked) throw new ForbiddenException('Événement verrouillé après inscriptions');
+    if (ev.isLocked)
+      throw new ForbiddenException('Événement verrouillé après inscriptions');
 
     if (userRole !== Role.DIRECTOR && userRole !== Role.SERVICE_MANAGER) {
       throw new ForbiddenException();
@@ -128,9 +146,19 @@ export class EventService {
         ...(dto.title && { title: dto.title }),
         ...(dto.description && { description: dto.description }),
         ...(dto.date && { date: new Date(dto.date) }),
-        ...(dto.startTime && { startTime: new Date(`${dto.date ?? ev.date.toISOString().substring(0,10)}T${dto.startTime}:00`) }),
-        ...(dto.endTime && { endTime: new Date(`${dto.date ?? ev.date.toISOString().substring(0,10)}T${dto.endTime}:00`) }),
-        ...(typeof dto.price === 'number' && { priceCt: Math.round(dto.price * 100) }),
+        ...(dto.startTime && {
+          startTime: new Date(
+            `${dto.date ?? ev.date.toISOString().substring(0, 10)}T${dto.startTime}:00`,
+          ),
+        }),
+        ...(dto.endTime && {
+          endTime: new Date(
+            `${dto.date ?? ev.date.toISOString().substring(0, 10)}T${dto.endTime}:00`,
+          ),
+        }),
+        ...(typeof dto.price === 'number' && {
+          priceCt: Math.round(dto.price * 100),
+        }),
         ...(dto.capacity !== undefined && { capacity: dto.capacity }),
         ...(imageUrl !== undefined && { imageUrl }),
       },
@@ -139,15 +167,26 @@ export class EventService {
 
   /** Suppression */
   async remove(id: string) {
-    const regs = await this.prisma.eventRegistration.findMany({ where: { eventId: id }, include: { parentProfile: true, event: true } });
+    const regs = await this.prisma.eventRegistration.findMany({
+      where: { eventId: id },
+      include: { parentProfile: true, event: true },
+    });
 
     const refundFailures: string[] = [];
     for (const r of regs) {
-      if (r.paymentMethod === PaymentMethod.STRIPE && r.paymentStatus === PaymentStatus.PAID && r.stripeSessionId) {
+      if (
+        r.paymentMethod === PaymentMethod.STRIPE &&
+        r.paymentStatus === PaymentStatus.PAID &&
+        r.stripeSessionId
+      ) {
         try {
-          const session = await stripe.checkout.sessions.retrieve(r.stripeSessionId);
+          const session = await stripe.checkout.sessions.retrieve(
+            r.stripeSessionId,
+          );
           if (typeof session.payment_intent === 'string') {
-            await stripe.refunds.create({ payment_intent: session.payment_intent });
+            await stripe.refunds.create({
+              payment_intent: session.payment_intent,
+            });
           }
         } catch (e) {
           console.error('[Event remove] refund error', e);
@@ -158,12 +197,16 @@ export class EventService {
 
     if (refundFailures.length > 0) {
       // On ne supprime pas l'événement pour laisser une possibilité de remboursement manuel
-      throw new BadRequestException('Un ou plusieurs remboursements ont échoué, action annulée');
+      throw new BadRequestException(
+        'Un ou plusieurs remboursements ont échoué, action annulée',
+      );
     }
 
     // supprime en cascade enfants -> regs -> event
-    await this.prisma.$transaction(async tx => {
-      await tx.eventRegistrationChild.deleteMany({ where: { registration: { eventId: id } } });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.eventRegistrationChild.deleteMany({
+        where: { registration: { eventId: id } },
+      });
       await tx.eventRegistration.deleteMany({ where: { eventId: id } });
       await tx.event.delete({ where: { id } });
     });
@@ -171,26 +214,41 @@ export class EventService {
     // notification aux parents
     for (const r of regs) {
       try {
-        const parent = await this.prisma.user.findUnique({ where: { id: r.parentProfile.userId } });
+        const parent = await this.prisma.user.findUnique({
+          where: { id: r.parentProfile.userId },
+        });
         if (!parent) continue;
-        const childrenNames = await this.prisma.eventRegistrationChild.findMany({ where: { registrationId: r.id }, include: { child: true } });
-        const namesStr = childrenNames.map(c => `${c.child.firstName} ${c.child.lastName}`).join(', ');
+        const childrenNames = await this.prisma.eventRegistrationChild.findMany(
+          { where: { registrationId: r.id }, include: { child: true } },
+        );
+        const namesStr = childrenNames
+          .map((c) => `${c.child.firstName} ${c.child.lastName}`)
+          .join(', ');
         await this.mail.sendMail(
           parent.email,
           `Événement annulé : ${r.event.title}`,
           `<p>Bonjour,</p>
            <p>L'événement <strong>${r.event.title}</strong> prévu le ${r.event.date.toLocaleDateString('fr-FR')} a été annulé.</p>
            <p>Enfants inscrits concernés : ${namesStr}</p>
-           <p>Si un paiement avait été effectué, il vient d'être remboursé.</p>`
+           <p>Si un paiement avait été effectué, il vient d'être remboursé.</p>`,
         );
-      } catch(e) { console.error('[cancel event] mail error', e) }
+      } catch (e) {
+        console.error('[cancel event] mail error', e);
+      }
     }
   }
 
   /** Inscription d'un parent */
-  async register(eventId: string, userId: string, dto: RegisterEventDto, origin: string) {
+  async register(
+    eventId: string,
+    userId: string,
+    dto: RegisterEventDto,
+    origin: string,
+  ) {
     // récupère parentProfileId
-    const parentProfile = await this.prisma.parentProfile.findUnique({ where: { userId } });
+    const parentProfile = await this.prisma.parentProfile.findUnique({
+      where: { userId },
+    });
     if (!parentProfile) {
       throw new NotFoundException('Profil parent introuvable');
     }
@@ -219,18 +277,22 @@ export class EventService {
       select: { id: true },
     });
     if (ownedChildren.length !== dto.childIds.length) {
-      throw new ForbiddenException('Un ou plusieurs enfants ne vous appartiennent pas');
+      throw new ForbiddenException(
+        'Un ou plusieurs enfants ne vous appartiennent pas',
+      );
     }
 
     // Empêche le mode FREE sur un événement payant
     if (ev.priceCt > 0 && dto.paymentMethod === PaymentMethod.FREE) {
-      throw new BadRequestException('Le mode de paiement gratuit n\'est pas autorisé pour cet événement');
+      throw new BadRequestException(
+        "Le mode de paiement gratuit n'est pas autorisé pour cet événement",
+      );
     }
 
     // Les méthodes et statuts de paiement seront recalculés à l'intérieur de la transaction
 
     // Transaction atomique avec re-vérification de capacité et verrouillage pessimiste
-    const result = await this.prisma.$transaction(async tx => {
+    const result = await this.prisma.$transaction(async (tx) => {
       // Re-charge l'événement à l'intérieur de la transaction pour éviter les races
       const evNow = await tx.event.findUnique({ where: { id: eventId } });
       if (!evNow) throw new NotFoundException('Événement introuvable');
@@ -252,14 +314,23 @@ export class EventService {
         data: {
           eventId,
           parentProfileId,
-          paymentMethod: (evNow.priceCt === 0 ? PaymentMethod.FREE : dto.paymentMethod) as any,
-          paymentStatus: (evNow.priceCt === 0 ? PaymentStatus.FREE : (dto.paymentMethod === PaymentMethod.CHEQUE ? PaymentStatus.PENDING : PaymentStatus.PENDING)) as any,
+          paymentMethod: (evNow.priceCt === 0
+            ? PaymentMethod.FREE
+            : dto.paymentMethod) as any,
+          paymentStatus: (evNow.priceCt === 0
+            ? PaymentStatus.FREE
+            : dto.paymentMethod === PaymentMethod.CHEQUE
+              ? PaymentStatus.PENDING
+              : PaymentStatus.PENDING) as any,
           amountCt,
         },
       });
 
       await tx.eventRegistrationChild.createMany({
-        data: dto.childIds.map(id => ({ registrationId: reg.id, childId: id })),
+        data: dto.childIds.map((id) => ({
+          registrationId: reg.id,
+          childId: id,
+        })),
       });
 
       // Verrouille l'événement dès la première inscription (plus modifiable par admin)
@@ -297,7 +368,10 @@ export class EventService {
     });
 
     // enregistre session id
-    await this.prisma.eventRegistration.update({ where: { id: result.id }, data: { stripeSessionId: session.id } });
+    await this.prisma.eventRegistration.update({
+      where: { id: result.id },
+      data: { stripeSessionId: session.id },
+    });
 
     return { registrationId: result.id, stripeUrl: session.url };
   }
@@ -308,29 +382,44 @@ export class EventService {
     if (session.payment_status !== 'paid') {
       throw new BadRequestException('Paiement non validé');
     }
-    const reg = await this.prisma.eventRegistration.findFirst({ where: { stripeSessionId: sessionId }, include: { parentProfile: true } });
+    const reg = await this.prisma.eventRegistration.findFirst({
+      where: { stripeSessionId: sessionId },
+      include: { parentProfile: true },
+    });
     if (!reg) throw new NotFoundException('Inscription inconnue');
     if (reg.parentProfile.userId !== requesterUserId) {
       throw new ForbiddenException('Accès refusé');
     }
     if (reg.paymentStatus !== PaymentStatus.PAID) {
-      await this.prisma.eventRegistration.update({ where: { id: reg.id }, data: { paymentStatus: PaymentStatus.PAID } });
+      await this.prisma.eventRegistration.update({
+        where: { id: reg.id },
+        data: { paymentStatus: PaymentStatus.PAID },
+      });
       await this._sendRegistrationMail(reg.id);
     }
 
-    const kids = await this.prisma.eventRegistrationChild.findMany({ where: { registrationId: reg.id }, include: { child: true } });
-    const event = await this.prisma.event.findUnique({ where: { id: reg.eventId } });
+    const kids = await this.prisma.eventRegistrationChild.findMany({
+      where: { registrationId: reg.id },
+      include: { child: true },
+    });
+    const event = await this.prisma.event.findUnique({
+      where: { id: reg.eventId },
+    });
     return {
       eventTitle: event?.title || '',
-      children: kids.map(k => `${k.child.firstName} ${k.child.lastName}`),
+      children: kids.map((k) => `${k.child.firstName} ${k.child.lastName}`),
     };
   }
 
   async updatePaymentStatus(registrationId: string, status: PaymentStatus) {
-    const reg = await this.prisma.eventRegistration.findUnique({ where: { id: registrationId } });
+    const reg = await this.prisma.eventRegistration.findUnique({
+      where: { id: registrationId },
+    });
     if (!reg) throw new NotFoundException('Inscription introuvable');
     if (reg.paymentMethod !== PaymentMethod.CHEQUE) {
-      throw new BadRequestException('Seules les inscriptions par chèque peuvent être modifiées manuellement');
+      throw new BadRequestException(
+        'Seules les inscriptions par chèque peuvent être modifiées manuellement',
+      );
     }
     return this.prisma.eventRegistration.update({ where: { id: registrationId }, data: { paymentStatus: status } });
   }
@@ -400,18 +489,27 @@ export class EventService {
 
   /** Annulation d'une inscription par le parent */
   async cancelRegistration(userId: string, registrationId: string) {
-    const reg = await this.prisma.eventRegistration.findUnique({ where: { id: registrationId }, include: { event: true, parentProfile: true } });
+    const reg = await this.prisma.eventRegistration.findUnique({
+      where: { id: registrationId },
+      include: { event: true, parentProfile: true },
+    });
     if (!reg) throw new NotFoundException('Inscription introuvable');
 
     // vérifie propriétaire
-    if (reg.parentProfile.userId !== userId) throw new ForbiddenException('Accès refusé');
+    if (reg.parentProfile.userId !== userId)
+      throw new ForbiddenException('Accès refusé');
 
     // remboursement si Stripe payé
-    if (reg.paymentMethod === PaymentMethod.STRIPE && reg.paymentStatus === PaymentStatus.PAID) {
+    if (
+      reg.paymentMethod === PaymentMethod.STRIPE &&
+      reg.paymentStatus === PaymentStatus.PAID
+    ) {
       if (!reg.stripeSessionId) {
         throw new BadRequestException('Session Stripe manquante');
       }
-      const session = await stripe.checkout.sessions.retrieve(reg.stripeSessionId);
+      const session = await stripe.checkout.sessions.retrieve(
+        reg.stripeSessionId,
+      );
       if (typeof session.payment_intent === 'string') {
         await stripe.refunds.create({ payment_intent: session.payment_intent });
       }
@@ -464,7 +562,7 @@ export class EventService {
     const recipient = reg.parentProfile.user.email;
 
     const childrenList = reg.children
-      .map(ec => `${ec.child.firstName} ${ec.child.lastName}`)
+      .map((ec) => `${ec.child.firstName} ${ec.child.lastName}`)
       .join(', ');
     const amount = (reg.amountCt / 100).toFixed(2);
 
@@ -483,7 +581,7 @@ export class EventService {
       `<p>Bonjour,</p>
        <p>Votre inscription à l'événement <strong>${reg.event.title}</strong> du ${reg.event.date.toLocaleDateString('fr-FR')} de ${reg.event.startTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} à ${reg.event.endTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} a bien été prise en compte.</p>
        <p>Enfants inscrits : ${childrenList}</p>
-       <p>${payInfo}</p>`
+       <p>${payInfo}</p>`,
     );
   }
-} 
+}

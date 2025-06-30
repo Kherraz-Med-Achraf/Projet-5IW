@@ -1,0 +1,156 @@
+<template>
+    <div class="modal-overlay" @click.self="onClose">
+      <div class="modal-content">
+        <!-- En-tête -->
+        <div class="modal-header">
+          <h4>
+            <i class="material-icons">edit</i>
+            Justifier {{ record.child.firstName }} {{ record.child.lastName }}
+          </h4>
+          <button class="close-btn" @click="onClose">×</button>
+        </div>
+  
+        <!-- Contenu -->
+        <div class="modal-body">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">
+              Type
+            </label>
+            <select
+              v-model="form.type"
+              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+            >
+              <option value="ABSENCE">Absence</option>
+              <option value="LATENESS">Retard</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">
+              Date de justificatif
+            </label>
+            <input
+              type="date"
+              v-model="form.justificationDate"
+              :max="today"
+              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">
+              Motif / Commentaire
+            </label>
+            <input
+              type="text"
+              v-model="form.motif"
+              placeholder="Ex. certificat médical"
+              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">
+              Justificatif (facultatif)
+            </label>
+            <input
+              type="file"
+              @change="onFileChange"
+              class="mt-1 block w-full"
+            />
+          </div>
+        </section>
+  
+        <!-- Pied de page -->
+        <footer class="px-6 py-4 border-t flex justify-end space-x-2">
+          <button
+            type="button"
+            class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+            @click="onClose"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            :disabled="submitting"
+            @click="onSubmit"
+          >
+            {{ submitting ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+        </footer>
+      </div>
+    </div>
+  </template>
+  
+  <script setup lang="ts">
+  import { ref } from 'vue';
+  import { defineProps, defineEmits } from 'vue';
+  
+  interface RecordProp {
+    id: number;
+    child: { firstName: string; lastName: string };
+  }
+  
+  const props = defineProps<{ record: RecordProp }>();
+  const emit = defineEmits<{
+    (e: 'close'): void;
+    (e: 'submit', payload: {
+      recordId: number;
+      type: 'ABSENCE' | 'LATENESS';
+      justificationDate: string;
+      motif: string;
+      file?: File;
+    }): void;
+  }>();
+  
+  const today = new Date().toISOString().substr(0, 10);
+  const form = ref({
+    type: 'ABSENCE' as 'ABSENCE' | 'LATENESS',
+    justificationDate: today,
+    motif: '',
+  });
+  const file = ref<File | null>(null);
+  const submitting = ref(false);
+  
+  function onFileChange(e: Event) {
+    const target = e.target as HTMLInputElement;
+    file.value = target.files?.[0] ?? null;
+  }
+  
+  function onClose() {
+    emit('close');
+  }
+  
+  async function onSubmit() {
+    submitting.value = true;
+    await emit('submit', {
+      recordId: props.record.id,
+      type: form.value.type,
+      justificationDate: form.value.justificationDate,
+      motif: form.value.motif,
+      file: file.value ?? undefined,
+    });
+    submitting.value = false;
+  }
+  </script>
+  
+  <style scoped>
+  /* Force le positionnement correct de la modale */
+  .fixed {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 9999 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  /* Assure que la modale reste centrée */
+  .fixed > div {
+    position: relative !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+  </style>
+  

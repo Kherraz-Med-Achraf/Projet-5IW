@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useAuthStore } from "./auth";
+import { API_BASE_URL } from "@/utils/api";
 
 export interface Parent {
   id: number;
@@ -43,8 +44,7 @@ export const useParentStore = defineStore("parent", () => {
   const loading = ref(false);
   const error = ref("");
 
-  const API_BASE =
-    (import.meta.env.VITE_NEST_API_URL as string) || "http://localhost:3000";
+  const API_BASE = API_BASE_URL;
 
   async function fetchParents(): Promise<Parent[]> {
     loading.value = true;

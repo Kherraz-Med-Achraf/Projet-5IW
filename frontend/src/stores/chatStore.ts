@@ -4,9 +4,10 @@ import { ref, reactive } from "vue";
 import { socket, initSocket } from "@/plugins/socket";
 import router from "@/router";
 import { useAuthStore } from "./auth";
+import { API_BASE_URL } from "@/utils/api";
 
 /* URL racine de l'API Nest */
-const API = import.meta.env.VITE_NEST_API_URL ?? "";
+const API = API_BASE_URL ?? import.meta.env.VITE_NEST_API_URL ?? '';
 
 interface Chat {
   id: string;

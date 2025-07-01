@@ -1,0 +1,149 @@
+name: Deploy on deploy branch
+
+# Déclenche uniquement sur push vers la branche deploy
+on:
+  push:
+    branches: [deploy]
+  pull_request:
+    branches: [deploy]
+    types: [closed]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🏁 Start deployment
+        run: |
+          echo "🚀 Début du déploiement automatique"
+          echo "📝 Commit: ${{ github.sha }}"
+          echo "👤 Auteur: ${{ github.actor }}"
+      
+
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: deploy
+      
+      - name: 🔐 Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
+      - name: 📦 Create deployment archive
+        run: |
+          echo "📦 Création de l'archive de déploiement..."
+          # Créer un fichier .tarignore pour les exclusions
+          cat > .tarignore << EOF
+          .git
+          node_modules
+          .history
+          .DS_Store
+          *.tar.gz
+          *.log
+          .github/workflows
+          EOF
+
+          # Créer l'archive en excluant les fichiers listés
+          tar -czf /tmp/projet5iw-deploy.tar.gz \
+            --exclude-from=.tarignore \
+            --exclude='.tarignore' \
+            .
+
+          # Déplacer l'archive et nettoyer
+          mv /tmp/projet5iw-deploy.tar.gz ./projet5iw-deploy.tar.gz
+          rm -f .tarignore
+
+          echo "✅ Archive créée :"
+          ls -lh projet5iw-deploy.tar.gz
+
+      - name: 📤 Transfer and deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.MGR_HOST }}
+          username: ${{ secrets.MGR_SSH_USER }}
+          key: ${{ secrets.MGR_SSH_KEY }}
+          port: ${{ secrets.MGR_SSH_PORT || 22 }}
+          script: |
+            set -euo pipefail
+
+            echo "📂 Préparation du répertoire de déploiement..."
+            mkdir -p /tmp/projet5iw-deploy
+            cd /tmp/projet5iw-deploy
+
+      - name: 📁 Upload code archive
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.MGR_HOST }}
+          username: ${{ secrets.MGR_SSH_USER }}
+          key: ${{ secrets.MGR_SSH_KEY }}
+          port: ${{ secrets.MGR_SSH_PORT || 22 }}
+          source: "projet5iw-deploy.tar.gz"
+          target: "/tmp/"
+
+      - name: 🚀 Deploy to production
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN:    ${{ secrets.DOCKERHUB_TOKEN }}
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.MGR_HOST }}
+          username: ${{ secrets.MGR_SSH_USER }}
+          key: ${{ secrets.MGR_SSH_KEY }}
+          port: ${{ secrets.MGR_SSH_PORT || 22 }}
+          envs: "DOCKERHUB_USERNAME,DOCKERHUB_TOKEN"
+          command_timeout: 30m
+          script: |
+            set -euo pipefail
+
+            echo "$DOCKERHUB_TOKEN" | docker login \
+              --username "$DOCKERHUB_USERNAME" \
+              --password-stdin
+
+            echo "📦 Extraction de l'archive..."
+            cd /tmp
+            tar -xzf projet5iw-deploy.tar.gz -C projet5iw-deploy --strip-components=1
+
+            echo "🔄 Sauvegarde de l'ancien déploiement..."
+            if [ -d "/home/github/projet5iw" ]; then
+              cp -r /home/github/projet5iw /home/github/projet5iw.backup.$(date +%Y%m%d_%H%M%S) 2>/dev/null || echo "⚠️  Impossible de sauvegarder (permissions)"
+            fi
+
+            echo "📂 Mise à jour du code..."
+            mkdir -p /home/github 2>/dev/null || echo "📂 Répertoire /home/github existe déjà"
+            rm -rf /home/github/projet5iw 2>/dev/null || echo "🧹 Nettoyage de l'ancien code..."
+            mv /tmp/projet5iw-deploy /home/github/projet5iw
+
+            echo "🔍 Vérification de l'état du Swarm..."
+            docker node ls
+
+
+            # → Aller dans le dossier où sont vraiment les scripts
+            cd /home/github/projet5iw/projet5iw-deploy
+
+            echo "📋 Contenu de projet5iw-deploy :"
+            ls -al
+
+            echo "🏗️ Lancement du build et du déploiement…"
+            chmod +x build-deploy.sh cleanup.sh
+            ./build-deploy.sh
+
+            echo "✅ Vérification du déploiement…"
+            sleep 10
+            docker stack services projet5iw
+
+            echo "🧹 Nettoyage des temporaires…"
+            rm -f /tmp/projet5iw-deploy.tar.gz
+
+            echo "🎉 Déploiement terminé !"
+
+      - name: 📊 Deployment Summary
+        if: always()
+        run: |
+          echo "## 📈 Résumé du Déploiement" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branche**: deploy" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Auteur**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Statut**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: https://educareschool.me" >> $GITHUB_STEP_SUMMARY

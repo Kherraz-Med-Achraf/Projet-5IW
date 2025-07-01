@@ -12,7 +12,7 @@ import Home from "@/views/Home.vue";
 import Dashboard from "@/views/Dashboard.vue";
 import ForgotPassword from "@/views/ForgotPassword.vue";
 import ResetPassword from "@/views/ResetPassword.vue";
-import OtpActivation from "@/views/OtpActivation.vue";
+import OtpActivation from "@/views/otpActivation.vue";
 import VerifyEmail from "@/views/VerifyEmail.vue";
 import ChatView from "@/views/chat/ChatView.vue";
 

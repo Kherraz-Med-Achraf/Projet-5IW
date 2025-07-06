@@ -211,7 +211,7 @@ onUnmounted(() => {
 .profile-section {
   background: white;
   border-radius: 1rem;
-  padding: 0;
+  padding: 2rem;
   box-shadow: var(--card-shadow);
   border: 1px solid var(--border-color);
   transition: all 0.3s ease;
@@ -221,32 +221,30 @@ onUnmounted(() => {
   }
 }
 
-/* En-tête de section style planning */
+/* En-tête de section identique */
 .section-header {
-  background: #4444ac;
-  border-radius: 1rem 1rem 0 0;
-  padding: 2rem 2rem 1rem 2rem;
-  margin-bottom: 0;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--background-light);
 
   h1, h2 {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin: 0;
-    color: white;
-    font-size: 1.5rem;
-    font-weight: 600;
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+    font-size: 1.875rem;
+    font-weight: 700;
     line-height: 1.2;
-    font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
     i {
-      color: white;
-      font-size: 1.75rem;
+      color: var(--primary-color);
+      font-size: 2rem;
     }
   }
 
   .post-count {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-muted);
     font-weight: 500;
     font-size: 1rem;
   }
@@ -324,11 +322,6 @@ onUnmounted(() => {
 }
 
 
-
-/* Contenu de la section */
-.profile-section > *:not(.section-header) {
-  padding: 2rem;
-}
 
 /* Grille des posts */
 .posts-grid {

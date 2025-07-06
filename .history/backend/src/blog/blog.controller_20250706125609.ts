@@ -182,7 +182,7 @@ export class BlogController {
   /**
    * Supprimer un post (Admin et Directeur peuvent supprimer tous les posts, autres seulement les leurs)
    */
-  @UseGuards(JwtAuthGuard, RolesGuard, CsrfGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SECRETARY, Role.DIRECTOR, Role.SERVICE_MANAGER)
   @Delete(':id')
   async deletePost(@Param('id') id: string, @Req() req: Request) {

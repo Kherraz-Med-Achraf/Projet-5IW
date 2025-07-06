@@ -558,7 +558,7 @@ const closeImageModal = () => {
     background: #f8fafc;
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    border-color: #333;
+    border-color: #444;
 
     &::before {
       left: 100%;

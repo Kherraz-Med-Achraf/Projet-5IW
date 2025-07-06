@@ -388,12 +388,11 @@ const onProposeTitle = async () => {
   titleProposal.value = null
 
   try {
-    const token = await AuthService.getToken()
-    const response = await fetch(`${API_BASE_URL}/ai/mission-improve`, {
+    const response = await fetch("http://localhost:3000/ai/mission-improve", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
       body: JSON.stringify({
         prompt: form.value.title,
@@ -450,12 +449,11 @@ const onProposeDescription = async () => {
   descriptionProposal.value = null
 
   try {
-    const token = await AuthService.getToken()
-    const response = await fetch(`${API_BASE_URL}/ai/mission-improve`, {
+    const response = await fetch("http://localhost:3000/ai/mission-improve", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
       body: JSON.stringify({
         prompt: form.value.description,

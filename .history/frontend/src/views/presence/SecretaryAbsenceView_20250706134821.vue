@@ -1450,9 +1450,6 @@ onMounted(() => {
   }
   
   .section-header {
-    margin: -1.5rem -1.5rem 1.5rem -1.5rem;
-    padding: 1rem 1.5rem;
-    width: calc(100% + 3rem);
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;

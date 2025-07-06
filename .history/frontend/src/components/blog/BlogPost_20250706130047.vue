@@ -105,52 +105,6 @@
         </button>
       </div>
     </div>
-
-    <!-- Modal de confirmation de suppression -->
-    <div 
-      v-if="showDeleteModal" 
-      class="delete-modal" 
-      @click="cancelDelete"
-      @keydown.escape="cancelDelete"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="delete-modal-title"
-      aria-describedby="delete-modal-description"
-      tabindex="-1"
-    >
-      <div class="delete-modal-content" @click.stop>
-        <div class="delete-modal-header">
-          <i class="material-icons" aria-hidden="true">warning</i>
-          <h3 id="delete-modal-title">Confirmer la suppression</h3>
-        </div>
-        <div class="delete-modal-body">
-          <p id="delete-modal-description">
-            Êtes-vous sûr de vouloir supprimer définitivement le post "<strong>{{ post.title }}</strong>" ?
-          </p>
-          <p class="delete-warning">Cette action est irréversible.</p>
-        </div>
-        <div class="delete-modal-actions">
-          <button 
-            type="button" 
-            @click="cancelDelete" 
-            class="btn-cancel"
-            aria-label="Annuler la suppression"
-          >
-            <i class="material-icons" aria-hidden="true">close</i>
-            Annuler
-          </button>
-          <button 
-            type="button" 
-            @click="confirmDelete" 
-            class="btn-delete-confirm"
-            aria-label="Confirmer la suppression définitive"
-          >
-            <i class="material-icons" aria-hidden="true">delete</i>
-            Supprimer
-          </button>
-        </div>
-      </div>
-    </div>
   </article>
 </template>
 
@@ -264,22 +218,15 @@ const toggleReaction = async (reactionType: ReactionType) => {
   }
 }
 
-const handleDelete = () => {
-  showDeleteModal.value = true
-}
+const handleDelete = async () => {
+  const confirmed = confirm(`Êtes-vous sûr de vouloir supprimer le post "${props.post.title}" ?`)
+  if (!confirmed) return
 
-const confirmDelete = async () => {
-  showDeleteModal.value = false
-  
   try {
     await blogStore.deletePost(props.post.id)
   } catch (error) {
     console.error('Erreur lors de la suppression:', error)
   }
-}
-
-const cancelDelete = () => {
-  showDeleteModal.value = false
 }
 
 const openMediaModal = () => {
@@ -411,7 +358,7 @@ const closeImageModal = () => {
 
 .post-date {
   font-size: 0.875rem;
-  color: black;
+  color: var(--text-secondary);
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -531,7 +478,7 @@ const closeImageModal = () => {
   align-items: center;
   gap: 0.625rem;
   padding: 0.75rem 1.25rem;
-  border: 1px solid #666;
+  border: 2px solid #e2e8f0;
   background: white;
   border-radius: 2rem;
   cursor: pointer;
@@ -558,7 +505,7 @@ const closeImageModal = () => {
     background: #f8fafc;
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    border-color: #333;
+    border-color: #cbd5e1;
 
     &::before {
       left: 100%;
@@ -602,7 +549,7 @@ const closeImageModal = () => {
 
   .reaction-label {
     font-weight: 600;
-    color: black;
+    color: var(--text-secondary);
     font-size: 0.875rem;
     margin: 0 0.25rem;
     transition: all 0.3s ease;
@@ -610,7 +557,7 @@ const closeImageModal = () => {
 
   .reaction-count {
     font-weight: 700;
-    color: black;
+    color: var(--text-secondary);
     min-width: 1.5rem;
     text-align: center;
     font-size: 0.875rem;
@@ -826,172 +773,5 @@ const closeImageModal = () => {
 .blog-post:focus-visible {
   outline: 2px solid var(--primary-color);
   outline-offset: 2px;
-}
-
-/* Modal de suppression */
-.delete-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 2rem;
-  backdrop-filter: blur(8px);
-}
-
-.delete-modal-content {
-  background: white;
-  border-radius: 1.5rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  max-width: 500px;
-  width: 100%;
-  overflow: hidden;
-  animation: slideUp 0.3s ease;
-}
-
-.delete-modal-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 2rem 2rem 1rem;
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  border-bottom: 1px solid #fca5a5;
-
-  i {
-    font-size: 2rem;
-    color: #dc2626;
-  }
-
-  h3 {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #dc2626;
-  }
-}
-
-.delete-modal-body {
-  padding: 1.5rem 2rem;
-  
-  p {
-    margin: 0 0 1rem 0;
-    color: var(--text-primary);
-    line-height: 1.6;
-  }
-
-  .delete-warning {
-    font-size: 0.875rem;
-    color: #dc2626;
-    font-weight: 600;
-    margin: 0;
-  }
-
-  strong {
-    color: var(--text-primary);
-    font-weight: 700;
-  }
-}
-
-.delete-modal-actions {
-  display: flex;
-  gap: 1rem;
-  padding: 1rem 2rem 2rem;
-  justify-content: flex-end;
-}
-
-.btn-cancel {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: #f3f4f6;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
-  border-radius: 0.75rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 600;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background: #e5e7eb;
-    color: #374151;
-  }
-
-  &:focus {
-    outline: 2px solid #6366f1;
-    outline-offset: 2px;
-  }
-
-  i {
-    font-size: 1rem;
-  }
-}
-
-.btn-delete-confirm {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  color: white;
-  border: none;
-  border-radius: 0.75rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 600;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
-
-  &:hover {
-    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
-  }
-
-  &:focus {
-    outline: 2px solid #dc2626;
-    outline-offset: 2px;
-  }
-
-  i {
-    font-size: 1rem;
-  }
-}
-
-/* Responsive pour la modale de suppression */
-@media (max-width: 768px) {
-  .delete-modal {
-    padding: 1rem;
-  }
-
-  .delete-modal-content {
-    max-width: 100%;
-  }
-
-  .delete-modal-header {
-    padding: 1.5rem 1.5rem 1rem;
-  }
-
-  .delete-modal-body {
-    padding: 1rem 1.5rem;
-  }
-
-  .delete-modal-actions {
-    padding: 1rem 1.5rem 1.5rem;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .btn-cancel,
-  .btn-delete-confirm {
-    width: 100%;
-    justify-content: center;
-  }
 }
 </style> 

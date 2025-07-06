@@ -773,22 +773,21 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: white;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
   margin: 0;
   font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.2;
 }
 
 .section-header h1 {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
 }
 
 .section-header h1 i,
 .section-header h2 i {
-  color: white;
-  font-size: 1.5rem;
+  color: #4338ca;
+  font-size: 1.75rem;
 }
 
 .child-count {
@@ -1450,9 +1449,6 @@ onMounted(() => {
   }
   
   .section-header {
-    margin: -1.5rem -1.5rem 1.5rem -1.5rem;
-    padding: 1rem 1.5rem;
-    width: calc(100% + 3rem);
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;

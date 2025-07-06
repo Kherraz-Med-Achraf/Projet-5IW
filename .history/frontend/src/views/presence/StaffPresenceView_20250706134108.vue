@@ -10,13 +10,13 @@
     <div class="profile-content" id="main-content">
       <div class="content-grid">
         <!-- En-tête avec date -->
-        <PageHeader 
-          title="Appel des présences"
-          :subtitle="todayLabel"
-          icon="event_available"
-        />
-        
         <div class="profile-section">
+          <div class="section-header">
+            <h1>
+              <i class="material-icons" aria-hidden="true">event_available</i>
+              Appel des présences – {{ todayLabel }}
+            </h1>
+          </div>
 
           <!-- Info note -->
           <div class="info-note">
@@ -520,18 +520,16 @@ onMounted(async () => {
 
 .children-section .section-header {
   background: #4444ac;
-  border-radius: 0.75rem 0.75rem 0 0;
-  margin: 0;
+  border-radius: 0;
   padding: 1.5rem;
-  width: 100%;
+  margin-bottom: 0;
 }
 
 .section-header {
   background: #4444ac;
-  margin: -1.5rem -1.5rem 2rem -1.5rem;
   padding: 1.5rem;
-  border-radius: 0.75rem 0.75rem 0 0;
-  width: calc(100% + 3rem);
+  border-radius: 12px;
+  margin-bottom: 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -827,17 +825,9 @@ onMounted(async () => {
   }
   
   .section-header {
-    margin: -1rem -1rem 1.5rem -1rem;
-    padding: 1rem 1.5rem;
-    width: calc(100% + 2rem);
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
-  }
-  
-  .children-section .section-header {
-    margin: 0;
-    width: 100%;
   }
   
   .info-grid {

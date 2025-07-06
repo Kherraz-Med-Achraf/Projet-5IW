@@ -787,7 +787,7 @@ onMounted(async () => {
   gap: 0.5rem;
 
   strong {
-    color: black;
+    color: var(--text-primary);
     font-weight: 600;
   }
 
@@ -814,12 +814,12 @@ onMounted(async () => {
 
   .reaction-count {
     font-weight: 600;
-    color: black;
+    color: var(--text-primary);
   }
 
   .reaction-emojis {
     font-size: 0.75rem;
-    color: black;
+    color: var(--text-muted);
   }
 }
 
@@ -880,7 +880,7 @@ onMounted(async () => {
   justify-content: center;
   gap: 0.75rem;
   padding: 3rem;
-  color: black;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   font-weight: 500;
 

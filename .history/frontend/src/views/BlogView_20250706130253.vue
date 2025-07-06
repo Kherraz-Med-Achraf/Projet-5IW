@@ -17,6 +17,30 @@
           icon="article"
         />
 
+        <!-- Section des actions -->
+        <div class="profile-section">
+          <!-- Actions du blog -->
+          <div id="blog-actions" class="blog-actions">
+            <!-- Bouton pour créer un post -->
+            <button
+              v-if="canCreatePost"
+              class="edit-btn"
+              @click="showCreateModal = true"
+              type="button"
+              aria-label="Créer un nouvel article de blog"
+            >
+              <i class="material-icons" aria-hidden="true">add</i>
+              Créer un article
+            </button>
+
+            <!-- Message d'information pour les autres rôles -->
+            <div v-if="!canCreatePost && authStore.user" class="info-message">
+              <i class="material-icons" aria-hidden="true">visibility</i>
+              <p>Vous pouvez consulter les articles et laisser des réactions</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Section des articles -->
         <div class="profile-section" id="blog-posts">
           <div class="section-header">
@@ -58,13 +82,19 @@
               <i class="material-icons" aria-hidden="true">article</i>
             </div>
             <h3>Aucun article pour le moment</h3>
-            <p>Les articles apparaîtront ici dès qu'ils seront publiés.</p>
+            <p v-if="canCreatePost">Soyez le premier à publier un article !</p>
+            <p v-else>Les articles apparaîtront ici dès qu'ils seront publiés.</p>
           </div>
         </div>
       </div>
     </div>
 
-
+    <!-- Modal de création de post -->
+    <CreatePostForm
+      :visible="showCreateModal"
+      @close="showCreateModal = false"
+      @post-created="handlePostCreatedModal"
+    />
   </main>
 </template>
 
@@ -73,8 +103,8 @@ import { computed, onMounted, ref, watch, onUnmounted } from "vue";
 import { useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useBlogStore } from "@/stores/blogStore";
+import CreatePostForm from "@/components/blog/CreatePostForm.vue";
 import BlogPost from "@/components/blog/BlogPost.vue";
-import PageHeader from "@/components/PageHeader.vue";
 
 // Routing
 const route = useRoute();
@@ -83,9 +113,20 @@ const route = useRoute();
 const authStore = useAuthStore();
 const blogStore = useBlogStore();
 
-
+// State
+const showCreateModal = ref(false);
 
 // Computed
+const canCreatePost = computed(() => {
+  const userRole = authStore.user?.role;
+  return (
+    userRole === "ADMIN" ||
+    userRole === "SECRETARY" ||
+    userRole === "DIRECTOR" ||
+    userRole === "SERVICE_MANAGER"
+  );
+});
+
 const posts = computed(() => {
   return blogStore.sortedPosts;
 });
@@ -95,7 +136,15 @@ const reloadPosts = async () => {
   await blogStore.fetchPosts();
 };
 
+const handlePostCreated = () => {
+  // Le post est déjà ajouté au store, on peut faire un scroll vers le haut
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
 
+const handlePostCreatedModal = () => {
+  handlePostCreated();
+  showCreateModal.value = false;
+};
 
 // Fonction pour charger les données
 const loadBlogData = async () => {
@@ -211,7 +260,7 @@ onUnmounted(() => {
 .profile-section {
   background: white;
   border-radius: 1rem;
-  padding: 0;
+  padding: 2rem;
   box-shadow: var(--card-shadow);
   border: 1px solid var(--border-color);
   transition: all 0.3s ease;
@@ -221,32 +270,30 @@ onUnmounted(() => {
   }
 }
 
-/* En-tête de section style planning */
+/* En-tête de section identique */
 .section-header {
-  background: #4444ac;
-  border-radius: 1rem 1rem 0 0;
-  padding: 2rem 2rem 1rem 2rem;
-  margin-bottom: 0;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--background-light);
 
   h1, h2 {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin: 0;
-    color: white;
-    font-size: 1.5rem;
-    font-weight: 600;
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+    font-size: 1.875rem;
+    font-weight: 700;
     line-height: 1.2;
-    font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
     i {
-      color: white;
-      font-size: 1.75rem;
+      color: var(--primary-color);
+      font-size: 2rem;
     }
   }
 
   .post-count {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-muted);
     font-weight: 500;
     font-size: 1rem;
   }
@@ -323,11 +370,28 @@ onUnmounted(() => {
   }
 }
 
+/* Message d'information */
+.info-message {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #7dd3fc;
+  border-radius: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
 
+  i {
+    color: #0284c7;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
 
-/* Contenu de la section */
-.profile-section > *:not(.section-header) {
-  padding: 2rem;
+  p {
+    margin: 0;
+    line-height: 1.4;
+  }
 }
 
 /* Grille des posts */

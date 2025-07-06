@@ -152,7 +152,7 @@ const isVideo = computed(() => {
 const fullMediaUrl = computed(() => {
   if (!props.post.mediaUrl) return ''
   if (props.post.mediaUrl.startsWith('http')) return props.post.mediaUrl
-  return `${API_BASE_URL}${props.post.mediaUrl}`
+  return `http://localhost:3000${props.post.mediaUrl}`
 })
 
 // Watchers
@@ -233,11 +233,10 @@ const updatePost = async () => {
     formData.append('improveDescriptionWithAI', 'true')
   }
 
-  const token = await AuthService.getToken()
-  const response = await fetch(`${API_BASE_URL}/blog/${props.post.id}`, {
+  const response = await fetch(`http://localhost:3000/blog/${props.post.id}`, {
     method: 'PUT',
     headers: {
-      'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${localStorage.getItem('token')}`,
     },
     body: formData,
   })

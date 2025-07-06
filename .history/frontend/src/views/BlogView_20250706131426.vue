@@ -325,11 +325,6 @@ onUnmounted(() => {
 
 
 
-/* Contenu de la section */
-.profile-section > *:not(.section-header) {
-  padding: 2rem;
-}
-
 /* Grille des posts */
 .posts-grid {
   display: flex;

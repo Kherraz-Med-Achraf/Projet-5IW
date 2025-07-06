@@ -520,10 +520,9 @@ onMounted(async () => {
 
 .children-section .section-header {
   background: #4444ac;
-  border-radius: 0.75rem 0.75rem 0 0;
-  margin: 0;
+  border-radius: 0;
   padding: 1.5rem;
-  width: 100%;
+  margin-bottom: 0;
 }
 
 .section-header {
@@ -827,17 +826,9 @@ onMounted(async () => {
   }
   
   .section-header {
-    margin: -1rem -1rem 1.5rem -1rem;
-    padding: 1rem 1.5rem;
-    width: calc(100% + 2rem);
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
-  }
-  
-  .children-section .section-header {
-    margin: 0;
-    width: 100%;
   }
   
   .info-grid {

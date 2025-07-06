@@ -152,7 +152,7 @@ const isVideo = computed(() => {
 const fullMediaUrl = computed(() => {
   if (!props.post.mediaUrl) return ''
   if (props.post.mediaUrl.startsWith('http')) return props.post.mediaUrl
-  return `${API_BASE_URL}${props.post.mediaUrl}`
+  return `http://localhost:3000${props.post.mediaUrl}`
 })
 
 // Watchers

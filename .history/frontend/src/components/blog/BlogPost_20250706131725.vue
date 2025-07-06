@@ -531,7 +531,7 @@ const closeImageModal = () => {
   align-items: center;
   gap: 0.625rem;
   padding: 0.75rem 1.25rem;
-  border: 1px solid #666;
+  border: 2px solid black;
   background: white;
   border-radius: 2rem;
   cursor: pointer;
@@ -558,7 +558,7 @@ const closeImageModal = () => {
     background: #f8fafc;
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    border-color: #333;
+    border-color: #cbd5e1;
 
     &::before {
       left: 100%;
@@ -602,7 +602,7 @@ const closeImageModal = () => {
 
   .reaction-label {
     font-weight: 600;
-    color: black;
+    color: var(--text-secondary);
     font-size: 0.875rem;
     margin: 0 0.25rem;
     transition: all 0.3s ease;
@@ -610,7 +610,7 @@ const closeImageModal = () => {
 
   .reaction-count {
     font-weight: 700;
-    color: black;
+    color: var(--text-secondary);
     min-width: 1.5rem;
     text-align: center;
     font-size: 0.875rem;

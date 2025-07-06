@@ -11,13 +11,13 @@
     <div class="profile-content" id="main-content">
       <div class="content-grid">
         <!-- En-tête avec date et sélecteur -->
-        <PageHeader 
-          title="Gestion des absences / retards"
-          :subtitle="formattedDate"
-          icon="assignment_late"
-        />
-        
         <div class="profile-section">
+          <div class="section-header">
+            <h1>
+              <i class="material-icons" aria-hidden="true">assignment_late</i>
+              Gestion des absences / retards – {{ formattedDate }}
+            </h1>
+          </div>
 
           <!-- Sélecteur de date -->
           <div class="date-selector" role="group" aria-labelledby="date-label">
@@ -756,16 +756,12 @@ onMounted(() => {
 
 /* Section headers */
 .section-header {
-  background: #4444ac;
-  margin: -1.5rem -1.5rem 2rem -1.5rem;
-  padding: 1.5rem;
-  border-radius: 0.75rem 0.75rem 0 0;
-  width: calc(100% + 3rem);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .section-header h1,
@@ -773,22 +769,21 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: white;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
   margin: 0;
   font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.2;
 }
 
 .section-header h1 {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
 }
 
 .section-header h1 i,
 .section-header h2 i {
-  color: white;
-  font-size: 1.5rem;
+  color: #4338ca;
+  font-size: 1.75rem;
 }
 
 .child-count {
@@ -1450,9 +1445,6 @@ onMounted(() => {
   }
   
   .section-header {
-    margin: -1.5rem -1.5rem 1.5rem -1.5rem;
-    padding: 1rem 1.5rem;
-    width: calc(100% + 3rem);
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;

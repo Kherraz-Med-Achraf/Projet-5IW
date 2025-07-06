@@ -880,7 +880,7 @@ onMounted(async () => {
   justify-content: center;
   gap: 0.75rem;
   padding: 3rem;
-  color: black;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   font-weight: 500;
 

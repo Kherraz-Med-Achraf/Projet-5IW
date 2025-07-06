@@ -703,14 +703,14 @@ onMounted(async () => {
     .stat-number {
       font-size: 1.875rem;
       font-weight: 700;
-      color: black;
+      color: var(--text-primary);
       line-height: 1;
       margin-bottom: 0.25rem;
     }
 
     .stat-label {
       font-size: 0.875rem;
-      color: black;
+      color: var(--text-secondary);
       font-weight: 500;
     }
   }
@@ -737,7 +737,7 @@ onMounted(async () => {
       border: none;
       padding: 1rem 0.75rem;
       font-weight: 600;
-      color: black;
+      color: var(--text-primary);
       font-size: 0.875rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -748,7 +748,6 @@ onMounted(async () => {
       padding: 1rem 0.75rem;
       border-bottom: 1px solid var(--border-color);
       font-size: 0.875rem;
-      color: black;
     }
 
     :deep(.gridjs-tr:hover) {
@@ -787,7 +786,7 @@ onMounted(async () => {
   gap: 0.5rem;
 
   strong {
-    color: black;
+    color: var(--text-primary);
     font-weight: 600;
   }
 
@@ -814,12 +813,12 @@ onMounted(async () => {
 
   .reaction-count {
     font-weight: 600;
-    color: black;
+    color: var(--text-primary);
   }
 
   .reaction-emojis {
     font-size: 0.75rem;
-    color: black;
+    color: var(--text-muted);
   }
 }
 
@@ -880,7 +879,7 @@ onMounted(async () => {
   justify-content: center;
   gap: 0.75rem;
   padding: 3rem;
-  color: black;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   font-weight: 500;
 
@@ -1155,9 +1154,8 @@ onMounted(async () => {
   }
 
   .section-header {
-    margin: -1.5rem -1.5rem 1.5rem -1.5rem;
-    padding: 1rem 1.5rem;
-    width: calc(100% + 3rem);
+    margin-bottom: 1.5rem;
+    padding: 1rem;
 
     h1, h2, h3 {
       font-size: 1.125rem;

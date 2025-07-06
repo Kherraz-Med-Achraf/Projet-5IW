@@ -114,7 +114,7 @@ export class BlogController {
   /**
    * Ajouter/modifier une réaction (Parents et autres utilisateurs connectés)
    */
-  @UseGuards(JwtAuthGuard, CsrfGuard)
+  @UseGuards(JwtAuthGuard)
   @Post(':id/reactions')
   async toggleReaction(
     @Param('id') postId: string,
@@ -128,7 +128,7 @@ export class BlogController {
   /**
    * Modifier un post (Admin et Directeur peuvent modifier tous les posts, autres seulement les leurs)
    */
-  @UseGuards(JwtAuthGuard, RolesGuard, CsrfGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SECRETARY, Role.DIRECTOR, Role.SERVICE_MANAGER)
   @Put(':id')
   @UseInterceptors(
@@ -182,7 +182,7 @@ export class BlogController {
   /**
    * Supprimer un post (Admin et Directeur peuvent supprimer tous les posts, autres seulement les leurs)
    */
-  @UseGuards(JwtAuthGuard, RolesGuard, CsrfGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SECRETARY, Role.DIRECTOR, Role.SERVICE_MANAGER)
   @Delete(':id')
   async deletePost(@Param('id') id: string, @Req() req: Request) {

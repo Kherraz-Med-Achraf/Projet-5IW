@@ -18,15 +18,14 @@
 
         <!-- Section des statistiques -->
         <div class="profile-section">
-          <div class="section-header">
-            <h3>
-              <i class="material-icons" aria-hidden="true">analytics</i>
-              Statistiques
-            </h3>
-          </div>
-          
           <!-- Statistiques intégrées -->
           <div class="stats-section">
+            <div class="section-header">
+              <h3>
+                <i class="material-icons" aria-hidden="true">analytics</i>
+                Statistiques
+              </h3>
+            </div>
             <div class="stats-grid">
               <div class="stat-card">
                 <div class="stat-icon">
@@ -56,18 +55,26 @@
                 </div>
               </div>
             </div>
-            
-            <!-- Actions d'administration -->
-            <div class="admin-actions">
-              <router-link to="/blog" class="edit-btn edit-btn-secondary">
-                <i class="material-icons" aria-hidden="true">visibility</i>
-                Voir le blog public
-              </router-link>
-              <button @click="showCreateModal = true" class="edit-btn" type="button">
-                <i class="material-icons" aria-hidden="true">add</i>
-                Nouveau post
-              </button>
-            </div>
+          </div>
+        </div>
+
+        <!-- Section des actions d'administration -->
+        <div class="profile-section">
+          <div class="section-header">
+            <h3>
+              <i class="material-icons" aria-hidden="true">settings</i>
+              Actions d'administration
+            </h3>
+          </div>
+          <div class="admin-actions">
+            <router-link to="/blog" class="edit-btn edit-btn-secondary">
+              <i class="material-icons" aria-hidden="true">visibility</i>
+              Voir le blog public
+            </router-link>
+            <button @click="showCreateModal = true" class="edit-btn" type="button">
+              <i class="material-icons" aria-hidden="true">add</i>
+              Nouveau post
+            </button>
           </div>
         </div>
 
@@ -542,12 +549,11 @@ onMounted(async () => {
 
 /* En-tête de section identique */
 .section-header {
-  margin: -2rem -2rem 2rem -2rem;
-  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
   background: #4444ac;
-  border-radius: 0.75rem 0.75rem 0 0;
+  border-radius: 0.75rem;
   border: none;
-  width: calc(100% + 4rem);
 
   h1, h2, h3 {
     display: flex;
@@ -703,14 +709,14 @@ onMounted(async () => {
     .stat-number {
       font-size: 1.875rem;
       font-weight: 700;
-      color: black;
+      color: var(--text-primary);
       line-height: 1;
       margin-bottom: 0.25rem;
     }
 
     .stat-label {
       font-size: 0.875rem;
-      color: black;
+      color: var(--text-secondary);
       font-weight: 500;
     }
   }
@@ -737,7 +743,7 @@ onMounted(async () => {
       border: none;
       padding: 1rem 0.75rem;
       font-weight: 600;
-      color: black;
+      color: var(--text-primary);
       font-size: 0.875rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -748,7 +754,6 @@ onMounted(async () => {
       padding: 1rem 0.75rem;
       border-bottom: 1px solid var(--border-color);
       font-size: 0.875rem;
-      color: black;
     }
 
     :deep(.gridjs-tr:hover) {
@@ -787,7 +792,7 @@ onMounted(async () => {
   gap: 0.5rem;
 
   strong {
-    color: black;
+    color: var(--text-primary);
     font-weight: 600;
   }
 
@@ -814,12 +819,12 @@ onMounted(async () => {
 
   .reaction-count {
     font-weight: 600;
-    color: black;
+    color: var(--text-primary);
   }
 
   .reaction-emojis {
     font-size: 0.75rem;
-    color: black;
+    color: var(--text-muted);
   }
 }
 
@@ -880,7 +885,7 @@ onMounted(async () => {
   justify-content: center;
   gap: 0.75rem;
   padding: 3rem;
-  color: black;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   font-weight: 500;
 
@@ -1155,9 +1160,8 @@ onMounted(async () => {
   }
 
   .section-header {
-    margin: -1.5rem -1.5rem 1.5rem -1.5rem;
-    padding: 1rem 1.5rem;
-    width: calc(100% + 3rem);
+    margin-bottom: 1.5rem;
+    padding: 1rem;
 
     h1, h2, h3 {
       font-size: 1.125rem;

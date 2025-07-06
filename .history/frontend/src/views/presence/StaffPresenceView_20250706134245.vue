@@ -827,17 +827,9 @@ onMounted(async () => {
   }
   
   .section-header {
-    margin: -1rem -1rem 1.5rem -1rem;
-    padding: 1rem 1.5rem;
-    width: calc(100% + 2rem);
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
-  }
-  
-  .children-section .section-header {
-    margin: 0;
-    width: 100%;
   }
   
   .info-grid {

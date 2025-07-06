@@ -22,7 +22,9 @@ export class RegisterByInviteDto {
 
   @Transform(({ value }) => value?.trim())
   @IsString()
-  @MinLength(12, { message: 'Le mot de passe doit contenir au moins 12 caractères' })
+  @MinLength(12, {
+    message: 'Le mot de passe doit contenir au moins 12 caractères',
+  })
   @Matches(PASSWORD_REGEX, {
     message:
       'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractère spécial',
@@ -31,7 +33,9 @@ export class RegisterByInviteDto {
 
   @Transform(({ value }) => value?.trim())
   @IsString()
-  @MinLength(12, { message: 'La confirmation doit contenir au moins 12 caractères' })
+  @MinLength(12, {
+    message: 'La confirmation doit contenir au moins 12 caractères',
+  })
   passwordConfirm: string;
 
   // → Informations du ParentProfile

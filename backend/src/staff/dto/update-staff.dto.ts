@@ -24,7 +24,9 @@ export class UpdateStaffDto {
 
   @IsOptional()
   @Transform(({ value }) => value?.trim())
-  @IsPhoneNumber('FR', { message: 'Le téléphone doit être un numéro français valide' })
+  @IsPhoneNumber('FR', {
+    message: 'Le téléphone doit être un numéro français valide',
+  })
   phone?: string;
 
   @IsOptional()

@@ -27,48 +27,57 @@ export class ParentController {
     return this.svc.findAll();
   }
   @Get(':id')
-  @Roles(Role.SECRETARY, Role.ADMIN, Role.DIRECTOR, Role.SERVICE_MANAGER, Role.PARENT)
+  @Roles(
+    Role.SECRETARY,
+    Role.ADMIN,
+    Role.DIRECTOR,
+    Role.SERVICE_MANAGER,
+    Role.PARENT,
+  )
   async findOne(
     @User() user: { id: string; role: Role },
     @Param('id', ParseIntPipe) id: number,
   ) {
     const profile = await this.svc.findOne(id);
-    if (
-      user.role === Role.PARENT &&
-      profile.userId !== user.id
-    ) {
-      throw new ForbiddenException("Accès refusé à ce profil parent");
+    if (user.role === Role.PARENT && profile.userId !== user.id) {
+      throw new ForbiddenException('Accès refusé à ce profil parent');
     }
     return profile;
   }
   @Patch(':id')
-  @Roles(Role.SECRETARY, Role.ADMIN, Role.DIRECTOR, Role.SERVICE_MANAGER, Role.PARENT)
+  @Roles(
+    Role.SECRETARY,
+    Role.ADMIN,
+    Role.DIRECTOR,
+    Role.SERVICE_MANAGER,
+    Role.PARENT,
+  )
   async update(
     @User() user: { id: string; role: Role },
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateParentDto,
   ) {
     const profile = await this.svc.findOne(id);
-    if (
-      user.role === Role.PARENT &&
-      profile.userId !== user.id
-    ) {
-      throw new ForbiddenException("Accès refusé à ce profil parent");
+    if (user.role === Role.PARENT && profile.userId !== user.id) {
+      throw new ForbiddenException('Accès refusé à ce profil parent');
     }
     return this.svc.update(id, dto);
   }
   @Delete(':id')
-  @Roles(Role.SECRETARY, Role.ADMIN, Role.DIRECTOR, Role.SERVICE_MANAGER, Role.PARENT)
+  @Roles(
+    Role.SECRETARY,
+    Role.ADMIN,
+    Role.DIRECTOR,
+    Role.SERVICE_MANAGER,
+    Role.PARENT,
+  )
   async remove(
     @User() user: { id: string; role: Role },
     @Param('id', ParseIntPipe) id: number,
   ) {
     const profile = await this.svc.findOne(id);
-    if (
-      user.role === Role.PARENT &&
-      profile.userId !== user.id
-    ) {
-      throw new ForbiddenException("Accès refusé à ce profil parent");
+    if (user.role === Role.PARENT && profile.userId !== user.id) {
+      throw new ForbiddenException('Accès refusé à ce profil parent');
     }
     return this.svc.remove(id);
   }

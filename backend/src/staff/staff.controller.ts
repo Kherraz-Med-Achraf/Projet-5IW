@@ -37,7 +37,13 @@ export class StaffController {
   }
 
   @Get(':id')
-  @Roles(Role.SECRETARY, Role.SERVICE_MANAGER, Role.DIRECTOR, Role.ADMIN, Role.STAFF)
+  @Roles(
+    Role.SECRETARY,
+    Role.SERVICE_MANAGER,
+    Role.DIRECTOR,
+    Role.ADMIN,
+    Role.STAFF,
+  )
   async findOne(
     @User() user: { id: string; role: Role },
     @Param('id', ParseIntPipe) id: number,

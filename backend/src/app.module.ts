@@ -61,7 +61,7 @@ import { EmergencyContactModule } from './emergency-contact/emergency-contact.mo
       }),
       inject: [ConfigService],
     }),
-    ScheduleModule.forRoot(), 
+    ScheduleModule.forRoot(),
     // Modules métiers
     AuthModule,
     AcademicYearModule,

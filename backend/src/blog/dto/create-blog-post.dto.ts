@@ -1,4 +1,11 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, MaxLength, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsEnum,
+  MaxLength,
+  IsBoolean,
+} from 'class-validator';
 import { PostMediaType } from '@prisma/client';
 
 export class CreateBlogPostDto {
@@ -9,7 +16,9 @@ export class CreateBlogPostDto {
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(2000, { message: 'La description ne peut pas dépasser 2000 caractères' })
+  @MaxLength(2000, {
+    message: 'La description ne peut pas dépasser 2000 caractères',
+  })
   description: string;
 
   @IsOptional()
@@ -27,4 +36,4 @@ export class CreateBlogPostDto {
   @IsOptional()
   @IsBoolean()
   improveDescriptionWithAI?: boolean;
-} 
+}

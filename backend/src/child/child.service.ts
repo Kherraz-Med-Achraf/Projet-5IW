@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { CreateChildDto } from './dto/create-child.dto';
@@ -13,10 +17,13 @@ export class ChildService {
     private readonly mailService: MailService,
   ) {}
 
-  async createForParent(parentProfileId: number, dto: CreateChildDto): Promise<Child> {
+  async createForParent(
+    parentProfileId: number,
+    dto: CreateChildDto,
+  ): Promise<Child> {
     const defaultPwd = process.env.CHILD_DEFAULT_PASSWORD || 'child1234';
 
-    return this.prisma.$transaction(async tx => {
+    return this.prisma.$transaction(async (tx) => {
       const existingDuplicate = await tx.child.findFirst({
         where: {
           firstName: dto.firstName,
@@ -44,7 +51,9 @@ export class ChildService {
       const base = `${child.firstName[0].toLowerCase()}${child.lastName.toLowerCase()}`;
       let login = base;
       let suffix = 1;
-      while (await tx.user.findUnique({ where: { email: `${login}@kids.local` } })) {
+      while (
+        await tx.user.findUnique({ where: { email: `${login}@kids.local` } })
+      ) {
         login = `${base}_${suffix++}`;
       }
       const hashed = await bcrypt.hash(defaultPwd, 10);
@@ -76,7 +85,10 @@ export class ChildService {
     return this.prisma.child.findMany({ where: { parentProfileId } });
   }
 
-  async findOneForParent(parentProfileId: number, id: number): Promise<Child | null> {
+  async findOneForParent(
+    parentProfileId: number,
+    id: number,
+  ): Promise<Child | null> {
     return this.prisma.child.findFirst({ where: { id, parentProfileId } });
   }
 
@@ -103,14 +115,16 @@ export class ChildService {
         `Un autre enfant "${newFirst} ${newLast}" existe déjà.`,
       );
     }
-    const result = await this.prisma.$transaction(async tx => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const count = await tx.child.updateMany({
         where: { id, parentProfileId },
         data: {
           ...(dto.firstName && { firstName: dto.firstName }),
           ...(dto.lastName && { lastName: dto.lastName }),
           ...(dto.birthDate && { birthDate: new Date(dto.birthDate) }),
-          ...(dto.imageConsent !== undefined && { imageConsent: dto.imageConsent }),
+          ...(dto.imageConsent !== undefined && {
+            imageConsent: dto.imageConsent,
+          }),
         },
       });
       if (count.count === 0) {
@@ -118,7 +132,9 @@ export class ChildService {
       }
       const child = await tx.child.findUnique({ where: { id } });
       if (!child) {
-        throw new NotFoundException(`Enfant ${id} introuvable après mise à jour`);
+        throw new NotFoundException(
+          `Enfant ${id} introuvable après mise à jour`,
+        );
       }
       let loginChanged = false;
       let newLogin = '';
@@ -126,7 +142,9 @@ export class ChildService {
         const base = `${child.firstName[0].toLowerCase()}${child.lastName.toLowerCase()}`;
         let login = base;
         let suffix = 1;
-        while (await tx.user.findUnique({ where: { email: `${login}@kids.local` } })) {
+        while (
+          await tx.user.findUnique({ where: { email: `${login}@kids.local` } })
+        ) {
           login = `${base}_${suffix++}`;
         }
         await tx.user.updateMany({
@@ -165,7 +183,9 @@ export class ChildService {
     childId: number,
     imageConsent: boolean,
   ): Promise<Child> {
-    const existing = await this.prisma.child.findUnique({ where: { id: childId } });
+    const existing = await this.prisma.child.findUnique({
+      where: { id: childId },
+    });
     if (!existing || existing.parentProfileId !== parentProfileId) {
       throw new NotFoundException(`Enfant ${childId} introuvable`);
     }
@@ -176,7 +196,10 @@ export class ChildService {
     });
   }
 
-  async removeForParent(parentProfileId: number, id: number): Promise<{ id: number }> {
+  async removeForParent(
+    parentProfileId: number,
+    id: number,
+  ): Promise<{ id: number }> {
     const child = await this.prisma.child.findFirst({
       where: { id, parentProfileId },
       select: { id: true, userId: true, firstName: true, lastName: true },
@@ -185,7 +208,7 @@ export class ChildService {
       throw new NotFoundException(`Enfant ${id} introuvable`);
     }
 
-    await this.prisma.$transaction(async tx => {
+    await this.prisma.$transaction(async (tx) => {
       await tx.child.delete({ where: { id: child.id } });
       if (child.userId) {
         await tx.user.delete({ where: { id: child.userId } });

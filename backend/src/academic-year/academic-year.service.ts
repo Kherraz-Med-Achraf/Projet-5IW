@@ -51,7 +51,10 @@ export class AcademicYearService {
   /**
    * (Optionnel) Met à jour une année scolaire existante.
    */
-  async update(id: number, data: Partial<{ label: string; startDate: Date; endDate: Date }>) {
+  async update(
+    id: number,
+    data: Partial<{ label: string; startDate: Date; endDate: Date }>,
+  ) {
     await this.findOne(id);
     return this.prisma.academicYear.update({
       where: { id },

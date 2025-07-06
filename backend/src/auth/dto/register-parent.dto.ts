@@ -32,9 +32,13 @@ export class RegisterParentDto {
   lastName: string;
 
   @Transform(({ value }) => value?.trim())
-  @IsMobilePhone('fr-FR', { strictMode: false }, {
-    message: 'Le numéro de téléphone doit être un numéro français valide',
-  })
+  @IsMobilePhone(
+    'fr-FR',
+    { strictMode: false },
+    {
+      message: 'Le numéro de téléphone doit être un numéro français valide',
+    },
+  )
   phone: string;
 
   @Transform(({ value }) => value?.trim())
@@ -44,7 +48,9 @@ export class RegisterParentDto {
   address: string;
 
   @Transform(({ value }) => value?.trim())
-  @IsString({ message: 'La responsabilité légale doit être une chaîne de caractères' })
+  @IsString({
+    message: 'La responsabilité légale doit être une chaîne de caractères',
+  })
   @IsNotEmpty({ message: 'La responsabilité légale est obligatoire' })
   legalResponsibility: string;
 
@@ -69,7 +75,9 @@ export class RegisterParentDto {
   @Transform(({ value }) => value?.trim())
   @IsString({ message: 'Le mot de passe doit être une chaîne de caractères' })
   @IsNotEmpty({ message: 'Le mot de passe est obligatoire' })
-  @MinLength(12, { message: 'Le mot de passe doit contenir au moins 12 caractères' })
+  @MinLength(12, {
+    message: 'Le mot de passe doit contenir au moins 12 caractères',
+  })
   @Matches(PASSWORD_REGEX, {
     message:
       'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractère spécial',
@@ -79,7 +87,9 @@ export class RegisterParentDto {
   @Transform(({ value }) => value?.trim())
   @IsString({ message: 'La confirmation doit être une chaîne de caractères' })
   @IsNotEmpty({ message: 'La confirmation du mot de passe est obligatoire' })
-  @Match('password', { message: 'La confirmation ne correspond pas au mot de passe' })
+  @Match('password', {
+    message: 'La confirmation ne correspond pas au mot de passe',
+  })
   passwordConfirm: string;
 
   @IsOptional()

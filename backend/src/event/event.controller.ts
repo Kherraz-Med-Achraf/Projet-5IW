@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UploadedFile, UseInterceptors, BadRequestException, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  UploadedFile,
+  UseInterceptors,
+  BadRequestException,
+  Req,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { EventService } from './event.service';
@@ -15,7 +27,13 @@ export class EventController {
 
   /** 1. Liste des événements futurs */
   @Get()
-  @Roles(Role.PARENT, Role.DIRECTOR, Role.SERVICE_MANAGER, Role.SECRETARY, Role.STAFF)
+  @Roles(
+    Role.PARENT,
+    Role.DIRECTOR,
+    Role.SERVICE_MANAGER,
+    Role.SECRETARY,
+    Role.STAFF,
+  )
   list() {
     return this.svc.listUpcoming();
   }
@@ -23,10 +41,12 @@ export class EventController {
   /** 2. Créer un événement */
   @Post()
   @Roles(Role.DIRECTOR, Role.SERVICE_MANAGER)
-  @UseInterceptors(FileInterceptor('image', {
-    storage: memoryStorage(),
-    limits: { fileSize: 5 * 1024 * 1024 },
-  }))
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: memoryStorage(),
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
   async create(
     @Body() dto: CreateEventDto,
     @UploadedFile() image: Express.Multer.File,
@@ -39,10 +59,12 @@ export class EventController {
   /** 3. Mise à jour */
   @Patch(':id')
   @Roles(Role.DIRECTOR, Role.SERVICE_MANAGER)
-  @UseInterceptors(FileInterceptor('image', {
-    storage: memoryStorage(),
-    limits: { fileSize: 5 * 1024 * 1024 },
-  }))
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: memoryStorage(),
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateEventDto,
@@ -97,9 +119,7 @@ export class EventController {
   /** 13. Mise à jour manuel du statut paiement (chèque reçu) */
   @Patch('registrations/:id/payment')
   @Roles(Role.DIRECTOR, Role.SERVICE_MANAGER, Role.SECRETARY)
-  updatePayment(
-    @Param('id') id: string,
-  ) {
+  updatePayment(@Param('id') id: string) {
     return this.svc.updatePaymentStatus(id, 'PAID' as any);
   }
 
@@ -124,8 +144,11 @@ export class EventController {
     await fs.mkdir(dir, { recursive: true });
     // Validation MIME robuste via file-type : accepte uniquement JPEG / PNG
     const detected = await fileTypeFromBuffer(file.buffer);
-    if (!detected || (detected.mime !== 'image/jpeg' && detected.mime !== 'image/png')) {
-      throw new BadRequestException('Format d\'image non supporté');
+    if (
+      !detected ||
+      (detected.mime !== 'image/jpeg' && detected.mime !== 'image/png')
+    ) {
+      throw new BadRequestException("Format d'image non supporté");
     }
     const ext = detected.ext;
     const filename = `${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`;
@@ -133,4 +156,4 @@ export class EventController {
     await fs.writeFile(full, file.buffer);
     return `/uploads/events/${filename}`; // chemin statique
   }
-} 
+}

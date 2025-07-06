@@ -11,4 +11,4 @@ import { FileValidationService } from '../common/services/file-validation.servic
   providers: [BlogService, FileValidationService],
   exports: [BlogService],
 })
-export class BlogModule {} 
+export class BlogModule {}

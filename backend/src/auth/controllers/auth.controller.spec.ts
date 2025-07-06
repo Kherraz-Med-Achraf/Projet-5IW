@@ -87,7 +87,10 @@ describe('AuthController', () => {
     });
 
     it('should have proper role guards', () => {
-      const guards = Reflect.getMetadata('__guards__', controller.registerParent);
+      const guards = Reflect.getMetadata(
+        '__guards__',
+        controller.registerParent,
+      );
       expect(guards).toBeDefined();
     });
   });
@@ -118,8 +121,13 @@ describe('AuthController', () => {
 
       const result = await controller.registerByInvite(inviteDto);
 
-      expect(invitationService.validateToken).toHaveBeenCalledWith('valid-token');
-      expect(authService.registerWithRole).toHaveBeenCalledWith(inviteDto, Role.SECRETARY);
+      expect(invitationService.validateToken).toHaveBeenCalledWith(
+        'valid-token',
+      );
+      expect(authService.registerWithRole).toHaveBeenCalledWith(
+        inviteDto,
+        Role.SECRETARY,
+      );
       expect(invitationService.markAsUsed).toHaveBeenCalledWith('valid-token');
       expect(result.message).toContain('Inscription réussie');
     });
@@ -133,9 +141,10 @@ describe('AuthController', () => {
 
       mockInvitationService.validateToken.mockResolvedValue(mockInvitation);
 
-      await expect(controller.registerByInvite(inviteDto))
-        .rejects.toThrow(BadRequestException);
-      
+      await expect(controller.registerByInvite(inviteDto)).rejects.toThrow(
+        BadRequestException,
+      );
+
       expect(authService.registerWithRole).not.toHaveBeenCalled();
       expect(invitationService.markAsUsed).not.toHaveBeenCalled();
     });
@@ -161,12 +170,12 @@ describe('AuthController', () => {
       expect(authService.login).toHaveBeenCalledWith(
         loginDto.email,
         loginDto.password,
-        undefined
+        undefined,
       );
       expect(mockResponse.cookie).toHaveBeenCalledWith(
         'refresh_token',
         'refresh-token',
-        expect.objectContaining({ httpOnly: true })
+        expect.objectContaining({ httpOnly: true }),
       );
       expect(result.access_token).toBe('jwt-token');
       expect(result.user).toEqual(mockLoginResult.user);
@@ -188,7 +197,7 @@ describe('AuthController', () => {
       expect(authService.login).toHaveBeenCalledWith(
         loginDto.email,
         loginDto.password,
-        '123456'
+        '123456',
       );
     });
   });
@@ -202,7 +211,10 @@ describe('AuthController', () => {
 
       const result = await controller.initiateLogin(body);
 
-      expect(authService.initiateLogin).toHaveBeenCalledWith(body.email, body.password);
+      expect(authService.initiateLogin).toHaveBeenCalledWith(
+        body.email,
+        body.password,
+      );
       expect(result).toEqual(mockResult);
     });
   });
@@ -220,11 +232,14 @@ describe('AuthController', () => {
 
       const result = await controller.verifyOtp(body, mockResponse);
 
-      expect(authService.verifyOtp).toHaveBeenCalledWith(body.tempToken, body.otpCode);
+      expect(authService.verifyOtp).toHaveBeenCalledWith(
+        body.tempToken,
+        body.otpCode,
+      );
       expect(mockResponse.cookie).toHaveBeenCalledWith(
         'refresh_token',
         'refresh-token',
-        expect.objectContaining({ httpOnly: true })
+        expect.objectContaining({ httpOnly: true }),
       );
       expect(result.access_token).toBe('jwt-token');
       expect(result.csrf_token).toBeDefined();
@@ -234,7 +249,7 @@ describe('AuthController', () => {
   describe('logout', () => {
     it('should logout successfully', async () => {
       const mockRequest = {
-        cookies: { refresh_token: 'refresh-token' }
+        cookies: { refresh_token: 'refresh-token' },
       } as Request;
 
       mockAuthService.logout.mockResolvedValue(undefined);
@@ -244,11 +259,11 @@ describe('AuthController', () => {
       expect(authService.logout).toHaveBeenCalledWith('refresh-token');
       expect(mockResponse.clearCookie).toHaveBeenCalledWith(
         'refresh_token',
-        expect.objectContaining({ sameSite: 'strict' })
+        expect.objectContaining({ sameSite: 'strict' }),
       );
       expect(mockResponse.clearCookie).toHaveBeenCalledWith(
         'csrf_token',
-        expect.objectContaining({ sameSite: 'strict' })
+        expect.objectContaining({ sameSite: 'strict' }),
       );
       expect(result.message).toBe('Logout successful');
     });
@@ -257,7 +272,7 @@ describe('AuthController', () => {
   describe('refresh', () => {
     it('should refresh token successfully', async () => {
       const mockRequest = {
-        cookies: { refresh_token: 'refresh-token' }
+        cookies: { refresh_token: 'refresh-token' },
       } as Request;
 
       const mockResult = {
@@ -273,7 +288,7 @@ describe('AuthController', () => {
       expect(mockResponse.cookie).toHaveBeenCalledWith(
         'refresh_token',
         'new-refresh-token',
-        expect.objectContaining({ httpOnly: true })
+        expect.objectContaining({ httpOnly: true }),
       );
       expect(result.access_token).toBe('new-jwt-token');
       expect(result.csrf_token).toBeDefined();
@@ -282,9 +297,10 @@ describe('AuthController', () => {
     it('should throw UnauthorizedException when refresh token is missing', async () => {
       const mockRequest = { cookies: {} } as Request;
 
-      await expect(controller.refresh(mockRequest, mockResponse))
-        .rejects.toThrow(UnauthorizedException);
-      
+      await expect(
+        controller.refresh(mockRequest, mockResponse),
+      ).rejects.toThrow(UnauthorizedException);
+
       expect(authService.refreshToken).not.toHaveBeenCalled();
     });
   });
@@ -319,7 +335,7 @@ describe('AuthController', () => {
       expect(authService.resetPassword).toHaveBeenCalledWith(
         dto.prid,
         dto.token,
-        dto.newPassword
+        dto.newPassword,
       );
       expect(result).toEqual(mockResult);
     });
@@ -328,7 +344,7 @@ describe('AuthController', () => {
   describe('enableOtp', () => {
     it('should enable OTP for authenticated user', async () => {
       const mockRequest = {
-        user: { id: 'user-id' }
+        user: { id: 'user-id' },
       } as any;
 
       const mockResult = { qrCode: 'qr-code-data', secret: 'secret' };
@@ -343,8 +359,9 @@ describe('AuthController', () => {
     it('should throw UnauthorizedException when user is invalid', async () => {
       const mockRequest = { user: {} } as any;
 
-      await expect(controller.enableOtp(mockRequest))
-        .rejects.toThrow(UnauthorizedException);
+      await expect(controller.enableOtp(mockRequest)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
@@ -356,10 +373,10 @@ describe('AuthController', () => {
         'initiateLogin',
         'verifyOtp',
         'forgotPassword',
-        'resetPassword'
+        'resetPassword',
       ];
 
-      publicMethods.forEach(method => {
+      publicMethods.forEach((method) => {
         const isPublic = Reflect.getMetadata('isPublic', controller[method]);
         expect(isPublic).toBe(true);
       });
@@ -367,11 +384,11 @@ describe('AuthController', () => {
 
     it('should have proper guards on protected endpoints', () => {
       const protectedMethods = ['registerParent', 'enableOtp'];
-      
-      protectedMethods.forEach(method => {
+
+      protectedMethods.forEach((method) => {
         const guards = Reflect.getMetadata('__guards__', controller[method]);
         expect(guards).toBeDefined();
       });
     });
   });
-}); 
+});

@@ -28,18 +28,23 @@ class PrismaMock {
         createdAt: now,
         updatedAt: now,
         author: include?.author ? this.getMockAuthor(data.authorId) : undefined,
-        reactions: include?.reactions ? this.getPostReactions(`post-${this._idCounter - 1}`) : [],
+        reactions: include?.reactions
+          ? this.getPostReactions(`post-${this._idCounter - 1}`)
+          : [],
       };
       this._posts.push(post);
       return post;
     }),
 
     findMany: jest.fn(async ({ orderBy, include }: any) => {
-      let posts = [...this._posts];
+      const posts = [...this._posts];
       if (orderBy?.createdAt === 'desc') {
-        posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        posts.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
       }
-      return posts.map(post => ({
+      return posts.map((post) => ({
         ...post,
         author: include?.author ? this.getMockAuthor(post.authorId) : undefined,
         reactions: include?.reactions ? this.getPostReactions(post.id) : [],
@@ -47,7 +52,7 @@ class PrismaMock {
     }),
 
     findUnique: jest.fn(async ({ where, include }: any) => {
-      const post = this._posts.find(p => p.id === where.id);
+      const post = this._posts.find((p) => p.id === where.id);
       if (!post) return null;
       return {
         ...post,
@@ -57,24 +62,26 @@ class PrismaMock {
     }),
 
     update: jest.fn(async ({ where, data, include }: any) => {
-      const postIndex = this._posts.findIndex(p => p.id === where.id);
+      const postIndex = this._posts.findIndex((p) => p.id === where.id);
       if (postIndex === -1) throw new Error('Post not found');
-      
+
       this._posts[postIndex] = {
         ...this._posts[postIndex],
         ...data,
         updatedAt: new Date(),
       };
-      
+
       return {
         ...this._posts[postIndex],
-        author: include?.author ? this.getMockAuthor(this._posts[postIndex].authorId) : undefined,
+        author: include?.author
+          ? this.getMockAuthor(this._posts[postIndex].authorId)
+          : undefined,
         reactions: include?.reactions ? this.getPostReactions(where.id) : [],
       };
     }),
 
     delete: jest.fn(async ({ where }: any) => {
-      const postIndex = this._posts.findIndex(p => p.id === where.id);
+      const postIndex = this._posts.findIndex((p) => p.id === where.id);
       if (postIndex === -1) throw new Error('Post not found');
       return this._posts.splice(postIndex, 1)[0];
     }),
@@ -83,14 +90,14 @@ class PrismaMock {
   /* ---------------- BlogReaction ---------------- */
   blogReaction = {
     findMany: jest.fn(async ({ where, select }: any) => {
-      const filtered = this._reactions.filter(r => {
+      const filtered = this._reactions.filter((r) => {
         if (where?.userId && r.userId !== where.userId) return false;
         if (where?.postId && r.postId !== where.postId) return false;
         return true;
       });
-      
+
       if (select) {
-        return filtered.map(r => {
+        return filtered.map((r) => {
           const result: any = {};
           if (select.postId) result.postId = r.postId;
           if (select.type) result.type = r.type;
@@ -100,16 +107,19 @@ class PrismaMock {
           return result;
         });
       }
-      
+
       return filtered;
     }),
 
     findUnique: jest.fn(async ({ where }: any) => {
       if (where.postId_userId) {
-        return this._reactions.find(r => 
-          r.postId === where.postId_userId.postId && 
-          r.userId === where.postId_userId.userId
-        ) || null;
+        return (
+          this._reactions.find(
+            (r) =>
+              r.postId === where.postId_userId.postId &&
+              r.userId === where.postId_userId.userId,
+          ) || null
+        );
       }
       return null;
     }),
@@ -127,14 +137,14 @@ class PrismaMock {
     }),
 
     update: jest.fn(async ({ where, data }: any) => {
-      const reaction = this._reactions.find(r => r.id === where.id);
+      const reaction = this._reactions.find((r) => r.id === where.id);
       if (!reaction) throw new Error('Reaction not found');
       Object.assign(reaction, data);
       return reaction;
     }),
 
     delete: jest.fn(async ({ where }: any) => {
-      const reactionIndex = this._reactions.findIndex(r => r.id === where.id);
+      const reactionIndex = this._reactions.findIndex((r) => r.id === where.id);
       if (reactionIndex === -1) throw new Error('Reaction not found');
       return this._reactions.splice(reactionIndex, 1)[0];
     }),
@@ -169,7 +179,7 @@ class PrismaMock {
   }
 
   getPostReactions(postId: string) {
-    return this._reactions.filter(r => r.postId === postId);
+    return this._reactions.filter((r) => r.postId === postId);
   }
 }
 
@@ -191,7 +201,7 @@ describe('BlogService', () => {
 
   beforeEach(async () => {
     prisma = new PrismaMock();
-    
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BlogService,
@@ -302,15 +312,21 @@ describe('BlogService', () => {
   describe('getAllPosts', () => {
     beforeEach(async () => {
       // Create test posts with different timestamps
-      await service.createPost({
-        title: 'Post 1',
-        description: 'Description 1',
-      }, 'secretary-1');
-      
-      await service.createPost({
-        title: 'Post 2',
-        description: 'Description 2',
-      }, 'director-1');
+      await service.createPost(
+        {
+          title: 'Post 1',
+          description: 'Description 1',
+        },
+        'secretary-1',
+      );
+
+      await service.createPost(
+        {
+          title: 'Post 2',
+          description: 'Description 2',
+        },
+        'director-1',
+      );
     });
 
     it('should return all posts ordered by creation date desc', async () => {
@@ -325,7 +341,7 @@ describe('BlogService', () => {
       // Get the first post ID from the created posts
       const posts = await service.getAllPosts();
       const firstPostId = posts[1].id; // Post 1 (older)
-      
+
       // Add a reaction
       prisma._reactions.push({
         id: 'reaction-1',
@@ -354,10 +370,13 @@ describe('BlogService', () => {
     let postId: string;
 
     beforeEach(async () => {
-      const post = await service.createPost({
-        title: 'Test Post',
-        description: 'Test Description',
-      }, 'secretary-1');
+      const post = await service.createPost(
+        {
+          title: 'Test Post',
+          description: 'Test Description',
+        },
+        'secretary-1',
+      );
       postId = post.id;
     });
 
@@ -369,7 +388,9 @@ describe('BlogService', () => {
     });
 
     it('should throw NotFoundException when post not found', async () => {
-      await expect(service.getPostById('non-existent')).rejects.toThrow(NotFoundException);
+      await expect(service.getPostById('non-existent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should include user reaction when userId provided', async () => {
@@ -395,15 +416,20 @@ describe('BlogService', () => {
     let postId: string;
 
     beforeEach(async () => {
-      const post = await service.createPost({
-        title: 'Test Post',
-        description: 'Test Description',
-      }, 'secretary-1');
+      const post = await service.createPost(
+        {
+          title: 'Test Post',
+          description: 'Test Description',
+        },
+        'secretary-1',
+      );
       postId = post.id;
     });
 
     it('should add new reaction', async () => {
-      const result = await service.toggleReaction(postId, 'user-1', { type: ReactionType.LIKE });
+      const result = await service.toggleReaction(postId, 'user-1', {
+        type: ReactionType.LIKE,
+      });
 
       expect(result.message).toBe('Réaction ajoutée');
       expect(prisma.blogReaction.create).toHaveBeenCalledWith({
@@ -425,7 +451,9 @@ describe('BlogService', () => {
       };
       prisma._reactions.push(existingReaction);
 
-      const result = await service.toggleReaction(postId, 'user-1', { type: ReactionType.LIKE });
+      const result = await service.toggleReaction(postId, 'user-1', {
+        type: ReactionType.LIKE,
+      });
 
       expect(result.message).toBe('Réaction supprimée');
       expect(prisma.blogReaction.delete).toHaveBeenCalledWith({
@@ -443,7 +471,9 @@ describe('BlogService', () => {
       };
       prisma._reactions.push(existingReaction);
 
-      const result = await service.toggleReaction(postId, 'user-1', { type: ReactionType.HEART });
+      const result = await service.toggleReaction(postId, 'user-1', {
+        type: ReactionType.HEART,
+      });
 
       expect(result.message).toBe('Réaction modifiée');
       expect(prisma.blogReaction.update).toHaveBeenCalledWith({
@@ -454,7 +484,9 @@ describe('BlogService', () => {
 
     it('should throw NotFoundException when post not found', async () => {
       await expect(
-        service.toggleReaction('non-existent', 'user-1', { type: ReactionType.LIKE })
+        service.toggleReaction('non-existent', 'user-1', {
+          type: ReactionType.LIKE,
+        }),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -466,10 +498,13 @@ describe('BlogService', () => {
     let postId: string;
 
     beforeEach(async () => {
-      const post = await service.createPost({
-        title: 'Original Title',
-        description: 'Original Description',
-      }, 'secretary-1');
+      const post = await service.createPost(
+        {
+          title: 'Original Title',
+          description: 'Original Description',
+        },
+        'secretary-1',
+      );
       postId = post.id;
     });
 
@@ -481,7 +516,12 @@ describe('BlogService', () => {
         mediaType: 'IMAGE' as any,
       };
 
-      const result = await service.updatePost(postId, dto, Role.ADMIN, 'admin-1');
+      const result = await service.updatePost(
+        postId,
+        dto,
+        Role.ADMIN,
+        'admin-1',
+      );
 
       expect(result.title).toBe('Updated Title');
       expect(result.description).toBe('Updated Description');
@@ -496,7 +536,12 @@ describe('BlogService', () => {
         mediaType: 'IMAGE' as any,
       };
 
-      const result = await service.updatePost(postId, dto, Role.DIRECTOR, 'director-1');
+      const result = await service.updatePost(
+        postId,
+        dto,
+        Role.DIRECTOR,
+        'director-1',
+      );
 
       expect(result.title).toBe('Updated Title');
       expect(result.description).toBe('Updated Description');
@@ -511,7 +556,12 @@ describe('BlogService', () => {
         mediaType: 'IMAGE' as any,
       };
 
-      const result = await service.updatePost(postId, dto, Role.SECRETARY, 'secretary-1');
+      const result = await service.updatePost(
+        postId,
+        dto,
+        Role.SECRETARY,
+        'secretary-1',
+      );
 
       expect(result.title).toBe('Updated Title');
       expect(result.description).toBe('Updated Description');
@@ -520,17 +570,25 @@ describe('BlogService', () => {
 
     it('should allow service manager to update own post', async () => {
       // Create a post by service manager
-      const post = await service.createPost({
-        title: 'SM Post',
-        description: 'SM Description',
-      }, 'service-manager-1');
+      const post = await service.createPost(
+        {
+          title: 'SM Post',
+          description: 'SM Description',
+        },
+        'service-manager-1',
+      );
 
       const dto = {
         title: 'Updated Title',
         description: 'Updated Description',
       };
 
-      const result = await service.updatePost(post.id, dto, Role.SERVICE_MANAGER, 'service-manager-1');
+      const result = await service.updatePost(
+        post.id,
+        dto,
+        Role.SERVICE_MANAGER,
+        'service-manager-1',
+      );
 
       expect(result.title).toBe('Updated Title');
       expect(result.description).toBe('Updated Description');
@@ -540,7 +598,7 @@ describe('BlogService', () => {
       const dto = { title: 'Updated', description: 'Updated' };
 
       await expect(
-        service.updatePost('non-existent', dto, Role.SECRETARY, 'secretary-1')
+        service.updatePost('non-existent', dto, Role.SECRETARY, 'secretary-1'),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -548,7 +606,7 @@ describe('BlogService', () => {
       const dto = { title: 'Updated', description: 'Updated' };
 
       await expect(
-        service.updatePost(postId, dto, Role.SECRETARY, 'other-secretary')
+        service.updatePost(postId, dto, Role.SECRETARY, 'other-secretary'),
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -556,7 +614,12 @@ describe('BlogService', () => {
       const dto = { title: 'Updated', description: 'Updated' };
 
       await expect(
-        service.updatePost(postId, dto, Role.SERVICE_MANAGER, 'service-manager-1')
+        service.updatePost(
+          postId,
+          dto,
+          Role.SERVICE_MANAGER,
+          'service-manager-1',
+        ),
       ).rejects.toThrow(ForbiddenException);
     });
   });
@@ -568,64 +631,70 @@ describe('BlogService', () => {
     let postId: string;
 
     beforeEach(async () => {
-      const post = await service.createPost({
-        title: 'Test Post',
-        description: 'Test Description',
-      }, 'secretary-1');
+      const post = await service.createPost(
+        {
+          title: 'Test Post',
+          description: 'Test Description',
+        },
+        'secretary-1',
+      );
       postId = post.id;
     });
 
     it('should allow admin to delete any post', async () => {
       await expect(
-        service.deletePost(postId, Role.ADMIN, 'admin-1')
+        service.deletePost(postId, Role.ADMIN, 'admin-1'),
       ).resolves.not.toThrow();
     });
 
     it('should allow director to delete any post', async () => {
       await expect(
-        service.deletePost(postId, Role.DIRECTOR, 'director-1')
+        service.deletePost(postId, Role.DIRECTOR, 'director-1'),
       ).resolves.not.toThrow();
     });
 
     it('should allow secretary to delete own post', async () => {
       await expect(
-        service.deletePost(postId, Role.SECRETARY, 'secretary-1')
+        service.deletePost(postId, Role.SECRETARY, 'secretary-1'),
       ).resolves.not.toThrow();
     });
 
     it('should allow service manager to delete own post', async () => {
       // Create a post by service manager
-      const post = await service.createPost({
-        title: 'SM Post',
-        description: 'SM Description',
-      }, 'service-manager-1');
+      const post = await service.createPost(
+        {
+          title: 'SM Post',
+          description: 'SM Description',
+        },
+        'service-manager-1',
+      );
 
       await expect(
-        service.deletePost(post.id, Role.SERVICE_MANAGER, 'service-manager-1')
+        service.deletePost(post.id, Role.SERVICE_MANAGER, 'service-manager-1'),
       ).resolves.not.toThrow();
     });
 
-    it('should not allow secretary to delete other\'s post', async () => {
+    it("should not allow secretary to delete other's post", async () => {
       await expect(
-        service.deletePost(postId, Role.SECRETARY, 'other-secretary')
+        service.deletePost(postId, Role.SECRETARY, 'other-secretary'),
       ).rejects.toThrow(ForbiddenException);
     });
 
-    it('should not allow service manager to delete other\'s post', async () => {
+    it("should not allow service manager to delete other's post", async () => {
       await expect(
-        service.deletePost(postId, Role.SERVICE_MANAGER, 'service-manager-1')
+        service.deletePost(postId, Role.SERVICE_MANAGER, 'service-manager-1'),
       ).rejects.toThrow(ForbiddenException);
     });
 
     it('should not allow parent to delete post', async () => {
       await expect(
-        service.deletePost(postId, Role.PARENT, 'parent-1')
+        service.deletePost(postId, Role.PARENT, 'parent-1'),
       ).rejects.toThrow(ForbiddenException);
     });
 
     it('should throw NotFoundException when post not found', async () => {
       await expect(
-        service.deletePost('non-existent', Role.DIRECTOR, 'director-1')
+        service.deletePost('non-existent', Role.DIRECTOR, 'director-1'),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -635,10 +704,13 @@ describe('BlogService', () => {
   /* ------------------------------------------------------------------- */
   describe('formatPostResponse', () => {
     it('should format secretary author correctly', async () => {
-      const post = await service.createPost({
-        title: 'Test Post',
-        description: 'Test Description',
-      }, 'secretary-1');
+      const post = await service.createPost(
+        {
+          title: 'Test Post',
+          description: 'Test Description',
+        },
+        'secretary-1',
+      );
 
       expect(post.author).toEqual({
         id: 'secretary-1',
@@ -648,10 +720,13 @@ describe('BlogService', () => {
     });
 
     it('should format director author correctly', async () => {
-      const post = await service.createPost({
-        title: 'Test Post',
-        description: 'Test Description',
-      }, 'director-1');
+      const post = await service.createPost(
+        {
+          title: 'Test Post',
+          description: 'Test Description',
+        },
+        'director-1',
+      );
 
       expect(post.author).toEqual({
         id: 'director-1',
@@ -661,10 +736,13 @@ describe('BlogService', () => {
     });
 
     it('should format service manager author correctly', async () => {
-      const post = await service.createPost({
-        title: 'Test Post',
-        description: 'Test Description',
-      }, 'service-manager-1');
+      const post = await service.createPost(
+        {
+          title: 'Test Post',
+          description: 'Test Description',
+        },
+        'service-manager-1',
+      );
 
       expect(post.author).toEqual({
         id: 'service-manager-1',
@@ -674,10 +752,13 @@ describe('BlogService', () => {
     });
 
     it('should count reactions correctly', async () => {
-      const post = await service.createPost({
-        title: 'Test Post',
-        description: 'Test Description',
-      }, 'secretary-1');
+      const post = await service.createPost(
+        {
+          title: 'Test Post',
+          description: 'Test Description',
+        },
+        'secretary-1',
+      );
 
       // Add reactions
       prisma._reactions.push(
@@ -697,4 +778,4 @@ describe('BlogService', () => {
       });
     });
   });
-}); 
+});

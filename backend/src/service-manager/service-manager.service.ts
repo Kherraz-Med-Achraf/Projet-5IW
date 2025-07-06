@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateServiceManagerDto } from './dto/create-service-manager.dto';
 import { UpdateServiceManagerDto } from './dto/update-service-manager.dto';
@@ -46,7 +50,7 @@ export class ServiceManagerService {
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    return this.prisma.$transaction(async tx => {
+    return this.prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           email,
@@ -94,9 +98,9 @@ export class ServiceManagerService {
     const profiles = await this.prisma.serviceManagerProfile.findMany({
       include: { user: true },
     });
-    
+
     // Masquer les données sensibles pour la sécurité
-    return profiles.map(profile => ({
+    return profiles.map((profile) => ({
       ...profile,
       phone: this.maskPhoneNumber(profile.phone),
     }));
@@ -110,7 +114,7 @@ export class ServiceManagerService {
     if (!profile) {
       throw new NotFoundException(`Chef de service ${id} introuvable`);
     }
-    
+
     // Masquer les données sensibles pour la sécurité
     return {
       ...profile,

@@ -46,7 +46,7 @@ describe('PlanningController – création de semestre (restriction rôles)', ()
     await app.close();
   });
 
-  it("autorise la création de semestre pour le rôle DIRECTOR", async () => {
+  it('autorise la création de semestre pour le rôle DIRECTOR', async () => {
     await createApp(Role.DIRECTOR);
     await request(app.getHttpServer())
       .post('/planning/semesters')
@@ -55,7 +55,7 @@ describe('PlanningController – création de semestre (restriction rôles)', ()
     expect(prisma.semester.create).toHaveBeenCalled();
   });
 
-  it("autorise la création de semestre pour le rôle SERVICE_MANAGER", async () => {
+  it('autorise la création de semestre pour le rôle SERVICE_MANAGER', async () => {
     await createApp(Role.SERVICE_MANAGER);
     await request(app.getHttpServer())
       .post('/planning/semesters')
@@ -63,7 +63,7 @@ describe('PlanningController – création de semestre (restriction rôles)', ()
       .expect(201);
   });
 
-  it("refuse la création de semestre pour le rôle STAFF", async () => {
+  it('refuse la création de semestre pour le rôle STAFF', async () => {
     await createApp(Role.STAFF);
     await request(app.getHttpServer())
       .post('/planning/semesters')
@@ -71,7 +71,7 @@ describe('PlanningController – création de semestre (restriction rôles)', ()
       .expect(403);
   });
 
-  it("refuse la création de semestre pour le rôle PARENT", async () => {
+  it('refuse la création de semestre pour le rôle PARENT', async () => {
     await createApp(Role.PARENT);
     await request(app.getHttpServer())
       .post('/planning/semesters')
@@ -79,7 +79,7 @@ describe('PlanningController – création de semestre (restriction rôles)', ()
       .expect(403);
   });
 
-  it("refuse la création de semestre pour le rôle SECRETARY", async () => {
+  it('refuse la création de semestre pour le rôle SECRETARY', async () => {
     await createApp(Role.SECRETARY);
     await request(app.getHttpServer())
       .post('/planning/semesters')
@@ -87,11 +87,11 @@ describe('PlanningController – création de semestre (restriction rôles)', ()
       .expect(403);
   });
 
-  it("refuse la création de semestre pour le rôle CHILD", async () => {
+  it('refuse la création de semestre pour le rôle CHILD', async () => {
     await createApp(Role.CHILD);
     await request(app.getHttpServer())
       .post('/planning/semesters')
       .send({ name: 'S1', startDate: '2025-09-01', endDate: '2026-01-31' })
       .expect(403);
   });
-}); 
+});

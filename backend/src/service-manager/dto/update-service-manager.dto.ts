@@ -1,4 +1,10 @@
-import { IsOptional, IsString, MinLength, IsUrl, IsDateString } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  MinLength,
+  IsUrl,
+  IsDateString,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class UpdateServiceManagerDto {
@@ -34,6 +40,8 @@ export class UpdateServiceManagerDto {
   @IsOptional()
   @Transform(({ value }) => value?.trim())
   @IsString({ message: 'Le téléphone doit être une chaîne de caractères' })
-  @MinLength(10, { message: 'Le téléphone doit contenir au moins 10 caractères' })
+  @MinLength(10, {
+    message: 'Le téléphone doit contenir au moins 10 caractères',
+  })
   phone?: string;
 }

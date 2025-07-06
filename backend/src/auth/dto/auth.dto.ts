@@ -7,11 +7,10 @@ import {
   IsInt,
   IsString,
   Length,
-  IsOptional
+  IsOptional,
 } from 'class-validator';
 
 import { PASSWORD_REGEX } from '../../common/constants/password.regex';
-
 
 export class RegisterDto {
   @Transform(({ value }) => value?.trim().toLowerCase())
@@ -20,7 +19,9 @@ export class RegisterDto {
 
   @Transform(({ value }) => value?.trim())
   @IsString({ message: 'Le mot de passe doit être une chaîne de caractères' })
-  @MinLength(12, { message: 'Le mot de passe doit contenir au moins 12 caractères' })
+  @MinLength(12, {
+    message: 'Le mot de passe doit contenir au moins 12 caractères',
+  })
   @Matches(PASSWORD_REGEX, {
     message:
       'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractère spécial',
@@ -39,9 +40,11 @@ export class LoginDto {
 
   @IsOptional()
   @Transform(({ value }) => value?.trim())
-  @IsString({ message: "Le code OTP doit être une chaîne de caractères" })
+  @IsString({ message: 'Le code OTP doit être une chaîne de caractères' })
   @Length(6, 6, { message: 'Le code OTP doit comporter exactement 6 chiffres' })
-  @Matches(/^\d{6}$/, { message: 'Le code OTP doit contenir uniquement des chiffres' })
+  @Matches(/^\d{6}$/, {
+    message: 'Le code OTP doit contenir uniquement des chiffres',
+  })
   otpCode?: string;
 }
 
@@ -62,8 +65,12 @@ export class ResetPasswordDto {
   token: string;
 
   @Transform(({ value }) => value?.trim())
-  @IsString({ message: 'Le nouveau mot de passe doit être une chaîne de caractères' })
-  @MinLength(12, { message: 'Le nouveau mot de passe doit contenir au moins 12 caractères' })
+  @IsString({
+    message: 'Le nouveau mot de passe doit être une chaîne de caractères',
+  })
+  @MinLength(12, {
+    message: 'Le nouveau mot de passe doit contenir au moins 12 caractères',
+  })
   @Matches(PASSWORD_REGEX, {
     message:
       'Le nouveau mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractère spécial',

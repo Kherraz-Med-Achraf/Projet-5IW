@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
 import { CreateBlogPostDto } from './dto/create-blog-post.dto';
@@ -63,7 +68,10 @@ export class BlogService {
   /**
    * Créer un nouveau post (Secrétaire, Directeur, Service Manager)
    */
-  async createPost(dto: CreateBlogPostDto, authorId: string): Promise<BlogPostResponseDto> {
+  async createPost(
+    dto: CreateBlogPostDto,
+    authorId: string,
+  ): Promise<BlogPostResponseDto> {
     // Sanitisation des données d'entrée
     const sanitizedTitle = this.sanitizeText(dto.title);
     const sanitizedDescription = this.sanitizeText(dto.description);
@@ -106,8 +114,10 @@ export class BlogService {
       });
     }
 
-    return posts.map(post => {
-      const userReaction = userReactions.find(r => r.postId === post.id)?.type;
+    return posts.map((post) => {
+      const userReaction = userReactions.find(
+        (r) => r.postId === post.id,
+      )?.type;
       return this.formatPostResponse(post, userReaction);
     });
   }
@@ -115,7 +125,10 @@ export class BlogService {
   /**
    * Récupérer un post par ID
    */
-  async getPostById(postId: string, userId?: string): Promise<BlogPostResponseDto> {
+  async getPostById(
+    postId: string,
+    userId?: string,
+  ): Promise<BlogPostResponseDto> {
     const post = await this.prisma.blogPost.findUnique({
       where: { id: postId },
       include: {
@@ -142,7 +155,11 @@ export class BlogService {
   /**
    * Ajouter ou modifier une réaction
    */
-  async toggleReaction(postId: string, userId: string, dto: CreateReactionDto): Promise<BlogPostResponseDto> {
+  async toggleReaction(
+    postId: string,
+    userId: string,
+    dto: CreateReactionDto,
+  ): Promise<BlogPostResponseDto> {
     // Vérifier que le post existe
     const post = await this.prisma.blogPost.findUnique({
       where: { id: postId },
@@ -188,7 +205,12 @@ export class BlogService {
   /**
    * Modifier un post (Admin et Directeur peuvent modifier tous les posts, autres seulement les leurs)
    */
-  async updatePost(postId: string, dto: CreateBlogPostDto, userRole: Role, userId: string): Promise<BlogPostResponseDto> {
+  async updatePost(
+    postId: string,
+    dto: CreateBlogPostDto,
+    userRole: Role,
+    userId: string,
+  ): Promise<BlogPostResponseDto> {
     // Vérifier que le post existe
     const existingPost = await this.prisma.blogPost.findUnique({
       where: { id: postId },
@@ -201,10 +223,13 @@ export class BlogService {
 
     // Vérification des permissions
     const canModifyAll = userRole === Role.ADMIN || userRole === Role.DIRECTOR;
-    const canModifyOwn = userRole === Role.SERVICE_MANAGER || userRole === Role.SECRETARY;
+    const canModifyOwn =
+      userRole === Role.SERVICE_MANAGER || userRole === Role.SECRETARY;
 
     if (!canModifyAll && (!canModifyOwn || existingPost.authorId !== userId)) {
-      throw new ForbiddenException('Vous ne pouvez modifier que vos propres posts');
+      throw new ForbiddenException(
+        'Vous ne pouvez modifier que vos propres posts',
+      );
     }
 
     // Préparer les données de mise à jour avec sanitisation
@@ -234,7 +259,11 @@ export class BlogService {
   /**
    * Supprimer un post (Admin et Directeur peuvent supprimer tous les posts, autres seulement les leurs)
    */
-  async deletePost(postId: string, userRole: Role, userId: string): Promise<void> {
+  async deletePost(
+    postId: string,
+    userRole: Role,
+    userId: string,
+  ): Promise<void> {
     const post = await this.prisma.blogPost.findUnique({
       where: { id: postId },
       select: { id: true, authorId: true },
@@ -246,10 +275,13 @@ export class BlogService {
 
     // Vérification des permissions
     const canDeleteAll = userRole === Role.ADMIN || userRole === Role.DIRECTOR;
-    const canDeleteOwn = userRole === Role.SERVICE_MANAGER || userRole === Role.SECRETARY;
+    const canDeleteOwn =
+      userRole === Role.SERVICE_MANAGER || userRole === Role.SECRETARY;
 
     if (!canDeleteAll && (!canDeleteOwn || post.authorId !== userId)) {
-      throw new ForbiddenException('Vous n\'avez pas le droit de supprimer ce post');
+      throw new ForbiddenException(
+        "Vous n'avez pas le droit de supprimer ce post",
+      );
     }
 
     // Suppression en cascade (réactions supprimées automatiquement)
@@ -268,21 +300,21 @@ export class BlogService {
         lastName: author.secretaryProfile.lastName,
       };
     }
-    
+
     if (author.directorProfile) {
       return {
         firstName: author.directorProfile.firstName,
         lastName: author.directorProfile.lastName,
       };
     }
-    
+
     if (author.serviceManagerProfile) {
       return {
         firstName: author.serviceManagerProfile.firstName,
         lastName: author.serviceManagerProfile.lastName,
       };
     }
-    
+
     return {
       firstName: 'Auteur',
       lastName: 'Inconnu',
@@ -292,7 +324,10 @@ export class BlogService {
   /**
    * Formater la réponse d'un post avec les statistiques de réactions
    */
-  private formatPostResponse(post: any, userReaction?: ReactionType): BlogPostResponseDto {
+  private formatPostResponse(
+    post: any,
+    userReaction?: ReactionType,
+  ): BlogPostResponseDto {
     // Compter les réactions par type
     const reactionCounts = {
       LIKE: 0,
@@ -325,4 +360,4 @@ export class BlogService {
       userReaction,
     };
   }
-} 
+}

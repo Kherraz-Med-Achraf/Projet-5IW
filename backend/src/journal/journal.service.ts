@@ -1,5 +1,10 @@
 // src/journal/journal.service.ts
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JournalMensuel, JournalAttachment } from '@prisma/client';
 import { promises as fs } from 'fs';
@@ -23,7 +28,7 @@ export class JournalService {
     const academicYear = await this.prisma.academicYear.findFirst({
       where: {
         startDate: { lte: referenceDate },
-        endDate:   { gte: referenceDate },
+        endDate: { gte: referenceDate },
       },
     });
     if (!academicYear) {
@@ -93,7 +98,9 @@ export class JournalService {
   /**
    * Crée un journal (brouillon) pour un mois donné.
    */
-  async create(data: Parameters<PrismaService['journalMensuel']['create']>[0]['data']): Promise<JournalMensuel> {
+  async create(
+    data: Parameters<PrismaService['journalMensuel']['create']>[0]['data'],
+  ): Promise<JournalMensuel> {
     return this.prisma.journalMensuel.create({ data });
   }
 
@@ -104,7 +111,9 @@ export class JournalService {
     journalId: number,
     data: Parameters<PrismaService['journalMensuel']['update']>[0]['data'],
   ): Promise<JournalMensuel> {
-    const existing = await this.prisma.journalMensuel.findUnique({ where: { id: journalId } });
+    const existing = await this.prisma.journalMensuel.findUnique({
+      where: { id: journalId },
+    });
     if (!existing) {
       throw new NotFoundException('Ressource introuvable');
     }
@@ -113,16 +122,24 @@ export class JournalService {
         'Cette ressource ne peut plus être modifiée',
       );
     }
-    return this.prisma.journalMensuel.update({ where: { id: journalId }, data });
+    return this.prisma.journalMensuel.update({
+      where: { id: journalId },
+      data,
+    });
   }
 
   /**
    * Soumet définitivement un journal (passer isSubmitted à true + horodatage).
    */
   async submit(journalId: number): Promise<JournalMensuel> {
-    const existing = await this.prisma.journalMensuel.findUnique({ where: { id: journalId } });
+    const existing = await this.prisma.journalMensuel.findUnique({
+      where: { id: journalId },
+    });
     if (!existing) throw new NotFoundException('Ressource introuvable');
-    if (existing.isSubmitted) throw new ForbiddenException('Opération non autorisée sur cette ressource');
+    if (existing.isSubmitted)
+      throw new ForbiddenException(
+        'Opération non autorisée sur cette ressource',
+      );
 
     const missionCount = await this.prisma.mission.count({
       where: {
@@ -146,17 +163,27 @@ export class JournalService {
    * Réouvre un journal soumis (réinitialiser isSubmitted à false).
    */
   async reopen(journalId: number): Promise<JournalMensuel> {
-    const existing = await this.prisma.journalMensuel.findUnique({ where: { id: journalId } });
+    const existing = await this.prisma.journalMensuel.findUnique({
+      where: { id: journalId },
+    });
     if (!existing) throw new NotFoundException('Ressource introuvable');
-    if (!existing.isSubmitted) throw new ForbiddenException('Opération non autorisée sur cette ressource');
-    return this.prisma.journalMensuel.update({ where: { id: journalId }, data: { isSubmitted: false } });
+    if (!existing.isSubmitted)
+      throw new ForbiddenException(
+        'Opération non autorisée sur cette ressource',
+      );
+    return this.prisma.journalMensuel.update({
+      where: { id: journalId },
+      data: { isSubmitted: false },
+    });
   }
 
   /**
    * Supprime un journal (et ses pièces jointes, en cascade).
    */
   async remove(journalId: number): Promise<JournalMensuel> {
-    const existing = await this.prisma.journalMensuel.findUnique({ where: { id: journalId } });
+    const existing = await this.prisma.journalMensuel.findUnique({
+      where: { id: journalId },
+    });
     if (!existing) throw new NotFoundException('Ressource introuvable');
     return this.prisma.journalMensuel.delete({ where: { id: journalId } });
   }
@@ -169,16 +196,22 @@ export class JournalService {
     filename: string,
     filepath: string,
   ): Promise<JournalAttachment> {
-    const existing = await this.prisma.journalMensuel.findUnique({ where: { id: journalId } });
+    const existing = await this.prisma.journalMensuel.findUnique({
+      where: { id: journalId },
+    });
     if (!existing) throw new NotFoundException('Ressource introuvable');
-    return this.prisma.journalAttachment.create({ data: { journal: { connect: { id: journalId } }, filename, filepath } });
+    return this.prisma.journalAttachment.create({
+      data: { journal: { connect: { id: journalId } }, filename, filepath },
+    });
   }
 
   /**
    * Supprime une pièce jointe par son ID et efface le fichier sur le disque.
    */
   async removeAttachment(attachmentId: number): Promise<JournalAttachment> {
-    const existing = await this.prisma.journalAttachment.findUnique({ where: { id: attachmentId } });
+    const existing = await this.prisma.journalAttachment.findUnique({
+      where: { id: attachmentId },
+    });
     if (!existing) throw new NotFoundException('Ressource introuvable');
     const filePathOnDisk = join(process.cwd(), 'uploads', existing.filename);
     try {
@@ -186,13 +219,17 @@ export class JournalService {
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
     }
-    return this.prisma.journalAttachment.delete({ where: { id: attachmentId } });
+    return this.prisma.journalAttachment.delete({
+      where: { id: attachmentId },
+    });
   }
 
   /**
    * Trouve une pièce jointe par son nom de fichier sur le disque.
    */
-  async findAttachmentByFilename(filename: string): Promise<JournalAttachment | null> {
+  async findAttachmentByFilename(
+    filename: string,
+  ): Promise<JournalAttachment | null> {
     return this.prisma.journalAttachment.findFirst({
       where: { filename },
       include: {
@@ -214,7 +251,10 @@ export class JournalService {
    * Vérifie qu'un parent a accès à une pièce jointe donnée.
    * Un parent peut accéder aux pièces jointes des journaux de ses enfants uniquement.
    */
-  async verifyParentAccessToAttachment(attachmentId: number, parentUserId: string): Promise<boolean> {
+  async verifyParentAccessToAttachment(
+    attachmentId: number,
+    parentUserId: string,
+  ): Promise<boolean> {
     const attachment = await this.prisma.journalAttachment.findUnique({
       where: { id: attachmentId },
       include: {

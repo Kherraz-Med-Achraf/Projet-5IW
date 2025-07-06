@@ -1,6 +1,12 @@
 // src/journal/dto/create-journal.dto.ts
 
-import { IsInt, IsString, IsNotEmpty, IsObject, IsOptional } from 'class-validator';
+import {
+  IsInt,
+  IsString,
+  IsNotEmpty,
+  IsObject,
+  IsOptional,
+} from 'class-validator';
 
 /**
  * DTO pour la création d’un nouveau journal (brouillon).

@@ -18,7 +18,9 @@ export class CreateDirectorDto {
 
   @Transform(({ value }) => value?.trim())
   @IsString({ message: 'Le mot de passe doit être une chaîne de caractères' })
-  @MinLength(12, { message: 'Le mot de passe doit contenir au moins 12 caractères' })
+  @MinLength(12, {
+    message: 'Le mot de passe doit contenir au moins 12 caractères',
+  })
   @Matches(PASSWORD_REGEX, {
     message:
       'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractère spécial',
@@ -52,6 +54,8 @@ export class CreateDirectorDto {
 
   @Transform(({ value }) => value?.trim())
   @IsString({ message: 'Le téléphone doit être une chaîne de caractères' })
-  @MinLength(10, { message: 'Le téléphone doit contenir au moins 10 caractères' })
+  @MinLength(10, {
+    message: 'Le téléphone doit contenir au moins 10 caractères',
+  })
   phone: string;
 }

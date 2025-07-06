@@ -8,4 +8,4 @@ export class ChangePasswordDto {
   @IsString()
   @Matches(PASSWORD_REGEX)
   newPassword: string;
-} 
+}

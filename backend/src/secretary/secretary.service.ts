@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSecretaryDto } from './dto/create-secretary.dto';
 import { UpdateSecretaryDto } from './dto/update-secretary.dto';
@@ -55,7 +59,7 @@ export class SecretaryService {
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    return this.prisma.$transaction(async tx => {
+    return this.prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           email,
@@ -100,10 +104,12 @@ export class SecretaryService {
   }
 
   async findAll() {
-    const profiles = await this.prisma.secretaryProfile.findMany({ include: { user: true } });
-    
+    const profiles = await this.prisma.secretaryProfile.findMany({
+      include: { user: true },
+    });
+
     // Masquer les données sensibles pour la sécurité
-    return profiles.map(profile => ({
+    return profiles.map((profile) => ({
       ...profile,
       phone: this.maskPhoneNumber(profile.phone),
     }));
@@ -117,7 +123,7 @@ export class SecretaryService {
     if (!sec) {
       throw new NotFoundException(`Secrétaire ${id} introuvable`);
     }
-    
+
     // Masquer les données sensibles pour la sécurité
     return {
       ...sec,
@@ -128,9 +134,19 @@ export class SecretaryService {
   async update(id: number, dto: UpdateSecretaryDto) {
     const existing = await this.findOne(id);
 
-    const { firstName, lastName, birthDate, phone, specialty, startDate, profileImage } = dto;
-    if ((firstName && firstName !== existing.firstName) ||
-        (lastName && lastName !== existing.lastName)) {
+    const {
+      firstName,
+      lastName,
+      birthDate,
+      phone,
+      specialty,
+      startDate,
+      profileImage,
+    } = dto;
+    if (
+      (firstName && firstName !== existing.firstName) ||
+      (lastName && lastName !== existing.lastName)
+    ) {
       const dup = await this.prisma.secretaryProfile.findFirst({
         where: {
           firstName: firstName ?? existing.firstName,
@@ -160,7 +176,9 @@ export class SecretaryService {
   }
 
   async remove(id: number) {
-    const count = await this.prisma.secretaryProfile.deleteMany({ where: { id } });
+    const count = await this.prisma.secretaryProfile.deleteMany({
+      where: { id },
+    });
     if (count.count === 0) {
       throw new NotFoundException(`Secrétaire ${id} introuvable`);
     }

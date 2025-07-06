@@ -54,9 +54,10 @@ export class ChildController {
   ): Promise<ChildResponseDto[]> {
     let children: any[];
     if (user.role === Role.PARENT) {
-      const parentProfile = await this.childService.prisma.parentProfile.findUnique({
-        where: { userId: user.id },
-      });
+      const parentProfile =
+        await this.childService.prisma.parentProfile.findUnique({
+          where: { userId: user.id },
+        });
       if (!parentProfile) {
         throw new NotFoundException('Profil parent introuvable');
       }
@@ -65,7 +66,7 @@ export class ChildController {
       children = await this.childService.findAll();
     }
 
-    return children.map(c =>
+    return children.map((c) =>
       plainToInstance(ChildResponseDto, {
         ...c,
         birthDate: c.birthDate.toISOString(),
@@ -86,11 +87,13 @@ export class ChildController {
     @User() user: { id: string; role: Role },
   ): Promise<ChildResponseDto[]> {
     if (user.role === Role.CHILD) {
-      throw new ForbiddenException('Accès interdit : les enfants ne peuvent pas accéder à cette fonctionnalité.');
+      throw new ForbiddenException(
+        'Accès interdit : les enfants ne peuvent pas accéder à cette fonctionnalité.',
+      );
     }
 
     const children = await this.childService.findAllReferent(user.id);
-    return children.map(c =>
+    return children.map((c) =>
       plainToInstance(ChildResponseDto, {
         ...c,
         birthDate: c.birthDate.toISOString(),
@@ -132,13 +135,17 @@ export class ChildController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<ChildResponseDto> {
     if (user.role === Role.PARENT) {
-      const parentProfile = await this.childService.prisma.parentProfile.findUnique({
-        where: { userId: user.id },
-      });
+      const parentProfile =
+        await this.childService.prisma.parentProfile.findUnique({
+          where: { userId: user.id },
+        });
       if (!parentProfile) {
         throw new NotFoundException('Profil parent introuvable');
       }
-      const child = await this.childService.findOneForParent(parentProfile.id, id);
+      const child = await this.childService.findOneForParent(
+        parentProfile.id,
+        id,
+      );
       if (!child) {
         throw new NotFoundException(`Enfant ${id} introuvable`);
       }
@@ -158,25 +165,25 @@ export class ChildController {
   }
 
   @Patch(':id')
-  @Roles(
-    Role.PARENT,
-    Role.SERVICE_MANAGER,
-    Role.DIRECTOR,
-    Role.ADMIN,
-  )
+  @Roles(Role.PARENT, Role.SERVICE_MANAGER, Role.DIRECTOR, Role.ADMIN)
   async update(
     @User() user: { id: string; role: Role },
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateChildDto,
   ): Promise<ChildResponseDto> {
     if (user.role === Role.PARENT) {
-      const parentProfile = await this.childService.prisma.parentProfile.findUnique({
-        where: { userId: user.id },
-      });
+      const parentProfile =
+        await this.childService.prisma.parentProfile.findUnique({
+          where: { userId: user.id },
+        });
       if (!parentProfile) {
         throw new NotFoundException('Profil parent introuvable');
       }
-      const child = await this.childService.updateForParent(parentProfile.id, id, dto);
+      const child = await this.childService.updateForParent(
+        parentProfile.id,
+        id,
+        dto,
+      );
       return plainToInstance(ChildResponseDto, {
         ...child,
         birthDate: child.birthDate.toISOString(),
@@ -196,19 +203,20 @@ export class ChildController {
     @Param('id', ParseIntPipe) childId: number,
     @Body() body: { imageConsent: boolean },
   ): Promise<ChildResponseDto> {
-    const parentProfile = await this.childService.prisma.parentProfile.findUnique({
-      where: { userId: user.id },
-    });
+    const parentProfile =
+      await this.childService.prisma.parentProfile.findUnique({
+        where: { userId: user.id },
+      });
     if (!parentProfile) {
       throw new NotFoundException('Profil parent introuvable');
     }
-    
+
     const child = await this.childService.updateImageConsentForParent(
       parentProfile.id,
       childId,
       body.imageConsent,
     );
-    
+
     return plainToInstance(ChildResponseDto, {
       ...child,
       birthDate: child.birthDate.toISOString(),
@@ -216,14 +224,8 @@ export class ChildController {
   }
 
   @Delete(':id')
-  @Roles(
-    Role.SERVICE_MANAGER,
-    Role.DIRECTOR,
-    Role.ADMIN,
-  )
-  async remove(
-    @Param('id', ParseIntPipe) id: number,
-  ) {
+  @Roles(Role.SERVICE_MANAGER, Role.DIRECTOR, Role.ADMIN)
+  async remove(@Param('id', ParseIntPipe) id: number) {
     await this.childService.remove(id);
     return { message: `Enfant ${id} supprimé.` };
   }

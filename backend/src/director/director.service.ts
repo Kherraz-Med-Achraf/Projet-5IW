@@ -1,5 +1,9 @@
 // src/director/director.service.ts
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDirectorDto } from './dto/create-director.dto';
 import { UpdateDirectorDto } from './dto/update-director.dto';
@@ -56,7 +60,7 @@ export class DirectorService {
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    return this.prisma.$transaction(async tx => {
+    return this.prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           email,
@@ -97,10 +101,12 @@ export class DirectorService {
   }
 
   async findAll() {
-    const profiles = await this.prisma.directorProfile.findMany({ include: { user: true } });
-    
+    const profiles = await this.prisma.directorProfile.findMany({
+      include: { user: true },
+    });
+
     // Masquer les données sensibles pour la sécurité
-    return profiles.map(profile => ({
+    return profiles.map((profile) => ({
       ...profile,
       phone: this.maskPhoneNumber(profile.phone),
     }));
@@ -114,7 +120,7 @@ export class DirectorService {
     if (!dir) {
       throw new NotFoundException(`Directeur ${id} introuvable`);
     }
-    
+
     // Masquer les données sensibles pour la sécurité
     return {
       ...dir,
@@ -149,11 +155,17 @@ export class DirectorService {
       where: { id },
       data: {
         ...(dto.jobTitle !== undefined && { jobTitle: dto.jobTitle }),
-        ...(dto.startDate !== undefined && { startDate: new Date(dto.startDate) }),
-        ...(dto.profileImage !== undefined && { profileImage: dto.profileImage }),
+        ...(dto.startDate !== undefined && {
+          startDate: new Date(dto.startDate),
+        }),
+        ...(dto.profileImage !== undefined && {
+          profileImage: dto.profileImage,
+        }),
         ...(dto.firstName !== undefined && { firstName: dto.firstName }),
         ...(dto.lastName !== undefined && { lastName: dto.lastName }),
-        ...(dto.birthDate !== undefined && { birthDate: new Date(dto.birthDate) }),
+        ...(dto.birthDate !== undefined && {
+          birthDate: new Date(dto.birthDate),
+        }),
         ...(dto.phone !== undefined && { phone: dto.phone }),
       },
     });

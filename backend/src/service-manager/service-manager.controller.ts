@@ -32,23 +32,13 @@ export class ServiceManagerController {
   }
 
   @Get()
-  @Roles(
-    Role.SECRETARY,
-    Role.SERVICE_MANAGER,
-    Role.DIRECTOR,
-    Role.ADMIN,
-  )
+  @Roles(Role.SECRETARY, Role.SERVICE_MANAGER, Role.DIRECTOR, Role.ADMIN)
   findAll() {
     return this.svc.findAll();
   }
 
   @Get(':id')
-  @Roles(
-    Role.SECRETARY,
-    Role.SERVICE_MANAGER,
-    Role.DIRECTOR,
-    Role.ADMIN,
-  )
+  @Roles(Role.SECRETARY, Role.SERVICE_MANAGER, Role.DIRECTOR, Role.ADMIN)
   async findOne(
     @User() user: { id: string; role: Role },
     @Param('id', ParseIntPipe) id: number,
@@ -60,7 +50,6 @@ export class ServiceManagerController {
     return profile;
   }
 
-
   @Patch(':id')
   @Roles(Role.SERVICE_MANAGER, Role.DIRECTOR, Role.ADMIN)
   async update(
@@ -69,10 +58,7 @@ export class ServiceManagerController {
     @Body() dto: UpdateServiceManagerDto,
   ) {
     const profile = await this.svc.findOne(id);
-    if (
-      user.role === Role.SERVICE_MANAGER &&
-      profile.userId !== user.id
-    ) {
+    if (user.role === Role.SERVICE_MANAGER && profile.userId !== user.id) {
       throw new NotFoundException(`Profil service manager introuvable`);
     }
     return this.svc.update(id, dto);

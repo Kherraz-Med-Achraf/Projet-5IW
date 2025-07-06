@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStaffDto } from './dto/create-staff.dto';
 import { UpdateStaffDto } from './dto/update-staff.dto';
@@ -29,7 +33,16 @@ export class StaffService {
   }
 
   async create(dto: CreateStaffDto) {
-    const { email, password, firstName, lastName, phone, discipline, birthDate, specialty } = dto;
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      phone,
+      discipline,
+      birthDate,
+      specialty,
+    } = dto;
     if (await this.prisma.user.findUnique({ where: { email } })) {
       throw new BadRequestException('Email déjà utilisé');
     }
@@ -42,7 +55,7 @@ export class StaffService {
       );
     }
     const hashed = await bcrypt.hash(password, 10);
-    return this.prisma.$transaction(async tx => {
+    return this.prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           email,
@@ -81,10 +94,12 @@ export class StaffService {
   }
 
   async findAll() {
-    const profiles = await this.prisma.staffProfile.findMany({ include: { user: true } });
-    
+    const profiles = await this.prisma.staffProfile.findMany({
+      include: { user: true },
+    });
+
     // Masquer les données sensibles pour la sécurité
-    return profiles.map(profile => ({
+    return profiles.map((profile) => ({
       ...profile,
       phone: this.maskPhoneNumber(profile.phone),
     }));
@@ -96,7 +111,7 @@ export class StaffService {
       include: { user: true },
     });
     if (!profile) throw new NotFoundException(`Staff ${id} introuvable`);
-    
+
     // Masquer les données sensibles pour la sécurité
     return {
       ...profile,
@@ -127,7 +142,9 @@ export class StaffService {
         ...(dto.lastName !== undefined && { lastName: dto.lastName }),
         ...(dto.phone !== undefined && { phone: dto.phone }),
         ...(dto.discipline !== undefined && { discipline: dto.discipline }),
-        ...(dto.birthDate !== undefined && { birthDate: new Date(dto.birthDate) }),
+        ...(dto.birthDate !== undefined && {
+          birthDate: new Date(dto.birthDate),
+        }),
         ...(dto.specialty !== undefined && { specialty: dto.specialty }),
       },
     });

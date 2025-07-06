@@ -49,7 +49,7 @@ export class BlogController {
       limits: {
         fileSize: 50 * 1024 * 1024, // 50MB max
       },
-    })
+    }),
   )
   async createPost(
     @Body() dto: CreateBlogPostDto,
@@ -57,26 +57,28 @@ export class BlogController {
     @Req() req: Request,
   ) {
     const user = req.user as { id: string };
-    
+
     // Si un fichier est uploadé, valider et sauvegarder
     if (file) {
       // Validation sécurisée du fichier
       this.fileValidationService.validateFile(file);
-      
+
       // Générer un nom de fichier sécurisé
-      const secureFilename = this.fileValidationService.generateSecureFilename(file.originalname);
-      
+      const secureFilename = this.fileValidationService.generateSecureFilename(
+        file.originalname,
+      );
+
       // Créer le répertoire s'il n'existe pas
       const uploadDir = join(process.cwd(), 'uploads', 'blog');
       mkdirSync(uploadDir, { recursive: true });
-      
+
       // Sauvegarder le fichier
       const filePath = join(uploadDir, secureFilename);
       writeFileSync(filePath, file.buffer);
-      
+
       // Mettre à jour les données du DTO
       dto.mediaUrl = `/uploads/blog/${secureFilename}`;
-      
+
       // Déterminer le type de média basé sur le mimetype
       if (file.mimetype.startsWith('image/')) {
         dto.mediaType = 'IMAGE';
@@ -134,7 +136,7 @@ export class BlogController {
       limits: {
         fileSize: 50 * 1024 * 1024, // 50MB max
       },
-    })
+    }),
   )
   async updatePost(
     @Param('id') id: string,
@@ -143,26 +145,28 @@ export class BlogController {
     @Req() req: Request,
   ) {
     const user = req.user as { id: string; role: Role };
-    
+
     // Si un fichier est uploadé, valider et sauvegarder
     if (file) {
       // Validation sécurisée du fichier
       this.fileValidationService.validateFile(file);
-      
+
       // Générer un nom de fichier sécurisé
-      const secureFilename = this.fileValidationService.generateSecureFilename(file.originalname);
-      
+      const secureFilename = this.fileValidationService.generateSecureFilename(
+        file.originalname,
+      );
+
       // Créer le répertoire s'il n'existe pas
       const uploadDir = join(process.cwd(), 'uploads', 'blog');
       mkdirSync(uploadDir, { recursive: true });
-      
+
       // Sauvegarder le fichier
       const filePath = join(uploadDir, secureFilename);
       writeFileSync(filePath, file.buffer);
-      
+
       // Mettre à jour les données du DTO
       dto.mediaUrl = `/uploads/blog/${secureFilename}`;
-      
+
       // Déterminer le type de média basé sur le mimetype
       if (file.mimetype.startsWith('image/')) {
         dto.mediaType = 'IMAGE';
@@ -185,4 +189,4 @@ export class BlogController {
     await this.blogService.deletePost(id, user.role, user.id);
     return { message: 'Post supprimé avec succès' };
   }
-} 
+}

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateParentDto } from './dto/update-parent.dto';
 
@@ -31,10 +35,10 @@ export class ParentService {
     });
 
     // Masquer les données sensibles pour la sécurité
-    return profiles.map(profile => ({
+    return profiles.map((profile) => ({
       ...profile,
       phone: this.maskPhoneNumber(profile.phone),
-      emergencyContacts: profile.emergencyContacts.map(contact => ({
+      emergencyContacts: profile.emergencyContacts.map((contact) => ({
         ...contact,
         phone: this.maskPhoneNumber(contact.phone),
       })),
@@ -49,12 +53,12 @@ export class ParentService {
     if (!profile) {
       throw new NotFoundException(`Profil parent ${id} introuvable`);
     }
-    
+
     // Masquer les données sensibles pour la sécurité
     return {
       ...profile,
       phone: this.maskPhoneNumber(profile.phone),
-      emergencyContacts: profile.emergencyContacts.map(contact => ({
+      emergencyContacts: profile.emergencyContacts.map((contact) => ({
         ...contact,
         phone: this.maskPhoneNumber(contact.phone),
       })),

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Validation CUID</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test de Validation CUID</h1>
+    
+    <div id="results"></div>
+    
+    <script>
+        const API_BASE_URL = 'http://localhost:3000';
+        
+        function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${type}`;
+            resultDiv.textContent = message;
+            resultsDiv.appendChild(resultDiv);
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        async function testCuidValidation() {
+            try {
+                // 1. Obtenir un token CSRF
+                addResult('1. Récupération du token CSRF...', 'info');
+                const csrfResponse = await fetch(`${API_BASE_URL}/auth/csrf`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (!csrfResponse.ok) {
+                    throw new Error(`Erreur CSRF: ${csrfResponse.status}`);
+                }
+                
+                const csrfData = await csrfResponse.json();
+                const csrfToken = csrfData.csrf_token;
+                addResult(`✅ Token CSRF obtenu: ${csrfToken}`, 'success');
+                
+                // 2. Tester avec un CUID valide
+                addResult('2. Test avec CUID valide...', 'info');
+                const validCuid = 'cmcp5o9a2001oqu3bxnagr0t3';
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}/planning/semesters/${validCuid}/overview`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-Token': csrfToken
+                        },
+                        credentials: 'include'
+                    });
+                    
+                    if (response.status === 400) {
+                        const errorData = await response.json();
+                        if (errorData.message && errorData.message.includes('CUID')) {
+                            addResult(`❌ Validation CUID échouée: ${errorData.message}`, 'error');
+                        } else if (errorData.message && errorData.message.includes('UUID')) {
+                            addResult(`❌ Validation encore en mode UUID: ${errorData.message}`, 'error');
+                        } else {
+                            addResult(`⚠️ Erreur 400 différente: ${JSON.stringify(errorData)}`, 'error');
+                        }
+                    } else if (response.status === 401) {
+                        addResult('⚠️ Erreur d\'authentification - normal sans token JWT', 'info');
+                    } else if (response.status === 403) {
+                        addResult('⚠️ Erreur d\'autorisation - normal sans permissions', 'info');
+                    } else if (response.status === 404) {
+                        addResult('⚠️ Semestre non trouvé - normal si le semestre n\'existe pas', 'info');
+                    } else {
+                        addResult(`✅ Validation CUID passée! Status: ${response.status}`, 'success');
+                    }
+                } catch (error) {
+                    addResult(`❌ Erreur réseau: ${error.message}`, 'error');
+                }
+                
+                // 3. Tester avec un UUID (devrait échouer)
+                addResult('3. Test avec UUID (devrait échouer)...', 'info');
+                const invalidUuid = '550e8400-e29b-41d4-a716-446655440000';
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}/planning/semesters/${invalidUuid}/overview`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-Token': csrfToken
+                        },
+                        credentials: 'include'
+                    });
+                    
+                    if (response.status === 400) {
+                        const errorData = await response.json();
+                        if (errorData.message && errorData.message.includes('CUID')) {
+                            addResult(`✅ Validation CUID fonctionne! UUID rejeté: ${errorData.message}`, 'success');
+                        } else {
+                            addResult(`⚠️ Erreur 400 différente: ${JSON.stringify(errorData)}`, 'error');
+                        }
+                    } else {
+                        addResult(`❌ UUID accepté - validation CUID ne fonctionne pas`, 'error');
+                    }
+                } catch (error) {
+                    addResult(`❌ Erreur réseau: ${error.message}`, 'error');
+                }
+                
+                // 4. Tester avec un ID invalide
+                addResult('4. Test avec ID invalide...', 'info');
+                const invalidId = 'invalid-id-123';
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}/planning/semesters/${invalidId}/overview`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-Token': csrfToken
+                        },
+                        credentials: 'include'
+                    });
+                    
+                    if (response.status === 400) {
+                        const errorData = await response.json();
+                        if (errorData.message && errorData.message.includes('CUID')) {
+                            addResult(`✅ Validation CUID fonctionne! ID invalide rejeté: ${errorData.message}`, 'success');
+                        } else {
+                            addResult(`⚠️ Erreur 400 différente: ${JSON.stringify(errorData)}`, 'error');
+                        }
+                    } else {
+                        addResult(`❌ ID invalide accepté - validation CUID ne fonctionne pas`, 'error');
+                    }
+                } catch (error) {
+                    addResult(`❌ Erreur réseau: ${error.message}`, 'error');
+                }
+                
+                addResult('🎉 Test terminé!', 'success');
+                
+            } catch (error) {
+                addResult(`❌ Erreur générale: ${error.message}`, 'error');
+            }
+        }
+        
+        // Lancer le test au chargement de la page
+        window.onload = testCuidValidation;
+    </script>
+</body>
+</html> 

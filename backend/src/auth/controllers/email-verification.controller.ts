@@ -9,10 +9,7 @@ export class EmailVerificationController {
 
   @Public()
   @Get('confirm-email')
-  async confirmEmail(
-    @Query('uid') uid: string,
-    @Query('token') token: string,
-  ) {
+  async confirmEmail(@Query('uid') uid: string, @Query('token') token: string) {
     return this.auth.confirmEmail(uid, token);
   }
 }

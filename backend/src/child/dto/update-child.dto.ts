@@ -1,4 +1,10 @@
-import { IsOptional, IsString, IsDateString, IsInt, IsBoolean } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsDateString,
+  IsInt,
+  IsBoolean,
+} from 'class-validator';
 
 export class UpdateChildDto {
   @IsOptional()

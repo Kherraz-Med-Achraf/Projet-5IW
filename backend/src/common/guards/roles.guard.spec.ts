@@ -1,22 +1,22 @@
-import { ExecutionContext } from '@nestjs/common'
-import { Reflector } from '@nestjs/core'
-import { RolesGuard } from './roles.guard'
-import { Role } from '@prisma/client'
+import { ExecutionContext } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { RolesGuard } from './roles.guard';
+import { Role } from '@prisma/client';
 
-const reflector = new Reflector()
-const guard     = new RolesGuard(reflector)
+const reflector = new Reflector();
+const guard = new RolesGuard(reflector);
 
 // Fabrique un ExecutionContext minimal avec un utilisateur donné
-afterEach(() => jest.restoreAllMocks())
+afterEach(() => jest.restoreAllMocks());
 
 function ctxWithRole(role: Role): ExecutionContext {
   return {
     switchToHttp: () => ({
       getRequest: () => ({ user: { role } }),
     }),
-    getHandler:   () => ({}),
-    getClass:     () => ({}),
-  } as unknown as ExecutionContext
+    getHandler: () => ({}),
+    getClass: () => ({}),
+  } as unknown as ExecutionContext;
 }
 
 /**
@@ -25,17 +25,20 @@ function ctxWithRole(role: Role): ExecutionContext {
  * Ces routes sont décorées par @Roles(DIRECTOR, SERVICE_MANAGER) dans EventController.
  */
 describe('RolesGuard – accès gestion Événements (CRUD)', () => {
-  const allowed = [Role.DIRECTOR, Role.SERVICE_MANAGER]
+  const allowed = [Role.DIRECTOR, Role.SERVICE_MANAGER];
 
   beforeEach(() => {
-    jest.spyOn(reflector, 'get').mockReturnValue(allowed)
-  })
+    jest.spyOn(reflector, 'get').mockReturnValue(allowed);
+  });
 
-  it.each(allowed)('autorise l\'accès Event CRUD pour le rôle %s', (role) => {
-    expect(guard.canActivate(ctxWithRole(role))).toBe(true)
-  })
+  it.each(allowed)("autorise l'accès Event CRUD pour le rôle %s", (role) => {
+    expect(guard.canActivate(ctxWithRole(role))).toBe(true);
+  });
 
-  it.each([Role.STAFF, Role.PARENT, Role.SECRETARY])('refuse l\'accès Event CRUD pour le rôle %s', (role) => {
-    expect(guard.canActivate(ctxWithRole(role))).toBe(false)
-  })
-}) 
+  it.each([Role.STAFF, Role.PARENT, Role.SECRETARY])(
+    "refuse l'accès Event CRUD pour le rôle %s",
+    (role) => {
+      expect(guard.canActivate(ctxWithRole(role))).toBe(false);
+    },
+  );
+});

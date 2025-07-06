@@ -5,4 +5,4 @@ export class CreateReactionDto {
   @IsEnum(ReactionType)
   @IsNotEmpty()
   type: ReactionType;
-} 
+}

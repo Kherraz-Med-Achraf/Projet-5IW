@@ -1,18 +1,26 @@
 // src/ai/ai.service.ts
-import { Injectable, ServiceUnavailableException, BadRequestException } from '@nestjs/common'
-import OpenAI from 'openai'
+import {
+  Injectable,
+  ServiceUnavailableException,
+  BadRequestException,
+} from '@nestjs/common';
+import OpenAI from 'openai';
 
 @Injectable()
 export class AiService {
-  private readonly openai: OpenAI
+  private readonly openai: OpenAI;
 
   constructor() {
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
-    })
+    });
   }
 
-  async improveMission(prompt: string, type: 'mission' | 'observation' | 'progression' | 'blog' = 'mission', subType?: 'title' | 'description'): Promise<string> {
+  async improveMission(
+    prompt: string,
+    type: 'mission' | 'observation' | 'progression' | 'blog' = 'mission',
+    subType?: 'title' | 'description',
+  ): Promise<string> {
     try {
       let systemPrompt = '';
       let maxTokens = 120;
@@ -217,39 +225,39 @@ AMÉLIORE le texte pour qu'il soit plus accrocheur et professionnel tout en rest
         ],
         temperature: 0.7,
         max_tokens: maxTokens,
-      })
+      });
 
       // on renvoie simplement le premier choix, sans les sauts de ligne superflus
-      return (completion.choices?.[0].message?.content || '').trim()
+      return (completion.choices?.[0].message?.content || '').trim();
     } catch (error: any) {
       // Gestion spécifique des erreurs OpenAI
       if (error.status === 429) {
         if (error.code === 'insufficient_quota') {
           throw new ServiceUnavailableException(
-            'Le service IA a atteint sa limite de quota. Veuillez réessayer plus tard ou contacter l\'administrateur.'
-          )
+            "Le service IA a atteint sa limite de quota. Veuillez réessayer plus tard ou contacter l'administrateur.",
+          );
         } else {
           throw new ServiceUnavailableException(
-            'Trop de requêtes vers le service IA. Veuillez attendre quelques instants avant de réessayer.'
-          )
+            'Trop de requêtes vers le service IA. Veuillez attendre quelques instants avant de réessayer.',
+          );
         }
       } else if (error.status === 401) {
         throw new ServiceUnavailableException(
-          'Erreur d\'authentification avec le service IA. Contactez l\'administrateur.'
-        )
+          "Erreur d'authentification avec le service IA. Contactez l'administrateur.",
+        );
       } else if (error.status === 400) {
         throw new BadRequestException(
-          'La demande n\'est pas valide. Vérifiez le contenu de votre mission.'
-        )
+          "La demande n'est pas valide. Vérifiez le contenu de votre mission.",
+        );
       } else if (error.status >= 500) {
         throw new ServiceUnavailableException(
-          'Le service IA est temporairement indisponible. Réessayez dans quelques instants.'
-        )
+          'Le service IA est temporairement indisponible. Réessayez dans quelques instants.',
+        );
       } else {
         // Erreur générique
         throw new ServiceUnavailableException(
-          'Erreur lors de la communication avec le service IA. Veuillez réessayer plus tard.'
-        )
+          'Erreur lors de la communication avec le service IA. Veuillez réessayer plus tard.',
+        );
       }
     }
   }

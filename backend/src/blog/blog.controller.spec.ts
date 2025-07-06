@@ -28,9 +28,7 @@ describe('BlogController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BlogController],
-      providers: [
-        { provide: BlogService, useValue: blogServiceMock },
-      ],
+      providers: [{ provide: BlogService, useValue: blogServiceMock }],
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
@@ -70,7 +68,11 @@ describe('BlogController', () => {
 
       blogServiceMock.createPost.mockResolvedValue(expectedResult);
 
-      const result = await controller.createPost(mockDto, null as any, mockRequest);
+      const result = await controller.createPost(
+        mockDto,
+        null as any,
+        mockRequest,
+      );
 
       expect(service.createPost).toHaveBeenCalledWith(mockDto, 'user-1');
       expect(result).toBe(expectedResult);
@@ -97,7 +99,11 @@ describe('BlogController', () => {
 
       blogServiceMock.createPost.mockResolvedValue(expectedResult);
 
-      const result = await controller.createPost(mockDto, mockFile, mockRequest);
+      const result = await controller.createPost(
+        mockDto,
+        mockFile,
+        mockRequest,
+      );
 
       expect(service.createPost).toHaveBeenCalledWith(expectedDto, 'user-1');
       expect(result).toBe(expectedResult);
@@ -224,9 +230,17 @@ describe('BlogController', () => {
 
       blogServiceMock.toggleReaction.mockResolvedValue(expectedResult);
 
-      const result = await controller.toggleReaction('post-1', mockDto, mockRequest);
+      const result = await controller.toggleReaction(
+        'post-1',
+        mockDto,
+        mockRequest,
+      );
 
-      expect(service.toggleReaction).toHaveBeenCalledWith('post-1', 'user-1', mockDto);
+      expect(service.toggleReaction).toHaveBeenCalledWith(
+        'post-1',
+        'user-1',
+        mockDto,
+      );
       expect(result).toBe(expectedResult);
     });
   });
@@ -252,9 +266,19 @@ describe('BlogController', () => {
 
       blogServiceMock.updatePost.mockResolvedValue(expectedResult);
 
-      const result = await controller.updatePost('post-1', mockDto, null as any, mockRequest);
+      const result = await controller.updatePost(
+        'post-1',
+        mockDto,
+        null as any,
+        mockRequest,
+      );
 
-      expect(service.updatePost).toHaveBeenCalledWith('post-1', mockDto, Role.SECRETARY, 'user-1');
+      expect(service.updatePost).toHaveBeenCalledWith(
+        'post-1',
+        mockDto,
+        Role.SECRETARY,
+        'user-1',
+      );
       expect(result).toBe(expectedResult);
     });
 
@@ -279,9 +303,19 @@ describe('BlogController', () => {
 
       blogServiceMock.updatePost.mockResolvedValue(expectedResult);
 
-      const result = await controller.updatePost('post-1', mockDto, mockFile, mockRequest);
+      const result = await controller.updatePost(
+        'post-1',
+        mockDto,
+        mockFile,
+        mockRequest,
+      );
 
-      expect(service.updatePost).toHaveBeenCalledWith('post-1', expectedDto, Role.SECRETARY, 'user-1');
+      expect(service.updatePost).toHaveBeenCalledWith(
+        'post-1',
+        expectedDto,
+        Role.SECRETARY,
+        'user-1',
+      );
       expect(result).toBe(expectedResult);
     });
   });
@@ -291,18 +325,22 @@ describe('BlogController', () => {
   /* ------------------------------------------------------------------- */
   describe('deletePost', () => {
     it('should delete post successfully', async () => {
-      const mockRequest = { 
-        user: { 
-          id: 'user-1', 
-          role: Role.DIRECTOR 
-        } 
+      const mockRequest = {
+        user: {
+          id: 'user-1',
+          role: Role.DIRECTOR,
+        },
       } as any;
 
       blogServiceMock.deletePost.mockResolvedValue(undefined);
 
       const result = await controller.deletePost('post-1', mockRequest);
 
-      expect(service.deletePost).toHaveBeenCalledWith('post-1', Role.DIRECTOR, 'user-1');
+      expect(service.deletePost).toHaveBeenCalledWith(
+        'post-1',
+        Role.DIRECTOR,
+        'user-1',
+      );
       expect(result).toEqual({ message: 'Post supprimé avec succès' });
     });
   });
@@ -312,18 +350,42 @@ describe('BlogController', () => {
   /* ------------------------------------------------------------------- */
   describe('Route Guards and Roles', () => {
     it('should have correct decorators on createPost', () => {
-      const createPostMetadata = Reflect.getMetadata('roles', controller.createPost);
-      expect(createPostMetadata).toEqual([Role.ADMIN, Role.SECRETARY, Role.DIRECTOR, Role.SERVICE_MANAGER]);
+      const createPostMetadata = Reflect.getMetadata(
+        'roles',
+        controller.createPost,
+      );
+      expect(createPostMetadata).toEqual([
+        Role.ADMIN,
+        Role.SECRETARY,
+        Role.DIRECTOR,
+        Role.SERVICE_MANAGER,
+      ]);
     });
 
     it('should have correct decorators on updatePost', () => {
-      const updatePostMetadata = Reflect.getMetadata('roles', controller.updatePost);
-      expect(updatePostMetadata).toEqual([Role.ADMIN, Role.SECRETARY, Role.DIRECTOR, Role.SERVICE_MANAGER]);
+      const updatePostMetadata = Reflect.getMetadata(
+        'roles',
+        controller.updatePost,
+      );
+      expect(updatePostMetadata).toEqual([
+        Role.ADMIN,
+        Role.SECRETARY,
+        Role.DIRECTOR,
+        Role.SERVICE_MANAGER,
+      ]);
     });
 
     it('should have correct decorators on deletePost', () => {
-      const deletePostMetadata = Reflect.getMetadata('roles', controller.deletePost);
-      expect(deletePostMetadata).toEqual([Role.ADMIN, Role.SECRETARY, Role.DIRECTOR, Role.SERVICE_MANAGER]);
+      const deletePostMetadata = Reflect.getMetadata(
+        'roles',
+        controller.deletePost,
+      );
+      expect(deletePostMetadata).toEqual([
+        Role.ADMIN,
+        Role.SECRETARY,
+        Role.DIRECTOR,
+        Role.SERVICE_MANAGER,
+      ]);
     });
   });
 
@@ -341,7 +403,9 @@ describe('BlogController', () => {
 
       const fileFilter = (req: any, file: Express.Multer.File, cb: any) => {
         const allowedTypes = /jpeg|jpg|png|gif|mp4|mov|avi|webm/;
-        const extName = allowedTypes.test(file.originalname.split('.').pop()?.toLowerCase() || '');
+        const extName = allowedTypes.test(
+          file.originalname.split('.').pop()?.toLowerCase() || '',
+        );
         const mimeType = allowedTypes.test(file.mimetype);
 
         if (mimeType && extName) {
@@ -356,7 +420,7 @@ describe('BlogController', () => {
 
       expect(mockCallback).toHaveBeenCalledWith(
         expect.any(BadRequestException),
-        false
+        false,
       );
     });
 
@@ -368,7 +432,9 @@ describe('BlogController', () => {
 
       const fileFilter = (req: any, file: Express.Multer.File, cb: any) => {
         const allowedTypes = /jpeg|jpg|png|gif|mp4|mov|avi|webm/;
-        const extName = allowedTypes.test(file.originalname.split('.').pop()?.toLowerCase() || '');
+        const extName = allowedTypes.test(
+          file.originalname.split('.').pop()?.toLowerCase() || '',
+        );
         const mimeType = allowedTypes.test(file.mimetype);
 
         if (mimeType && extName) {
@@ -392,7 +458,9 @@ describe('BlogController', () => {
 
       const fileFilter = (req: any, file: Express.Multer.File, cb: any) => {
         const allowedTypes = /jpeg|jpg|png|gif|mp4|mov|avi|webm/;
-        const extName = allowedTypes.test(file.originalname.split('.').pop()?.toLowerCase() || '');
+        const extName = allowedTypes.test(
+          file.originalname.split('.').pop()?.toLowerCase() || '',
+        );
         const mimeType = allowedTypes.test(file.mimetype);
 
         if (mimeType && extName) {
@@ -408,4 +476,4 @@ describe('BlogController', () => {
       expect(mockCallback).toHaveBeenCalledWith(null, true);
     });
   });
-}); 
+});

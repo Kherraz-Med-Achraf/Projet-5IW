@@ -1125,6 +1125,12 @@ async function saveContact() {
       headers['X-CSRF-Token'] = csrfToken
     }
 
+    console.log('[saveContact] Sending request with data:', contactData);
+    console.log('[saveContact] Headers:', headers);
+    console.log('[saveContact] parentProfileId type:', typeof parentProfileId, 'value:', parentProfileId);
+    console.log('[saveContact] editingContact.id type:', typeof editingContact.value.id, 'value:', editingContact.value.id);
+    console.log('[saveContact] URL:', `http://localhost:3000/parents/${parentProfileId}/emergency-contacts/${editingContact.value.id}`);
+
     // Convertir les IDs en nombres pour s'assurer qu'ils sont corrects
     const parentId = parseInt(parentProfileId.toString());
     const contactId = parseInt(editingContact.value.id.toString());
@@ -1139,6 +1145,7 @@ async function saveContact() {
       body: JSON.stringify(contactData)
     });
 
+    console.log('[saveContact] Response status:', response.status);
     if (response.ok) {
       const savedContact = await response.json();
       
@@ -1229,12 +1236,12 @@ async function checkJournalAlerts() {
     );
 
     // 6) L'alerte est maintenant affichée sous forme de bloc visible dans Home.vue
-    // Plus besoin de toast ici, juste pour debug en cas de besoin
+    // Plus besoin de toast ici, juste un log pour debug
     if (missing.length) {
       const names = missing
         .map((c) => `${c.firstName} ${c.lastName}`)
         .join(", ");
-      // Journaux manquants détectés
+      console.log(`Journaux manquants détectés pour : ${names}`);
     }
   } catch (error) {
     console.error("Erreur lors de la vérification des journaux:", error);

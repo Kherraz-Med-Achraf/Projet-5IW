@@ -118,9 +118,9 @@
       
       const finalName = `${cleanName}${extension}`;
       
-      // Si le nom a été modifié, on crée un nouveau fichier avec le nom nettoyé
+      // Si le nom a été modifié, afficher un message informatif
       if (originalName !== finalName) {
-        // Nom de fichier nettoyé
+        console.log(`📁 Nom de fichier nettoyé: "${originalName}" → "${finalName}"`);
       }
       
       // Créer un nouveau fichier avec le nom nettoyé
@@ -148,6 +148,15 @@
 
     submitting.value = true;
     
+    console.log('🔍 Soumission justification:', {
+      recordId: props.record.id,
+      type: form.value.type,
+      justificationDate: form.value.justificationDate,
+      motif: form.value.motif,
+      hasFile: !!file.value,
+      fileName: file.value?.name
+    });
+
     try {
       await emit('submit', {
         recordId: props.record.id,
@@ -156,7 +165,7 @@
         motif: form.value.motif,
         file: file.value ?? undefined,
       });
-      
+      console.log('✅ Justification soumise avec succès');
       notify.showNotification('Justification enregistrée avec succès', 'success');
     } catch (error) {
       console.error('❌ Erreur lors de la soumission:', error);

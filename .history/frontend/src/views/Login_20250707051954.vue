@@ -90,7 +90,7 @@ async function onSubmit() {
     email: email.value,
     password: password.value,
   });
-  
+  console.log("[Login.vue] initiateLogin response →", res);
   if (res.tempToken && !res.access_token) {
     auth.tempToken = res.tempToken;
     showOtpModal.value = true;
@@ -114,6 +114,7 @@ async function submitOtp() {
     tempToken: auth.tempToken!,
     otpCode: otpCode.value,
   });
+  console.log("[Login.vue] verifyOtp response →", res);
   
   if (res.access_token) {
     toast.success("Connexion réussie !");

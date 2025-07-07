@@ -8,7 +8,7 @@
             title: 'Informations du parent',
           },
           {
-            title: 'Informations de l'enfant',
+            title: 'Informations de l’enfant',
           },
           {
             title: 'Création du compte',
@@ -29,7 +29,7 @@ const message = ref("Hello from Developer page!");
 let currentStep = ref(1);
 
 onMounted(() => {
-  // Component mounted
+  console.log("TheDev component mounted");
 });
 </script>
 

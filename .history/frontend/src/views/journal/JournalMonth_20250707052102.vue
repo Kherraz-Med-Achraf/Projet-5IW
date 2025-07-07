@@ -472,6 +472,8 @@ async function saveJournal() {
       progressionMissions: cleanProgressionMissions,
     };
     
+    console.log('Données à sauvegarder:', journalData);
+    
     if (existingJournal.value) {
       const upd = await journalStore.updateJournal(existingJournal.value.id, journalData);
       existingJournal.value = upd;

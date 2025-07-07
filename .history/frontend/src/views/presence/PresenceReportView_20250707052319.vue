@@ -723,44 +723,29 @@ function generatePDFContent() {
   `;
 }
 
-// Système de rafraîchissement automatique
-let refreshInterval: ReturnType<typeof setInterval> | null = null;
+// Fonctions d'actualisation
+const refreshReportData = async () => {
+  await store.fetchSheet();
+  await store.fetchReportOverview();
+};
 
-// Fonction de rafraîchissement silencieux (sans loader)
-async function refreshData() {
-  try {
-    const currentLoading = store.loading;
-    await store.fetchSheet();
-  } catch (error) {
-    console.error('❌ Erreur lors du rafraîchissement automatique:', error);
+// Fonction pour activer/désactiver la mise à jour automatique
+const enableAutoRefresh = () => {
+  if (refreshInterval.value) {
+    clearInterval(refreshInterval.value);
   }
-}
-
-// Gestion de la visibilité de la page
-function handleVisibilityChange() {
-  const isPageVisible = !document.hidden;
   
-  if (isPageVisible) {
-    // Page visible : relancer le rafraîchissement et mettre à jour immédiatement
-    startAutoRefresh();
-    refreshData();
-  } else {
-    // Page cachée : arrêter le rafraîchissement
-    stopAutoRefresh();
-  }
-}
+  refreshInterval.value = setInterval(async () => {
+    await refreshReportData();
+  }, 30000); // Actualiser toutes les 30 secondes
+};
 
-function startAutoRefresh() {
-  stopAutoRefresh(); // S'assurer qu'il n'y a pas déjà un interval
-  refreshInterval = setInterval(refreshData, 30000); // 30 secondes
-}
-
-function stopAutoRefresh() {
-  if (refreshInterval) {
-    clearInterval(refreshInterval);
-    refreshInterval = null;
+const disableAutoRefresh = () => {
+  if (refreshInterval.value) {
+    clearInterval(refreshInterval.value);
+    refreshInterval.value = null;
   }
-}
+};
 
 onMounted(() => {
   store.fetchSheet();

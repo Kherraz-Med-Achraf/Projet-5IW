@@ -510,6 +510,7 @@ async function handleCancelCourse(course: any) {
 
 function handleReassignChildren(sourceId: string, targetId: string) {
   // Gestion des réassignations
+  console.log('Réassignation:', sourceId, '->', targetId)
 }
 
 async function confirmCancelCourse() {

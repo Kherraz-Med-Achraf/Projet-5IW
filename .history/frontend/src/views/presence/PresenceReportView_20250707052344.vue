@@ -731,6 +731,7 @@ async function refreshData() {
   try {
     const currentLoading = store.loading;
     await store.fetchSheet();
+    console.log('📊 Données du rapport rafraîchies automatiquement');
   } catch (error) {
     console.error('❌ Erreur lors du rafraîchissement automatique:', error);
   }
@@ -753,12 +754,14 @@ function handleVisibilityChange() {
 function startAutoRefresh() {
   stopAutoRefresh(); // S'assurer qu'il n'y a pas déjà un interval
   refreshInterval = setInterval(refreshData, 30000); // 30 secondes
+  console.log('🔄 Rafraîchissement automatique activé (30s)');
 }
 
 function stopAutoRefresh() {
   if (refreshInterval) {
     clearInterval(refreshInterval);
     refreshInterval = null;
+    console.log('⏹️ Rafraîchissement automatique arrêté');
   }
 }
 

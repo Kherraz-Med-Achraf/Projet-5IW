@@ -510,6 +510,7 @@ async function handleCancelCourse(course: any) {
 
 function handleReassignChildren(sourceId: string, targetId: string) {
   // Gestion des réassignations
+  console.log('Réassignation:', sourceId, '->', targetId)
 }
 
 async function confirmCancelCourse() {
@@ -565,7 +566,9 @@ async function handleIndividualTransfers(transfers: Record<number, string>) {
     
     // Maintenant annuler automatiquement le cours
     if (transferCount > 0) {
+      console.log('Annulation automatique du cours après transferts...')
       await planning.cancelCourse(cancelledCourseId)
+      console.log('Cours annulé automatiquement après transferts')
       
       toast.success(`Transferts terminés ! ${transferCount} enfant(s) transféré(s) et cours annulé automatiquement.`)
     } else {

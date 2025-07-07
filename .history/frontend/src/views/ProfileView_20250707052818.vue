@@ -1229,12 +1229,12 @@ async function checkJournalAlerts() {
     );
 
     // 6) L'alerte est maintenant affichée sous forme de bloc visible dans Home.vue
-    // Plus besoin de toast ici, juste pour debug en cas de besoin
+    // Plus besoin de toast ici, juste un log pour debug
     if (missing.length) {
       const names = missing
         .map((c) => `${c.firstName} ${c.lastName}`)
         .join(", ");
-      // Journaux manquants détectés
+      console.log(`Journaux manquants détectés pour : ${names}`);
     }
   } catch (error) {
     console.error("Erreur lors de la vérification des journaux:", error);

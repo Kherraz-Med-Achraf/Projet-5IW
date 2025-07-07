@@ -444,26 +444,44 @@ async function handleCancelCourse(course: any) {
   // Si le cours est déjà annulé, on le réactive directement
   if (course.cancelled) {
     try {
+      console.log('=== RÉACTIVATION DU COURS ===')
+      console.log('Course ID:', course.id)
+      console.log('Course data before:', course)
+      
       await planning.reactivateCourse(course.id)
+      console.log('API call réactivation terminé')
       
       // Attendre un peu pour que l'API se mette à jour
       await new Promise(resolve => setTimeout(resolve, 500))
       
+      console.log('Rechargement des événements...')
       await loadEvents()
+      console.log('Événements rechargés')
       
       // Vérifier que le cours est bien réactivé
       const updatedCourse = events.value.find(e => e.id === course.id)
+      if (updatedCourse) {
+        console.log('Cours après réactivation:', updatedCourse)
+        console.log('Activité après réactivation:', updatedCourse.activity)
+        console.log('Cours considéré comme annulé?', updatedCourse.activity.toLowerCase().includes('annulé'))
+      }
       
       // Forcer aussi un rafraîchissement de l'aperçu global
       if (selectedSemesterId.value) {
-        await planning.loadPreview(selectedSemesterId.value)
+        console.log('Rechargement de l\'aperçu global...')
+        await planning.fetchOverview()
+        console.log('Aperçu global rechargé')
       }
       
-    } catch (error) {
-      console.error('Erreur lors de la réactivation:', error)
-      toast.error('Erreur lors de la réactivation du cours')
-    } finally {
       closeModal()
+      console.log('=== RÉACTIVATION TERMINÉE ===')
+      
+      // Informer l'utilisateur du succès de la réactivation
+      toast.success('Cours réactivé avec succès ! Les enfants transférés ont été automatiquement restaurés.')
+    } catch (err: any) {
+      console.error('=== ERREUR RÉACTIVATION ===', err)
+      // Afficher l'erreur à l'utilisateur
+      toast.error('Erreur lors de la réactivation : ' + (err.message || 'Erreur inconnue'))
     }
     return
   }
@@ -497,7 +515,9 @@ async function handleCancelCourse(course: any) {
   } else {
     // Pas d'enfants, annuler directement
     try {
+      console.log('Annulation du cours:', course.id)
       await planning.cancelCourse(course.id)
+      console.log('Cours annulé avec succès')
       await loadEvents()
       closeModal()
       toast.success('Cours annulé avec succès.')
@@ -510,6 +530,7 @@ async function handleCancelCourse(course: any) {
 
 function handleReassignChildren(sourceId: string, targetId: string) {
   // Gestion des réassignations
+  console.log('Réassignation:', sourceId, '->', targetId)
 }
 
 async function confirmCancelCourse() {
@@ -565,7 +586,9 @@ async function handleIndividualTransfers(transfers: Record<number, string>) {
     
     // Maintenant annuler automatiquement le cours
     if (transferCount > 0) {
+      console.log('Annulation automatique du cours après transferts...')
       await planning.cancelCourse(cancelledCourseId)
+      console.log('Cours annulé automatiquement après transferts')
       
       toast.success(`Transferts terminés ! ${transferCount} enfant(s) transféré(s) et cours annulé automatiquement.`)
     } else {

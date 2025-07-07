@@ -12,8 +12,8 @@
       <div class="profile-content" id="main-content">
         <div class="content-grid">
           <!-- Page Header -->
-          <PageHeader 
-            title="Bienvenue" 
+          <PageHeader
+            title="Bienvenue"
             subtitle="Découvrez les dernières actualités et informations"
             icon="home"
           />
@@ -22,7 +22,9 @@
           <div class="profile-section" id="blog-posts">
             <!-- États de chargement et erreur -->
             <div v-if="blogLoading" class="loading-indicator">
-              <i class="material-icons spinning" aria-hidden="true">hourglass_empty</i>
+              <i class="material-icons spinning" aria-hidden="true"
+                >hourglass_empty</i
+              >
               <span>Chargement des articles...</span>
             </div>
 
@@ -37,9 +39,9 @@
 
             <!-- Liste des posts -->
             <div v-else-if="blogPosts.length > 0" class="posts-grid">
-              <BlogPost 
-                v-for="post in blogPosts" 
-                :key="post.id" 
+              <BlogPost
+                v-for="post in blogPosts"
+                :key="post.id"
                 :post="post"
                 class="blog-post-card"
               />
@@ -64,17 +66,23 @@
     <!-- Skip links pour navigation rapide -->
     <div class="skip-links">
       <a href="#main-content" class="skip-link">Aller au contenu principal</a>
-      <a href="#presence-stats" class="skip-link">Aller aux statistiques de présence</a>
-      <a href="#referent-children" class="skip-link">Aller aux enfants référés</a>
-      <a href="#missing-journals" class="skip-link">Aller aux journaux manquants</a>
+      <a href="#presence-stats" class="skip-link"
+        >Aller aux statistiques de présence</a
+      >
+      <a href="#referent-children" class="skip-link"
+        >Aller aux enfants référés</a
+      >
+      <a href="#missing-journals" class="skip-link"
+        >Aller aux journaux manquants</a
+      >
     </div>
 
     <main class="profile-container" role="main" lang="fr">
       <div class="profile-content" id="main-content">
         <div class="content-grid">
           <!-- Page Header -->
-          <PageHeader 
-            title="Tableau de bord éducateur" 
+          <PageHeader
+            title="Tableau de bord éducateur"
             subtitle="Vue d'ensemble de vos activités et responsabilités"
             icon="school"
           />
@@ -96,7 +104,10 @@
               <div v-else-if="presenceError" class="error-state">
                 <i class="material-icons">error</i>
                 <p>{{ presenceError }}</p>
-                <button @click="loadPresenceData" class="edit-btn edit-btn-blue">
+                <button
+                  @click="loadPresenceData"
+                  class="edit-btn edit-btn-blue"
+                >
                   <i class="material-icons">refresh</i>
                   Réessayer
                 </button>
@@ -112,7 +123,7 @@
                     <div class="stat-label">Présents</div>
                   </div>
                 </div>
-                
+
                 <div class="stat-card absent">
                   <div class="stat-icon">
                     <i class="material-icons">cancel</i>
@@ -172,22 +183,34 @@
                   <i class="material-icons">child_care</i>
                 </div>
                 <h3>Aucun enfant référé</h3>
-                <p>Vous n'avez pas encore d'enfants sous votre responsabilité.</p>
+                <p>
+                  Vous n'avez pas encore d'enfants sous votre responsabilité.
+                </p>
               </div>
 
               <div v-else class="children-grid">
-                <div v-for="child in referentChildren" :key="child.id" class="child-card">
+                <div
+                  v-for="child in referentChildren"
+                  :key="child.id"
+                  class="child-card"
+                >
                   <div class="child-info">
                     <div class="child-avatar">
                       <i class="material-icons">child_care</i>
                     </div>
                     <div class="child-details">
                       <h3>{{ child.firstName }} {{ child.lastName }}</h3>
-                      <p class="child-age">{{ calculateAge(child.birthDate) }} ans</p>
+                      <p class="child-age">
+                        {{ calculateAge(child.birthDate) }} ans
+                      </p>
                     </div>
                   </div>
                   <div class="child-actions">
-                    <button @click="goToChildJournal(child.id)" class="edit-btn edit-btn-small" title="Journal de bord">
+                    <button
+                      @click="goToChildJournal(child.id)"
+                      class="edit-btn edit-btn-small"
+                      title="Journal de bord"
+                    >
                       <i class="material-icons">auto_stories</i>
                     </button>
                   </div>
@@ -197,7 +220,11 @@
           </section>
 
           <!-- Journaux mensuels manquants -->
-          <section v-if="missingJournals.length > 0" class="profile-section" id="missing-journals">
+          <section
+            v-if="missingJournals.length > 0"
+            class="profile-section"
+            id="missing-journals"
+          >
             <div class="section-header">
               <h2>
                 <i class="material-icons" aria-hidden="true">warning</i>
@@ -211,16 +238,32 @@
                     <i class="material-icons">assignment_late</i>
                   </div>
                   <div class="alert-content">
-                    <h3>{{ missingJournals.length }} journal{{ missingJournals.length > 1 ? 'x' : '' }} en attente</h3>
-                    <p>Les journaux mensuels suivants doivent être complétés pour le mois en cours</p>
+                    <h3>
+                      {{ missingJournals.length }} journal{{
+                        missingJournals.length > 1 ? "x" : ""
+                      }}
+                      en attente
+                    </h3>
+                    <p>
+                      Les journaux mensuels suivants doivent être complétés pour
+                      le mois en cours
+                    </p>
                   </div>
-                  <button class="dismiss-btn" @click="dismissAlert" title="Masquer cette alerte">
+                  <button
+                    class="dismiss-btn"
+                    @click="dismissAlert"
+                    title="Masquer cette alerte"
+                  >
                     <i class="material-icons">close</i>
                   </button>
                 </div>
-                
+
                 <div class="missing-journals-list">
-                  <div v-for="child in missingJournals" :key="child.id" class="missing-journal-item">
+                  <div
+                    v-for="child in missingJournals"
+                    :key="child.id"
+                    class="missing-journal-item"
+                  >
                     <div class="child-info">
                       <div class="child-avatar-small">
                         <i class="material-icons">child_care</i>
@@ -230,7 +273,10 @@
                         <p>Journal mensuel non soumis</p>
                       </div>
                     </div>
-                    <button @click="goToJournal(child.id)" class="edit-btn edit-btn-orange">
+                    <button
+                      @click="goToJournal(child.id)"
+                      class="edit-btn edit-btn-orange"
+                    >
                       <i class="material-icons">edit</i>
                       Compléter
                     </button>
@@ -240,7 +286,10 @@
                 <div class="alert-footer">
                   <div class="footer-info">
                     <i class="material-icons">schedule</i>
-                    <span>Vérification automatique le {{ alertDay }} de chaque mois</span>
+                    <span
+                      >Vérification automatique le {{ alertDay }} de chaque
+                      mois</span
+                    >
                   </div>
                 </div>
               </div>
@@ -257,17 +306,23 @@
     <div class="skip-links">
       <a href="#main-content" class="skip-link">Aller au contenu principal</a>
       <a href="#blog-stats" class="skip-link">Aller aux statistiques du blog</a>
-      <a href="#event-stats" class="skip-link">Aller aux statistiques des événements</a>
-      <a href="#presence-overview" class="skip-link">Aller au aperçu des présences</a>
-      <a href="#invite-parent" class="skip-link">Aller à l'invitation de parent</a>
+      <a href="#event-stats" class="skip-link"
+        >Aller aux statistiques des événements</a
+      >
+      <a href="#presence-overview" class="skip-link"
+        >Aller au aperçu des présences</a
+      >
+      <a href="#invite-parent" class="skip-link"
+        >Aller à l'invitation de parent</a
+      >
     </div>
 
     <main class="profile-container" role="main" lang="fr">
       <div class="profile-content" id="main-content">
         <div class="content-grid">
           <!-- Page Header -->
-          <PageHeader 
-            title="Tableau de bord directeur" 
+          <PageHeader
+            title="Tableau de bord directeur"
             subtitle="Vue d'ensemble de l'établissement et des activités"
             icon="account_balance"
           />
@@ -296,7 +351,7 @@
                     <div class="stat-label">Articles publiés</div>
                   </div>
                 </div>
-                
+
                 <div class="stat-card total-posts">
                   <div class="stat-icon">
                     <i class="material-icons">library_books</i>
@@ -341,13 +396,15 @@
                     <div class="stat-label">Événements à venir</div>
                   </div>
                 </div>
-                
+
                 <div class="stat-card registrations">
                   <div class="stat-icon">
                     <i class="material-icons">people</i>
                   </div>
                   <div class="stat-content">
-                    <div class="stat-value">{{ totalUpcomingRegistrations }}</div>
+                    <div class="stat-value">
+                      {{ totalUpcomingRegistrations }}
+                    </div>
                     <div class="stat-label">Inscriptions totales</div>
                   </div>
                 </div>
@@ -379,7 +436,10 @@
               <div v-else-if="presenceError" class="error-state">
                 <i class="material-icons">error</i>
                 <p>{{ presenceError }}</p>
-                <button @click="loadPresenceDataManagement" class="edit-btn edit-btn-blue">
+                <button
+                  @click="loadPresenceDataManagement"
+                  class="edit-btn edit-btn-blue"
+                >
                   <i class="material-icons">refresh</i>
                   Réessayer
                 </button>
@@ -395,7 +455,7 @@
                     <div class="stat-label">Présents</div>
                   </div>
                 </div>
-                
+
                 <div class="stat-card absent">
                   <div class="stat-icon">
                     <i class="material-icons">cancel</i>
@@ -418,7 +478,10 @@
               </div>
 
               <div class="action-buttons">
-                <button @click="goToPresenceReport" class="edit-btn edit-btn-blue">
+                <button
+                  @click="goToPresenceReport"
+                  class="edit-btn edit-btn-blue"
+                >
                   <i class="material-icons">assessment</i>
                   Voir les rapports
                 </button>
@@ -452,15 +515,20 @@
                     required
                   />
                   <div id="invite-help" class="form-help">
-                    Le parent recevra un lien d'invitation par e-mail pour créer son compte.
+                    Le parent recevra un lien d'invitation par e-mail pour créer
+                    son compte.
                   </div>
                 </div>
-                
+
                 <button
                   class="edit-btn edit-btn-blue"
                   @click="sendInvitation"
                   :disabled="inviteLoading || !inviteEmail.trim()"
-                  :aria-label="inviteLoading ? 'Envoi en cours...' : 'Envoyer l\'invitation'"
+                  :aria-label="
+                    inviteLoading
+                      ? 'Envoi en cours...'
+                      : 'Envoyer l\'invitation'
+                  "
                 >
                   <i class="material-icons">
                     {{ inviteLoading ? "hourglass_empty" : "send" }}
@@ -468,7 +536,7 @@
                   {{ inviteLoading ? "Envoi…" : "Envoyer l'invitation" }}
                 </button>
               </div>
-              
+
               <div
                 v-if="inviteMessage"
                 class="message"
@@ -489,22 +557,31 @@
   </div>
 
   <!-- Vue pour les chefs de service (SERVICE_MANAGER) : Dashboard de service -->
-  <div v-else-if="auth.user?.role === 'SERVICE_MANAGER'" class="profile-wrapper">
+  <div
+    v-else-if="auth.user?.role === 'SERVICE_MANAGER'"
+    class="profile-wrapper"
+  >
     <!-- Skip links pour navigation rapide -->
     <div class="skip-links">
       <a href="#main-content" class="skip-link">Aller au contenu principal</a>
       <a href="#blog-stats" class="skip-link">Aller aux statistiques du blog</a>
-      <a href="#event-stats" class="skip-link">Aller aux statistiques des événements</a>
-      <a href="#presence-overview" class="skip-link">Aller à l'aperçu des présences</a>
-      <a href="#invite-parent" class="skip-link">Aller à l'invitation de parent</a>
+      <a href="#event-stats" class="skip-link"
+        >Aller aux statistiques des événements</a
+      >
+      <a href="#presence-overview" class="skip-link"
+        >Aller à l'aperçu des présences</a
+      >
+      <a href="#invite-parent" class="skip-link"
+        >Aller à l'invitation de parent</a
+      >
     </div>
 
     <main class="profile-container" role="main" lang="fr">
       <div class="profile-content" id="main-content">
         <div class="content-grid">
           <!-- Page Header -->
-          <PageHeader 
-            title="Tableau de bord chef de service" 
+          <PageHeader
+            title="Tableau de bord chef de service"
             subtitle="Vue d'ensemble du service et des activités"
             icon="supervisor_account"
           />
@@ -533,7 +610,7 @@
                     <div class="stat-label">Articles publiés</div>
                   </div>
                 </div>
-                
+
                 <div class="stat-card total-posts">
                   <div class="stat-icon">
                     <i class="material-icons">library_books</i>
@@ -578,13 +655,15 @@
                     <div class="stat-label">Événements à venir</div>
                   </div>
                 </div>
-                
+
                 <div class="stat-card registrations">
                   <div class="stat-icon">
                     <i class="material-icons">people</i>
                   </div>
                   <div class="stat-content">
-                    <div class="stat-value">{{ totalUpcomingRegistrations }}</div>
+                    <div class="stat-value">
+                      {{ totalUpcomingRegistrations }}
+                    </div>
                     <div class="stat-label">Inscriptions totales</div>
                   </div>
                 </div>
@@ -616,7 +695,10 @@
               <div v-else-if="presenceError" class="error-state">
                 <i class="material-icons">error</i>
                 <p>{{ presenceError }}</p>
-                <button @click="loadPresenceDataManagement" class="edit-btn edit-btn-blue">
+                <button
+                  @click="loadPresenceDataManagement"
+                  class="edit-btn edit-btn-blue"
+                >
                   <i class="material-icons">refresh</i>
                   Réessayer
                 </button>
@@ -632,7 +714,7 @@
                     <div class="stat-label">Présents</div>
                   </div>
                 </div>
-                
+
                 <div class="stat-card absent">
                   <div class="stat-icon">
                     <i class="material-icons">cancel</i>
@@ -655,7 +737,10 @@
               </div>
 
               <div class="action-buttons">
-                <button @click="goToPresenceReport" class="edit-btn edit-btn-blue">
+                <button
+                  @click="goToPresenceReport"
+                  class="edit-btn edit-btn-blue"
+                >
                   <i class="material-icons">assessment</i>
                   Voir les rapports
                 </button>
@@ -689,15 +774,20 @@
                     required
                   />
                   <div id="invite-help-manager" class="form-help">
-                    Le parent recevra un lien d'invitation par e-mail pour créer son compte.
+                    Le parent recevra un lien d'invitation par e-mail pour créer
+                    son compte.
                   </div>
                 </div>
-                
+
                 <button
                   class="edit-btn edit-btn-blue"
                   @click="sendInvitation"
                   :disabled="inviteLoading || !inviteEmail.trim()"
-                  :aria-label="inviteLoading ? 'Envoi en cours...' : 'Envoyer l\'invitation'"
+                  :aria-label="
+                    inviteLoading
+                      ? 'Envoi en cours...'
+                      : 'Envoyer l\'invitation'
+                  "
                 >
                   <i class="material-icons">
                     {{ inviteLoading ? "hourglass_empty" : "send" }}
@@ -705,7 +795,7 @@
                   {{ inviteLoading ? "Envoi…" : "Envoyer l'invitation" }}
                 </button>
               </div>
-              
+
               <div
                 v-if="inviteMessage"
                 class="message"
@@ -731,15 +821,17 @@
     <div class="skip-links">
       <a href="#main-content" class="skip-link">Aller au contenu principal</a>
       <a href="#blog-stats" class="skip-link">Aller aux statistiques du blog</a>
-      <a href="#presence-overview" class="skip-link">Aller à l'aperçu des présences</a>
+      <a href="#presence-overview" class="skip-link"
+        >Aller à l'aperçu des présences</a
+      >
     </div>
 
     <main class="profile-container" role="main" lang="fr">
       <div class="profile-content" id="main-content">
         <div class="content-grid">
           <!-- Page Header -->
-          <PageHeader 
-            title="Tableau de bord secrétaire" 
+          <PageHeader
+            title="Tableau de bord secrétaire"
             subtitle="Vue d'ensemble des informations de l'établissement"
             icon="business_center"
           />
@@ -768,7 +860,7 @@
                     <div class="stat-label">Articles publiés</div>
                   </div>
                 </div>
-                
+
                 <div class="stat-card total-posts">
                   <div class="stat-icon">
                     <i class="material-icons">library_books</i>
@@ -806,7 +898,10 @@
               <div v-else-if="presenceError" class="error-state">
                 <i class="material-icons">error</i>
                 <p>{{ presenceError }}</p>
-                <button @click="loadPresenceDataManagement" class="edit-btn edit-btn-blue">
+                <button
+                  @click="loadPresenceDataManagement"
+                  class="edit-btn edit-btn-blue"
+                >
                   <i class="material-icons">refresh</i>
                   Réessayer
                 </button>
@@ -822,7 +917,7 @@
                     <div class="stat-label">Présents</div>
                   </div>
                 </div>
-                
+
                 <div class="stat-card absent">
                   <div class="stat-icon">
                     <i class="material-icons">cancel</i>
@@ -845,7 +940,10 @@
               </div>
 
               <div class="action-buttons">
-                <button @click="goToPresenceReport" class="edit-btn edit-btn-blue">
+                <button
+                  @click="goToPresenceReport"
+                  class="edit-btn edit-btn-blue"
+                >
                   <i class="material-icons">assessment</i>
                   Voir les rapports
                 </button>
@@ -865,10 +963,7 @@
         <h1 class="hero-title">
           <span class="wave">👋</span>
           Bienvenue,
-          {{
-            auth.user?.email?.split("@")[0] ||
-            "Utilisateur"
-          }}
+          {{ auth.user?.email?.split("@")[0] || "Utilisateur" }}
         </h1>
         <p class="hero-subtitle">
           Votre tableau de bord personnalisé vous attend
@@ -897,7 +992,6 @@
 
     <!-- Main Grid -->
     <div class="main-grid">
-
       <!-- Invitation Card -->
       <div v-if="canInvite" class="feature-card invitation-card">
         <div class="card-header">
@@ -990,6 +1084,7 @@ import { useToast } from "vue-toastification";
 import { useRouter, useRoute } from "vue-router";
 import BlogPost from "@/components/blog/BlogPost.vue";
 import PageHeader from "@/components/PageHeader.vue";
+import { API_BASE_URL } from "@/utils/api";
 
 /* ───── Stores & helpers ───── */
 const auth = useAuthStore();
@@ -1053,15 +1148,25 @@ const todayPresenceSheet = computed(() => {
 });
 
 const presentToday = computed(() => {
-  return todayPresenceSheet.value?.records?.filter((r: any) => r.status === 'present')?.length || 0;
+  return (
+    todayPresenceSheet.value?.records?.filter(
+      (r: any) => r.status === "present"
+    )?.length || 0
+  );
 });
 
 const absentToday = computed(() => {
-  return todayPresenceSheet.value?.records?.filter((r: any) => r.status === 'absent')?.length || 0;
+  return (
+    todayPresenceSheet.value?.records?.filter((r: any) => r.status === "absent")
+      ?.length || 0
+  );
 });
 
 const lateToday = computed(() => {
-  return todayPresenceSheet.value?.records?.filter((r: any) => r.status === 'late')?.length || 0;
+  return (
+    todayPresenceSheet.value?.records?.filter((r: any) => r.status === "late")
+      ?.length || 0
+  );
 });
 
 const totalChildren = computed(() => {
@@ -1072,7 +1177,7 @@ const totalChildren = computed(() => {
 const weeklyBlogPosts = computed(() => {
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-  
+
   return blogPosts.value.filter((post: any) => {
     const postDate = new Date(post.createdAt);
     return postDate >= oneWeekAgo;
@@ -1110,9 +1215,11 @@ const alertDay = ref<number>(25);
 
 /* ───── Computed ───── */
 const shouldShowJournalAlert = computed(() => {
-  return auth.user?.role === 'STAFF' && 
-         missingJournals.value.length > 0 && 
-         !alertDismissed.value;
+  return (
+    auth.user?.role === "STAFF" &&
+    missingJournals.value.length > 0 &&
+    !alertDismissed.value
+  );
 });
 
 /* ───── Actions UI ───── */
@@ -1160,17 +1267,17 @@ function goToJournal(childId: string) {
 
 // STAFF-specific functions
 async function loadPresenceData() {
-  if (auth.user?.role !== 'STAFF') return;
-  
+  if (auth.user?.role !== "STAFF") return;
+
   try {
     // Set today's date in the presence store
     const today = new Date().toISOString().substring(0, 10);
     presenceStore.date = today;
-    
+
     // Fetch today's presence sheet
     await presenceStore.fetchSheet();
   } catch (error) {
-    console.error('Error loading presence data:', error);
+    console.error("Error loading presence data:", error);
   }
 }
 
@@ -1180,11 +1287,11 @@ function calculateAge(birthDate: string): number {
   const today = new Date();
   let age = today.getFullYear() - birth.getFullYear();
   const monthDiff = today.getMonth() - birth.getMonth();
-  
+
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
     age--;
   }
-  
+
   return age;
 }
 
@@ -1199,50 +1306,52 @@ const loadHomeData = async () => {
   if (!auth.user) {
     return;
   }
-  
+
   try {
     // Charger la configuration d'alerte pour les éducateurs
-    if (auth.user?.role === 'STAFF') {
+    if (auth.user?.role === "STAFF") {
       loadAlertConfig();
-      
+
       // Charger les enfants référés
       await journalStore.fetchReferentChildren();
-      
+
       // Charger les données de présence du jour
       await loadPresenceData();
-      
+
       // Vérifier les journaux manquants lors du chargement
       await checkJournalAlerts();
     }
-    
+
     // Charger les données pour DIRECTOR et SERVICE_MANAGER
-    if (auth.user?.role === 'DIRECTOR' || auth.user?.role === 'SERVICE_MANAGER') {
+    if (
+      auth.user?.role === "DIRECTOR" ||
+      auth.user?.role === "SERVICE_MANAGER"
+    ) {
       // Charger les posts du blog
       await blogStore.fetchPosts();
-      
+
       // Charger les événements
       await eventStore.fetchEvents();
-      
+
       // Charger les données de présence du jour
       await loadPresenceData();
     }
-    
+
     // Charger les données pour SECRETARY
-    if (auth.user?.role === 'SECRETARY') {
+    if (auth.user?.role === "SECRETARY") {
       // Charger les posts du blog
       await blogStore.fetchPosts();
-      
+
       // Charger les données de présence du jour
       await loadPresenceData();
     }
-    
+
     // Charger les posts de blog pour PARENT/CHILD
     if (isParentOrChild.value) {
       await blogStore.fetchPosts();
     }
-    
   } catch (error) {
-    console.error('Home: Error loading home data:', error);
+    console.error("Home: Error loading home data:", error);
   }
 };
 
@@ -1263,9 +1372,7 @@ async function checkJournalAlerts() {
 
     // 4) Identifier les enfants avec des journaux déjà soumis
     const submittedIds = new Set(
-      journalStore.entries
-        .filter((e) => e.isSubmitted)
-        .map((e) => e.childId)
+      journalStore.entries.filter((e) => e.isSubmitted).map((e) => e.childId)
     );
 
     // 5) Identifier les enfants sans journal soumis
@@ -1299,7 +1406,7 @@ async function sendInvitation() {
   inviteLoading.value = true;
   try {
     const token: string = localStorage.getItem("token") || "";
-    const res = await fetch("http://localhost:3000/invitations", {
+    const res = await fetch(`${API_BASE_URL}/invitations`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1356,7 +1463,7 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-@import '@/assets/styles/profile-common.scss';
+@import "@/assets/styles/profile-common.scss";
 
 /* Variables CSS pour cohérence avec les autres pages */
 :root {
@@ -1373,7 +1480,8 @@ onMounted(async () => {
   --border-color: #e5e7eb;
   --background-light: #f9fafb;
   --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  --card-shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --card-shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* Skip links pour PARENT/CHILD */
@@ -1406,7 +1514,8 @@ onMounted(async () => {
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   padding: 2rem 0;
-  font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: "Satoshi", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    system-ui, sans-serif;
 }
 
 .profile-content {
@@ -1459,7 +1568,8 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: "Satoshi", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
 }
 
 .profile-section .section-header h2 i {
@@ -1481,7 +1591,8 @@ onMounted(async () => {
   padding-bottom: 1rem;
   border-bottom: 2px solid var(--background-light);
 
-  h1, h2 {
+  h1,
+  h2 {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -1513,7 +1624,7 @@ onMounted(async () => {
     gap: 1rem;
     align-items: flex-start;
   }
-  
+
   .profile-section .section-header h2 {
     font-size: 1.25rem;
   }
@@ -1593,7 +1704,7 @@ onMounted(async () => {
   text-decoration: none;
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(68, 68, 172, 0.2);
-  font-family: 'Satoshi', sans-serif;
+  font-family: "Satoshi", sans-serif;
   justify-content: center;
 
   &:hover {
@@ -1626,8 +1737,12 @@ onMounted(async () => {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* État d'erreur */
@@ -1665,7 +1780,11 @@ onMounted(async () => {
   .empty-icon {
     width: 4rem;
     height: 4rem;
-    background: linear-gradient(135deg, var(--background-light) 0%, #e5e7eb 100%);
+    background: linear-gradient(
+      135deg,
+      var(--background-light) 0%,
+      #e5e7eb 100%
+    );
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -2031,7 +2150,8 @@ onMounted(async () => {
     margin-bottom: 1.5rem;
     padding-bottom: 0.75rem;
 
-    h1, h2 {
+    h1,
+    h2 {
       font-size: 1.5rem;
       gap: 0.5rem;
 
@@ -2518,11 +2638,11 @@ onMounted(async () => {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .action-buttons {
     flex-direction: column;
   }
-  
+
   .invitation-form {
     padding: 1.5rem;
   }

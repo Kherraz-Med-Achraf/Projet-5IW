@@ -8,11 +8,19 @@ import rateLimit from 'express-rate-limit';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
+import { FRONTEND_BASE_URL } from './utils/frontend-url';
 
 async function bootstrap() {
   // On précise que l'app est de type NestExpressApplication
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Définition dynamique des origines autorisées (CORS & CSP)
+  const allowedOrigins = [
+    'http://localhost:3000', // API locale (requêtes directes ou pré-visualisations)
+    'http://api.educareschool.me',
+    FRONTEND_BASE_URL, // Frontend dynamique (local ou prod)
+    FRONTEND_BASE_URL.replace('http://', 'https://'), // Variante HTTPS en production
+  ];
   // Configuration des headers de sécurité avec Helmet (CSP stricte)
   app.use(
     helmet({
@@ -25,20 +33,14 @@ async function bootstrap() {
             'https://fonts.googleapis.com',
           ],
           fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-          imgSrc: [
-            "'self'",
-            'data:',
-            'http://localhost:3000',
-            'http://localhost:5173',
-            'http://localhost:5174',
-            'http://localhost:5175',
-            'http://localhost:5176',
-            'http://localhost:5177',
-            'http://localhost:5178',
-          ],
+          imgSrc: ["'self'", 'data:', ...allowedOrigins],
           scriptSrc: ["'self'"],
           objectSrc: ["'none'"],
-          mediaSrc: ["'self'", 'http://localhost:3000'],
+          mediaSrc: [
+            "'self'",
+            'http://localhost:3000',
+            'http://api.educareschool.me',
+          ],
           frameSrc: ["'none'"],
         },
       },
@@ -60,18 +62,17 @@ async function bootstrap() {
     }),
   );
 
-  // CORS autorisé depuis le front (http://localhost:5173-5178)
+  // CORS autorisé depuis le front
   app.enableCors({
-    origin: [
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'http://localhost:5175',
-      'http://localhost:5176',
-      'http://localhost:5177',
-      'http://localhost:5178',
-    ],
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With', 'Origin'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-CSRF-Token',
+      'X-Requested-With',
+      'Origin',
+    ],
     credentials: true,
     optionsSuccessStatus: 200, // Pour les navigateurs anciens
   });
@@ -135,7 +136,8 @@ async function bootstrap() {
     rateLimit({
       windowMs: 60_000, // 1 minute
       max: 20, // 20 requêtes/min pour les opérations normales
-      message: 'Trop de requêtes sur le planning, merci de réessayer plus tard.',
+      message:
+        'Trop de requêtes sur le planning, merci de réessayer plus tard.',
     }),
   );
 
@@ -145,7 +147,7 @@ async function bootstrap() {
     rateLimit({
       windowMs: 60_000, // 1 minute
       max: 2, // 2 requêtes/min pour les imports
-      message: 'Trop d\'imports Excel, merci de réessayer dans 1 minute.',
+      message: "Trop d'imports Excel, merci de réessayer dans 1 minute.",
     }),
   );
 
@@ -154,7 +156,7 @@ async function bootstrap() {
     rateLimit({
       windowMs: 60_000, // 1 minute
       max: 2, // 2 requêtes/min pour les imports
-      message: 'Trop d\'imports Excel, merci de réessayer dans 1 minute.',
+      message: "Trop d'imports Excel, merci de réessayer dans 1 minute.",
     }),
   );
 

@@ -2,8 +2,9 @@
  * Configuration centralisée des API endpoints
  */
 
-// URL de base de l'API
-export const API_BASE_URL = import.meta.env.VITE_NEST_API_URL || 'http://localhost:3000';
+// URL de base de l'API (source unique)
+import { API_BASE_URL as UTIL_API_BASE_URL } from "@/utils/api";
+export const API_BASE_URL = UTIL_API_BASE_URL;
 
 // Configuration des timeouts
 export const API_CONFIG = {
@@ -54,14 +55,14 @@ export const API_ENDPOINTS = {
 
 // Configuration des headers par défaut
 export const DEFAULT_HEADERS = {
-  'Content-Type': 'application/json',
-  'X-Requested-With': 'XMLHttpRequest',
-  'X-Content-Type-Options': 'nosniff',
+  "Content-Type": "application/json",
+  "X-Requested-With": "XMLHttpRequest",
+  "X-Content-Type-Options": "nosniff",
 } as const;
 
 // Configuration des cookies
 export const COOKIE_CONFIG = {
-  sameSite: 'strict' as const,
+  sameSite: "strict" as const,
   secure: import.meta.env.PROD,
   maxAge: 2 * 24 * 60 * 60, // 2 jours
 } as const;
@@ -70,4 +71,4 @@ export const COOKIE_CONFIG = {
 export const DEV_CONFIG = {
   enableLogs: import.meta.env.DEV,
   enableVerboseLogs: false, // Désactivé par défaut même en dev
-} as const; 
+} as const;

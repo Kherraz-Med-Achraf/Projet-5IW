@@ -423,6 +423,7 @@ import { usePresenceStore } from '@/stores/presenceStore'
 import { useNotificationStore } from '@/stores/notificationStore'
 import JustifyModal from '@/components/presence/JustifyModal.vue'
 import PageHeader from '@/components/PageHeader.vue'
+import { API_BASE_URL } from '@/utils/api'
 
 const store = usePresenceStore()
 const notify = useNotificationStore()
@@ -577,7 +578,7 @@ function fileUrl(path: string) {
   // Extraire le nom du fichier du chemin
   const filename = path.split('/').pop() || path
   // Utiliser la route protégée pour les justifications
-  return `http://localhost:3000/presences/justifications/${filename}`
+  return `${API_BASE_URL}/presences/justifications/${filename}`
 }
 
 // Fonctions pour gérer les fichiers avec authentification
@@ -589,7 +590,7 @@ async function openFile(path: string) {
 
   try {
     const filename = path.split('/').pop() || path
-    const url = `http://localhost:3000/presences/justifications/${filename}`
+    const url = `${API_BASE_URL}/presences/justifications/${filename}`
     
     const response = await fetch(url, {
       headers: {
@@ -622,7 +623,7 @@ async function downloadFile(path: string, suggestedName: string) {
 
   try {
     const filename = path.split('/').pop() || path
-    const url = `http://localhost:3000/presences/justifications/${filename}`
+    const url = `${API_BASE_URL}/presences/justifications/${filename}`
     
     const response = await fetch(url, {
       headers: {

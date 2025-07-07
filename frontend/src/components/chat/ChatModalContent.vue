@@ -185,13 +185,13 @@ import { useChatStore } from "@/stores/chatStore";
 import type { ChatMessage } from "@/stores/chatStore";
 import { useAuthStore } from "@/stores/auth";
 import { initials, colorFromId } from "@/utils/avatar";
-import { secureJsonCall } from "@/utils/api";
+import { secureJsonCall, API_BASE_URL } from "@/utils/api";
 
 const chatStore = useChatStore();
 const auth = useAuthStore();
 
 // URL racine de l'API Nest
-const API_BASE = import.meta.env.VITE_NEST_API_URL ?? "http://localhost:3000";
+const API_BASE = API_BASE_URL;
 
 const userId = auth.user?.id || "";
 const currentChatId = ref<string | null>(null);

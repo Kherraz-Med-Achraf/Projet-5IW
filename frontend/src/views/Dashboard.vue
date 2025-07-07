@@ -7,13 +7,23 @@
 
   <div class="dashboard">
     <!-- Menu latéral -->
-    <aside :class="['sidebar', { collapsed: sidebarCollapsed }]" role="complementary" aria-label="Menu de navigation du tableau de bord">
+    <aside
+      :class="['sidebar', { collapsed: sidebarCollapsed }]"
+      role="complementary"
+      aria-label="Menu de navigation du tableau de bord"
+    >
       <div class="sidebar-header">
-        <h1 v-if="!sidebarCollapsed" class="logo" id="dashboard-title">APAJH</h1>
-        <button 
-          @click="toggleSidebar" 
+        <h1 v-if="!sidebarCollapsed" class="logo" id="dashboard-title">
+          APAJH
+        </h1>
+        <button
+          @click="toggleSidebar"
           class="toggle-btn"
-          :aria-label="sidebarCollapsed ? 'Développer la barre de navigation' : 'Réduire la barre de navigation'"
+          :aria-label="
+            sidebarCollapsed
+              ? 'Développer la barre de navigation'
+              : 'Réduire la barre de navigation'
+          "
           :aria-expanded="!sidebarCollapsed"
           :aria-controls="'sidebar-navigation'"
           type="button"
@@ -33,12 +43,17 @@
         </button>
       </div>
 
-      <nav class="sidebar-nav" role="navigation" aria-label="Menu principal du tableau de bord" id="sidebar-navigation">
+      <nav
+        class="sidebar-nav"
+        role="navigation"
+        aria-label="Menu principal du tableau de bord"
+        id="sidebar-navigation"
+      >
         <ul role="list">
           <!-- Lien retour vers Home -->
           <li class="nav-back-home" role="listitem">
-            <button 
-              @click="goToHome" 
+            <button
+              @click="goToHome"
               class="nav-item nav-button"
               type="button"
               aria-label="Retourner à la page d'accueil principale"
@@ -53,20 +68,27 @@
           </li>
 
           <!-- Séparateur -->
-          <li class="nav-separator" v-if="!sidebarCollapsed" role="separator" aria-hidden="true"></li>
+          <li
+            class="nav-separator"
+            v-if="!sidebarCollapsed"
+            role="separator"
+            aria-hidden="true"
+          ></li>
 
           <!-- Menu items existants -->
-          <li
-            v-for="item in menuItems"
-            :key="item.name"
-            role="listitem"
-          >
+          <li v-for="item in menuItems" :key="item.name" role="listitem">
             <button
               @click="setActiveMenu(item.name)"
               @keydown="handleMenuKeydown($event, item.name)"
-              :class="['nav-item', 'nav-button', { active: activeMenu === item.name }]"
+              :class="[
+                'nav-item',
+                'nav-button',
+                { active: activeMenu === item.name },
+              ]"
               :aria-current="activeMenu === item.name ? 'page' : false"
-              :aria-label="`${item.label}${activeMenu === item.name ? ' - section actuelle' : ''}`"
+              :aria-label="`${item.label}${
+                activeMenu === item.name ? ' - section actuelle' : ''
+              }`"
               :tabindex="activeMenu === item.name ? 0 : -1"
               type="button"
             >
@@ -106,6 +128,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
 import { useToast } from "vue-toastification";
+import { API_BASE_URL } from "@/utils/api";
 
 import DashboardHome from "@/components/dashboard/DashboardHome.vue";
 import DashboardChild from "@/components/dashboard/DashboardChild.vue";
@@ -185,17 +208,12 @@ async function verifyToken(): Promise<boolean> {
       return false;
     }
 
-    const response = await fetch(
-      `${
-        import.meta.env.VITE_NEST_API_URL || "http://localhost:3000"
-      }/auth/verify-token`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${auth.token}`,
-        },
-      }
-    );
+    const response = await fetch(`${API_BASE_URL}/auth/verify-token`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${auth.token}`,
+      },
+    });
 
     return response.ok;
   } catch (error) {
@@ -224,44 +242,46 @@ async function setActiveMenu(menuName: string) {
 
 // Navigation au clavier pour le menu
 function handleMenuKeydown(event: KeyboardEvent, menuName: string) {
-  const currentIndex = menuItems.findIndex(item => item.name === menuName)
-  let nextIndex = currentIndex
+  const currentIndex = menuItems.findIndex((item) => item.name === menuName);
+  let nextIndex = currentIndex;
 
-  switch(event.key) {
-    case 'ArrowUp':
-      event.preventDefault()
-      nextIndex = currentIndex > 0 ? currentIndex - 1 : menuItems.length - 1
-      break
-    case 'ArrowDown':
-      event.preventDefault()
-      nextIndex = currentIndex < menuItems.length - 1 ? currentIndex + 1 : 0
-      break
-    case 'Home':
-      event.preventDefault()
-      nextIndex = 0
-      break
-    case 'End':
-      event.preventDefault()
-      nextIndex = menuItems.length - 1
-      break
-    case 'Enter':
-    case ' ':
-      event.preventDefault()
-      setActiveMenu(menuName)
-      return
+  switch (event.key) {
+    case "ArrowUp":
+      event.preventDefault();
+      nextIndex = currentIndex > 0 ? currentIndex - 1 : menuItems.length - 1;
+      break;
+    case "ArrowDown":
+      event.preventDefault();
+      nextIndex = currentIndex < menuItems.length - 1 ? currentIndex + 1 : 0;
+      break;
+    case "Home":
+      event.preventDefault();
+      nextIndex = 0;
+      break;
+    case "End":
+      event.preventDefault();
+      nextIndex = menuItems.length - 1;
+      break;
+    case "Enter":
+    case " ":
+      event.preventDefault();
+      setActiveMenu(menuName);
+      return;
     default:
-      return
+      return;
   }
-  
-  const nextItem = menuItems[nextIndex]
+
+  const nextItem = menuItems[nextIndex];
   if (nextItem) {
     // Focus sur le prochain élément
     setTimeout(() => {
-      const nextElement = document.querySelector(`[aria-label*="${nextItem.label}"]`) as HTMLElement
+      const nextElement = document.querySelector(
+        `[aria-label*="${nextItem.label}"]`
+      ) as HTMLElement;
       if (nextElement) {
-        nextElement.focus()
+        nextElement.focus();
       }
-    }, 0)
+    }, 0);
   }
 }
 
@@ -312,7 +332,8 @@ onUnmounted(() => {
   text-decoration: none;
   border-radius: 0.5rem;
   font-weight: 600;
-  font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: "Satoshi", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
   transition: top 0.2s ease;
 
   &:focus {

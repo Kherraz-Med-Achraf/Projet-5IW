@@ -15,12 +15,16 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Types } from 'mongoose';
 import { UseGuards } from '@nestjs/common';
 import { WsThrottlerGuard } from '../common/guards/ws-throttler.guard';
+import { FRONTEND_BASE_URL } from '../utils/frontend-url';
 
 @UseGuards(WsThrottlerGuard)
 @WebSocketGateway({
   namespace: '/chat',
   cors: {
-    origin: process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173',
+    origin: [
+      process.env.FRONTEND_ORIGIN || FRONTEND_BASE_URL,
+      FRONTEND_BASE_URL.replace('http://', 'https://'),
+    ],
     credentials: true,
   },
 })
@@ -32,13 +36,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private readonly MAX_ROOMS_PER_USER = 10; // Réduit de 500 à 10
   private readonly MAX_CONNECTIONS_PER_USER = 3; // Nouveau: limite de connexions simultanées
   private readonly userConnections = new Map<string, Set<string>>(); // Track connections par user
-  
+
   // Métriques de sécurité
-  private readonly suspiciousActivity = new Map<string, {
-    failedAttempts: number;
-    lastAttempt: Date;
-    blocked: boolean;
-  }>();
+  private readonly suspiciousActivity = new Map<
+    string,
+    {
+      failedAttempts: number;
+      lastAttempt: Date;
+      blocked: boolean;
+    }
+  >();
 
   constructor(
     private readonly jwtService: JwtService,
@@ -49,9 +56,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleConnection(@ConnectedSocket() socket: Socket) {
     const token = socket.handshake.auth?.token;
     const clientIp = socket.handshake.address;
-    
+
     if (!token) {
-      console.warn(`[SECURITY] Tentative de connexion sans token depuis ${clientIp}`);
+      console.warn(
+        `[SECURITY] Tentative de connexion sans token depuis ${clientIp}`,
+      );
       return socket.disconnect();
     }
 
@@ -66,7 +75,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
 
       if (!user) {
-        console.warn(`[SECURITY] Tentative de connexion avec token invalide (user inexistant) depuis ${clientIp}`);
+        console.warn(
+          `[SECURITY] Tentative de connexion avec token invalide (user inexistant) depuis ${clientIp}`,
+        );
         this.recordSuspiciousActivity(clientIp, 'INVALID_USER');
         return socket.disconnect();
       }
@@ -76,14 +87,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         user.passwordChangedAt &&
         payload.iat * 1000 < new Date(user.passwordChangedAt).getTime()
       ) {
-        console.warn(`[SECURITY] Tentative de connexion avec token expiré (password changed) pour user ${userId} depuis ${clientIp}`);
+        console.warn(
+          `[SECURITY] Tentative de connexion avec token expiré (password changed) pour user ${userId} depuis ${clientIp}`,
+        );
         this.recordSuspiciousActivity(clientIp, 'EXPIRED_TOKEN');
         return socket.disconnect();
       }
 
       // Vérifier si l'activité suspecte est bloquée
       if (this.isSuspiciousActivityBlocked(clientIp)) {
-        console.warn(`[SECURITY] Connexion bloquée pour activité suspecte depuis ${clientIp}`);
+        console.warn(
+          `[SECURITY] Connexion bloquée pour activité suspecte depuis ${clientIp}`,
+        );
         return socket.disconnect();
       }
 
@@ -91,10 +106,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (!this.userConnections.has(userId)) {
         this.userConnections.set(userId, new Set());
       }
-      
+
       const userSockets = this.userConnections.get(userId)!;
       if (userSockets.size >= this.MAX_CONNECTIONS_PER_USER) {
-        console.warn(`[SECURITY] Trop de connexions simultanées pour user ${userId} depuis ${clientIp}`);
+        console.warn(
+          `[SECURITY] Trop de connexions simultanées pour user ${userId} depuis ${clientIp}`,
+        );
         this.recordSuspiciousActivity(clientIp, 'TOO_MANY_CONNECTIONS');
         return socket.disconnect();
       }
@@ -112,10 +129,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // Room personnelle (pour recevoir newChat, etc.)
       socket.join(user.id);
-      
-      console.log(`[INFO] Connexion WebSocket établie pour user ${userId} (${userSockets.size}/${this.MAX_CONNECTIONS_PER_USER} connexions)`);
+
+      console.log(
+        `[INFO] Connexion WebSocket établie pour user ${userId} (${userSockets.size}/${this.MAX_CONNECTIONS_PER_USER} connexions)`,
+      );
     } catch (error) {
-      console.error(`[SECURITY] Erreur lors de la connexion WebSocket depuis ${clientIp}:`, error.message);
+      console.error(
+        `[SECURITY] Erreur lors de la connexion WebSocket depuis ${clientIp}:`,
+        error.message,
+      );
       this.recordSuspiciousActivity(clientIp, 'JWT_ERROR');
       return socket.disconnect();
     }
@@ -125,22 +147,27 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const activity = this.suspiciousActivity.get(clientIp) || {
       failedAttempts: 0,
       lastAttempt: new Date(),
-      blocked: false
+      blocked: false,
     };
 
     activity.failedAttempts++;
     activity.lastAttempt = new Date();
-    
+
     // Bloquer après 5 tentatives suspectes en 10 minutes
     if (activity.failedAttempts >= 5) {
       activity.blocked = true;
-      console.error(`[SECURITY] IP ${clientIp} bloquée pour activité suspecte (raison: ${reason})`);
-      
+      console.error(
+        `[SECURITY] IP ${clientIp} bloquée pour activité suspecte (raison: ${reason})`,
+      );
+
       // Débloquer automatiquement après 30 minutes
-      setTimeout(() => {
-        this.suspiciousActivity.delete(clientIp);
-        console.log(`[SECURITY] IP ${clientIp} débloquée automatiquement`);
-      }, 30 * 60 * 1000);
+      setTimeout(
+        () => {
+          this.suspiciousActivity.delete(clientIp);
+          console.log(`[SECURITY] IP ${clientIp} débloquée automatiquement`);
+        },
+        30 * 60 * 1000,
+      );
     }
 
     this.suspiciousActivity.set(clientIp, activity);
@@ -149,25 +176,28 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private isSuspiciousActivityBlocked(clientIp: string): boolean {
     const activity = this.suspiciousActivity.get(clientIp);
     if (!activity) return false;
-    
+
     // Si bloqué et moins de 30 minutes se sont écoulées
-    if (activity.blocked && (Date.now() - activity.lastAttempt.getTime()) < 30 * 60 * 1000) {
+    if (
+      activity.blocked &&
+      Date.now() - activity.lastAttempt.getTime() < 30 * 60 * 1000
+    ) {
       return true;
     }
-    
+
     // Reset si plus de 10 minutes se sont écoulées
-    if ((Date.now() - activity.lastAttempt.getTime()) > 10 * 60 * 1000) {
+    if (Date.now() - activity.lastAttempt.getTime() > 10 * 60 * 1000) {
       this.suspiciousActivity.delete(clientIp);
       return false;
     }
-    
+
     return false;
   }
 
   handleDisconnect(@ConnectedSocket() socket: Socket) {
     const userId = socket?.data?.user?.id;
     const clientIp = socket?.data?.clientIp;
-    
+
     if (!userId) return;
 
     // Supprimer de la liste des connexions
@@ -185,8 +215,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     ).length;
     const current = this.userRoomCount.get(userId) ?? 0;
     this.userRoomCount.set(userId, Math.max(current - roomsLeft, 0));
-    
-    console.log(`[INFO] Déconnexion WebSocket pour user ${userId} depuis ${clientIp}`);
+
+    console.log(
+      `[INFO] Déconnexion WebSocket pour user ${userId} depuis ${clientIp}`,
+    );
   }
 
   @Throttle({ join: { limit: 10, ttl: 60 } })
@@ -194,25 +226,33 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async onJoin(@ConnectedSocket() s: Socket, @MessageBody() chatId: string) {
     // Validation ObjectId
     if (!Types.ObjectId.isValid(chatId)) {
-      console.warn(`[SECURITY] Tentative de join avec chatId invalide: ${chatId} par user ${s.data.user?.id}`);
+      console.warn(
+        `[SECURITY] Tentative de join avec chatId invalide: ${chatId} par user ${s.data.user?.id}`,
+      );
       return;
     }
-    
+
     const userId = s.data.user.id;
 
     // Limite réduite par utilisateur
     const current = this.userRoomCount.get(userId) ?? 0;
     if (current >= this.MAX_ROOMS_PER_USER) {
-      console.warn(`[SECURITY] User ${userId} a atteint la limite de ${this.MAX_ROOMS_PER_USER} rooms`);
+      console.warn(
+        `[SECURITY] User ${userId} a atteint la limite de ${this.MAX_ROOMS_PER_USER} rooms`,
+      );
       return;
     }
 
     if (await this.chatService.canAccessChat(userId, chatId)) {
       s.join(chatId);
       this.userRoomCount.set(userId, current + 1);
-      console.log(`[INFO] User ${userId} a rejoint chat ${chatId} (${current + 1}/${this.MAX_ROOMS_PER_USER} rooms)`);
+      console.log(
+        `[INFO] User ${userId} a rejoint chat ${chatId} (${current + 1}/${this.MAX_ROOMS_PER_USER} rooms)`,
+      );
     } else {
-      console.warn(`[SECURITY] User ${userId} tentative d'accès non autorisé au chat ${chatId}`);
+      console.warn(
+        `[SECURITY] User ${userId} tentative d'accès non autorisé au chat ${chatId}`,
+      );
     }
   }
 
@@ -223,28 +263,38 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { chatId, content }: { chatId: string; content: string },
   ) {
     if (!Types.ObjectId.isValid(chatId)) {
-      console.warn(`[SECURITY] Tentative de sendMessage avec chatId invalide: ${chatId} par user ${s.data.user?.id}`);
+      console.warn(
+        `[SECURITY] Tentative de sendMessage avec chatId invalide: ${chatId} par user ${s.data.user?.id}`,
+      );
       return;
     }
-    
+
     // Validation supplémentaire du contenu
-    if (!content || typeof content !== 'string' || content.trim().length === 0) {
-      console.warn(`[SECURITY] Tentative d'envoi de message vide par user ${s.data.user?.id}`);
+    if (
+      !content ||
+      typeof content !== 'string' ||
+      content.trim().length === 0
+    ) {
+      console.warn(
+        `[SECURITY] Tentative d'envoi de message vide par user ${s.data.user?.id}`,
+      );
       return;
     }
-    
+
     if (content.length > 1000) {
-      console.warn(`[SECURITY] Tentative d'envoi de message trop long (${content.length} chars) par user ${s.data.user?.id}`);
+      console.warn(
+        `[SECURITY] Tentative d'envoi de message trop long (${content.length} chars) par user ${s.data.user?.id}`,
+      );
       return;
     }
-    
+
     try {
       const msg = await this.chatService.createMessage(
         chatId,
         s.data.user.id,
         content,
       );
-      
+
       this.server.to(chatId).emit('newMessage', {
         chatId,
         msgId: msg.id,
@@ -278,7 +328,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         });
       }
     } catch (error) {
-      console.error(`[ERROR] Erreur lors de l'envoi du message par user ${s.data.user?.id}:`, error.message);
+      console.error(
+        `[ERROR] Erreur lors de l'envoi du message par user ${s.data.user?.id}:`,
+        error.message,
+      );
     }
   }
 
@@ -294,10 +347,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }: { chatId: string; msgId: string; content: string },
   ) {
     if (!Types.ObjectId.isValid(chatId) || !Types.ObjectId.isValid(msgId)) {
-      console.warn(`[SECURITY] Tentative de editMessage avec IDs invalides par user ${s.data.user?.id}`);
+      console.warn(
+        `[SECURITY] Tentative de editMessage avec IDs invalides par user ${s.data.user?.id}`,
+      );
       return;
     }
-    
+
     try {
       const msg = await this.chatService.updateMessage(
         chatId,
@@ -305,7 +360,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         s.data.user.id,
         content,
       );
-      
+
       this.server.to(chatId).emit('messageUpdated', {
         chatId,
         msgId: msg.id,
@@ -313,7 +368,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         editedAt: (msg as any).editedAt,
       });
     } catch (error) {
-      console.error(`[ERROR] Erreur lors de l'édition du message par user ${s.data.user?.id}:`, error.message);
+      console.error(
+        `[ERROR] Erreur lors de l'édition du message par user ${s.data.user?.id}:`,
+        error.message,
+      );
     }
   }
 
@@ -324,15 +382,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() { chatId, msgId }: { chatId: string; msgId: string },
   ) {
     if (!Types.ObjectId.isValid(chatId) || !Types.ObjectId.isValid(msgId)) {
-      console.warn(`[SECURITY] Tentative de deleteMessage avec IDs invalides par user ${s.data.user?.id}`);
+      console.warn(
+        `[SECURITY] Tentative de deleteMessage avec IDs invalides par user ${s.data.user?.id}`,
+      );
       return;
     }
-    
+
     try {
       await this.chatService.deleteMessage(chatId, msgId, s.data.user.id);
       this.server.to(chatId).emit('messageDeleted', { chatId, msgId });
     } catch (error) {
-      console.error(`[ERROR] Erreur lors de la suppression du message par user ${s.data.user?.id}:`, error.message);
+      console.error(
+        `[ERROR] Erreur lors de la suppression du message par user ${s.data.user?.id}:`,
+        error.message,
+      );
     }
   }
 }

@@ -11,7 +11,7 @@
           <time class="post-date">{{ formattedDate }}</time>
         </div>
       </div>
-      
+
       <!-- Bouton supprimer pour les utilisateurs autorisés -->
       <button
         v-if="canDelete"
@@ -33,8 +33,8 @@
     <div class="post-content">
       <h3 class="post-title" v-text="post.title"></h3>
       <p class="post-description" v-text="post.description"></p>
-      
-            <!-- Média (image ou vidéo) -->
+
+      <!-- Média (image ou vidéo) -->
       <div v-if="post.mediaUrl" class="post-media">
         <img
           v-if="post.mediaType === 'IMAGE'"
@@ -60,27 +60,29 @@
 
     <!-- Réactions -->
     <div class="reactions" role="group" aria-label="Réactions au post">
-      <button 
-        v-for="(reaction, key) in reactions" 
+      <button
+        v-for="(reaction, key) in reactions"
         :key="key"
-        :aria-label="`${reaction.label} - ${post.reactions[key]} réactions${post.userReaction === key ? ' (votre réaction)' : ''}`"
+        :aria-label="`${reaction.label} - ${post.reactions[key]} réactions${
+          post.userReaction === key ? ' (votre réaction)' : ''
+        }`"
         :class="['reaction-btn', { active: post.userReaction === key }]"
         @click="toggleReaction(key)"
         @keydown.enter="toggleReaction(key)"
         @keydown.space="toggleReaction(key)"
       >
-        <span class="reaction-emoji" aria-hidden="true">{{ reaction.emoji }}</span>
+        <span class="reaction-emoji" aria-hidden="true">{{
+          reaction.emoji
+        }}</span>
         <span class="reaction-label">{{ reaction.label }}</span>
         <span class="reaction-count">{{ post.reactions[key] }}</span>
       </button>
     </div>
 
-
-
     <!-- Modal pour l'image en grand -->
-    <div 
-      v-if="showImageModal" 
-      class="image-modal" 
+    <div
+      v-if="showImageModal"
+      class="image-modal"
       @click="closeImageModal"
       @keydown.escape="closeImageModal"
       role="dialog"
@@ -89,14 +91,14 @@
       tabindex="-1"
     >
       <div class="modal-content" @click.stop>
-        <img 
-          :src="fullMediaUrl" 
-          alt="Image agrandie de l'article" 
-          class="modal-image" 
+        <img
+          :src="fullMediaUrl"
+          alt="Image agrandie de l'article"
+          class="modal-image"
         />
-        <button 
-          type="button" 
-          @click.prevent="closeImageModal" 
+        <button
+          type="button"
+          @click.prevent="closeImageModal"
           class="close-modal"
           aria-label="Fermer la vue agrandie"
           title="Fermer (Échap)"
@@ -107,9 +109,9 @@
     </div>
 
     <!-- Modal de confirmation de suppression -->
-    <div 
-      v-if="showDeleteModal" 
-      class="delete-modal" 
+    <div
+      v-if="showDeleteModal"
+      class="delete-modal"
       @click="cancelDelete"
       @keydown.escape="cancelDelete"
       role="dialog"
@@ -125,23 +127,25 @@
         </div>
         <div class="delete-modal-body">
           <p id="delete-modal-description">
-            Êtes-vous sûr de vouloir supprimer définitivement le post "<strong>{{ post.title }}</strong>" ?
+            Êtes-vous sûr de vouloir supprimer définitivement le post "<strong
+              >{{ post.title }}</strong
+            >" ?
           </p>
           <p class="delete-warning">Cette action est irréversible.</p>
         </div>
         <div class="delete-modal-actions">
-          <button 
-            type="button" 
-            @click="cancelDelete" 
+          <button
+            type="button"
+            @click="cancelDelete"
             class="btn-cancel"
             aria-label="Annuler la suppression"
           >
             <i class="material-icons" aria-hidden="true">close</i>
             Annuler
           </button>
-          <button 
-            type="button" 
-            @click="confirmDelete" 
+          <button
+            type="button"
+            @click="confirmDelete"
             class="btn-delete-confirm"
             aria-label="Confirmer la suppression définitive"
           >
@@ -155,142 +159,145 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useBlogStore } from '@/stores/blogStore'
-import { ReactionType } from '@/types/blog'
+import { computed, ref } from "vue";
+import { useAuthStore } from "@/stores/auth";
+import { useBlogStore } from "@/stores/blogStore";
+import { ReactionType } from "@/types/blog";
+import { API_BASE_URL } from "@/utils/api";
 
 // Props
 interface Props {
   post: {
-    id: string
-    title: string
-    description: string
-    mediaUrl?: string
-    mediaType?: 'IMAGE' | 'VIDEO'
-    createdAt: string
+    id: string;
+    title: string;
+    description: string;
+    mediaUrl?: string;
+    mediaType?: "IMAGE" | "VIDEO";
+    createdAt: string;
     author: {
-      id: string
-      firstName: string
-      lastName: string
-    }
+      id: string;
+      firstName: string;
+      lastName: string;
+    };
     reactions: {
-      LIKE: number
-      HEART: number
-      SMILE: number
-      CLAP: number
-      PARTY: number
-    }
-    userReaction?: ReactionType
-  }
+      LIKE: number;
+      HEART: number;
+      SMILE: number;
+      CLAP: number;
+      PARTY: number;
+    };
+    userReaction?: ReactionType;
+  };
 }
 
-const props = defineProps<Props>()
+const props = defineProps<Props>();
 
 // Stores
-const authStore = useAuthStore()
-const blogStore = useBlogStore()
+const authStore = useAuthStore();
+const blogStore = useBlogStore();
 
 // État local
-const showImageModal = ref(false)
-const showDeleteModal = ref(false)
+const showImageModal = ref(false);
+const showDeleteModal = ref(false);
 
 // Réactions avec labels pour l'accessibilité
 const reactions = {
-  LIKE: { emoji: '👏', label: 'Bravo' },
-  HEART: { emoji: '❤️', label: 'Touchant' },
-  SMILE: { emoji: '😊', label: 'Joyeux' },
-  CLAP: { emoji: '👍', label: 'Approuve' },
-  PARTY: { emoji: '🌟', label: 'Excellent' }
-}
+  LIKE: { emoji: "👏", label: "Bravo" },
+  HEART: { emoji: "❤️", label: "Touchant" },
+  SMILE: { emoji: "😊", label: "Joyeux" },
+  CLAP: { emoji: "👍", label: "Approuve" },
+  PARTY: { emoji: "🌟", label: "Excellent" },
+};
 
 // Computed
 const shouldHideAuthorInfo = computed(() => {
-  const userRole = authStore.user?.role
-  return userRole === 'PARENT' || userRole === 'CHILD'
-})
+  const userRole = authStore.user?.role;
+  return userRole === "PARENT" || userRole === "CHILD";
+});
 
 const authorDisplayName = computed(() => {
   if (shouldHideAuthorInfo.value) {
-    return 'Apajh94'
+    return "Apajh94";
   }
-  return `${props.post.author.firstName} ${props.post.author.lastName}`
-})
+  return `${props.post.author.firstName} ${props.post.author.lastName}`;
+});
 
 const authorInitials = computed(() => {
   if (shouldHideAuthorInfo.value) {
-    return 'AP'
+    return "AP";
   }
-  const first = props.post.author.firstName?.[0] || ''
-  const last = props.post.author.lastName?.[0] || ''
-  return (first + last).toUpperCase()
-})
+  const first = props.post.author.firstName?.[0] || "";
+  const last = props.post.author.lastName?.[0] || "";
+  return (first + last).toUpperCase();
+});
 
 const formattedDate = computed(() => {
-  const date = new Date(props.post.createdAt)
-  return date.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-})
+  const date = new Date(props.post.createdAt);
+  return date.toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+});
 
 const fullMediaUrl = computed(() => {
-  if (!props.post.mediaUrl) return ''
+  if (!props.post.mediaUrl) return "";
   // Si c'est déjà une URL complète, on la retourne
-  if (props.post.mediaUrl.startsWith('http')) return props.post.mediaUrl
+  if (props.post.mediaUrl.startsWith("http")) return props.post.mediaUrl;
   // Sinon on ajoute l'URL du serveur
-  return `http://localhost:3000${props.post.mediaUrl}`
-})
+  return `${API_BASE_URL}${props.post.mediaUrl}`;
+});
 
 const canDelete = computed(() => {
-  const userRole = authStore.user?.role
-  const isAuthor = authStore.user?.id === props.post.author.id
-  
-  return userRole === 'ADMIN' || 
-         userRole === 'DIRECTOR' || 
-         (userRole === 'SERVICE_MANAGER' && isAuthor) ||
-         (userRole === 'SECRETARY' && isAuthor)
-})
+  const userRole = authStore.user?.role;
+  const isAuthor = authStore.user?.id === props.post.author.id;
+
+  return (
+    userRole === "ADMIN" ||
+    userRole === "DIRECTOR" ||
+    (userRole === "SERVICE_MANAGER" && isAuthor) ||
+    (userRole === "SECRETARY" && isAuthor)
+  );
+});
 
 // Méthodes
 const toggleReaction = async (reactionType: ReactionType) => {
   try {
-    await blogStore.toggleReaction(props.post.id, reactionType)
+    await blogStore.toggleReaction(props.post.id, reactionType);
   } catch (error) {
-    console.error('Erreur lors de la réaction:', error)
+    console.error("Erreur lors de la réaction:", error);
   }
-}
+};
 
 const handleDelete = () => {
-  showDeleteModal.value = true
-}
+  showDeleteModal.value = true;
+};
 
 const confirmDelete = async () => {
-  showDeleteModal.value = false
-  
+  showDeleteModal.value = false;
+
   try {
-    await blogStore.deletePost(props.post.id)
+    await blogStore.deletePost(props.post.id);
   } catch (error) {
-    console.error('Erreur lors de la suppression:', error)
+    console.error("Erreur lors de la suppression:", error);
   }
-}
+};
 
 const cancelDelete = () => {
-  showDeleteModal.value = false
-}
+  showDeleteModal.value = false;
+};
 
 const openMediaModal = () => {
-  if (props.post.mediaType === 'IMAGE') {
-    showImageModal.value = true
+  if (props.post.mediaType === "IMAGE") {
+    showImageModal.value = true;
   }
-}
+};
 
 const closeImageModal = () => {
-  showImageModal.value = false
-}
+  showImageModal.value = false;
+};
 </script>
 
 <style scoped lang="scss">
@@ -306,22 +313,25 @@ const closeImageModal = () => {
   --border-color: #e5e7eb;
   --background-light: #f9fafb;
   --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  --card-shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --card-shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .blog-post {
   background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 1.5rem;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: "Satoshi", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    system-ui, sans-serif;
   position: relative;
   margin-bottom: 2rem;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -334,9 +344,10 @@ const closeImageModal = () => {
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 10px 10px -5px rgba(0, 0, 0, 0.04);
     border-color: rgba(68, 68, 172, 0.3);
-    
+
     &::before {
       opacity: 1;
     }
@@ -375,9 +386,9 @@ const closeImageModal = () => {
   box-shadow: 0 8px 16px rgba(68, 68, 172, 0.3);
   border: 3px solid white;
   position: relative;
-  
+
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: -2px;
     background: linear-gradient(135deg, #4444ac, #6366f1, #8b5cf6);
@@ -386,7 +397,7 @@ const closeImageModal = () => {
     opacity: 0;
     transition: opacity 0.3s ease;
   }
-  
+
   &:hover::before {
     opacity: 0.7;
   }
@@ -416,9 +427,9 @@ const closeImageModal = () => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  
+
   &::before {
-    content: '📅';
+    content: "📅";
     font-size: 0.75rem;
   }
 }
@@ -455,7 +466,7 @@ const closeImageModal = () => {
   }
 
   span {
-    font-family: 'Satoshi', sans-serif;
+    font-family: "Satoshi", sans-serif;
   }
 }
 
@@ -544,13 +555,18 @@ const closeImageModal = () => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
     transition: left 0.6s ease;
   }
 
@@ -576,12 +592,16 @@ const closeImageModal = () => {
     border-color: #4444ac;
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(68, 68, 172, 0.4);
-    
+
     &::after {
-      content: '';
+      content: "";
       position: absolute;
       inset: 0;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.2) 0%,
+        transparent 100%
+      );
       border-radius: inherit;
       pointer-events: none;
     }
@@ -673,8 +693,12 @@ const closeImageModal = () => {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .modal-content {
@@ -689,11 +713,11 @@ const closeImageModal = () => {
 }
 
 @keyframes slideUp {
-  from { 
+  from {
     opacity: 0;
     transform: translateY(20px) scale(0.95);
   }
-  to { 
+  to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
@@ -877,7 +901,7 @@ const closeImageModal = () => {
 
 .delete-modal-body {
   padding: 1.5rem 2rem;
-  
+
   p {
     margin: 0 0 1rem 0;
     color: var(--text-primary);
@@ -917,7 +941,7 @@ const closeImageModal = () => {
   font-size: 0.875rem;
   font-weight: 600;
   transition: all 0.2s ease;
-  
+
   &:hover {
     background: #e5e7eb;
     color: #374151;
@@ -994,4 +1018,4 @@ const closeImageModal = () => {
     justify-content: center;
   }
 }
-</style> 
+</style>

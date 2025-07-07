@@ -7,7 +7,7 @@ export function getApiBaseUrl(): string {
   ) {
     // Production sur le domaine educareschool.me
     if (window.location.hostname.indexOf("educareschool.me") !== -1) {
-      return "http://api.educareschool.me";
+      return "https://api.educareschool.me";
     }
     // Autres environnements (ex. dev/staging) sur le même host
     return `http://${window.location.hostname}:3000`;

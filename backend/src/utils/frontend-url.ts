@@ -9,7 +9,7 @@ export function getFrontendBaseUrl(): string {
     }
   
     // 3. Par défaut en production
-    return 'http://educareschool.me';
+    return 'https://educareschool.me';
   }
   
   // Valeur unique à ré-utiliser dans l'app si besoin

@@ -17,9 +17,8 @@ async function bootstrap() {
   // Définition dynamique des origines autorisées (CORS & CSP)
   const allowedOrigins = [
     'http://localhost:3000', // API locale (requêtes directes ou pré-visualisations)
-    'http://api.educareschool.me',
+    'https://api.educareschool.me',
     FRONTEND_BASE_URL, // Frontend dynamique (local ou prod)
-    FRONTEND_BASE_URL.replace('http://', 'https://'), // Variante HTTPS en production
   ];
   // Configuration des headers de sécurité avec Helmet (CSP stricte)
   app.use(
@@ -39,7 +38,7 @@ async function bootstrap() {
           mediaSrc: [
             "'self'",
             'http://localhost:3000',
-            'http://api.educareschool.me',
+            'https://api.educareschool.me',
           ],
           frameSrc: ["'none'"],
         },

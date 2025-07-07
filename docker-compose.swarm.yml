@@ -54,7 +54,7 @@ services:
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - traefik_letsencrypt:/letsencrypt
+      - /opt/traefik/letsencrypt:/letsencrypt
     networks:
       - frontend-net
       - backend-net
@@ -94,14 +94,13 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.frontend.rule=Host(`educareschool.me`)"
-        - "# traefik.http.routers.frontend.entrypoints=websecure"
-        - "# traefik.http.routers.frontend.tls.certresolver=myresolver"
-        - "traefik.http.routers.frontend.entrypoints=web"
+        - "traefik.http.routers.frontend.entrypoints=websecure"
+        - "traefik.http.routers.frontend.tls.certresolver=myresolver"
         - "traefik.http.services.frontend.loadbalancer.server.port=80"
-        - "# traefik.http.routers.frontend-http.rule=Host(`educareschool.me`)"
-        - "# traefik.http.routers.frontend-http.entrypoints=web"
-        - "# traefik.http.routers.frontend-http.middlewares=redirect-to-https"
-        - "# traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+        - "traefik.http.routers.frontend-http.rule=Host(`educareschool.me`)"
+        - "traefik.http.routers.frontend-http.entrypoints=web"
+        - "traefik.http.routers.frontend-http.middlewares=redirect-to-https"
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       update_config:
         parallelism: 1
         delay: 10s
@@ -162,13 +161,14 @@ services:
         - "traefik.enable=true"
         # Router HTTPS
         - "traefik.http.routers.nest.rule=Host(`api.educareschool.me`)"
-        - "traefik.http.routers.nest.entrypoints=web"
+        - "traefik.http.routers.nest.entrypoints=websecure"
+        - "traefik.http.routers.nest.tls.certresolver=myresolver"
         # Port du service
         - "traefik.http.services.nest.loadbalancer.server.port=3000"
         # Redirection HTTP vers HTTPS
-        - "# traefik.http.routers.nest-http.rule=Host(`api.educareschool.me`)"
-        - "# traefik.http.routers.nest-http.entrypoints=web"
-        - "# traefik.http.routers.nest-http.middlewares=redirect-to-https"
+        - "traefik.http.routers.nest-http.rule=Host(`api.educareschool.me`)"
+        - "traefik.http.routers.nest-http.entrypoints=web"
+        - "traefik.http.routers.nest-http.middlewares=redirect-to-https"
       update_config:
         parallelism: 1
         delay: 10s
@@ -266,9 +266,11 @@ services:
         # HTTP → HTTPS
         - "traefik.http.routers.kuma-http.rule=Host(`kuma.educareschool.me`)"
         - "traefik.http.routers.kuma-http.entrypoints=web"
+        - "traefik.http.routers.kuma-http.middlewares=redirect-to-https"
         # HTTPS router
         - "traefik.http.routers.kuma.rule=Host(`kuma.educareschool.me`)"
-        - "traefik.http.routers.kuma.entrypoints=web"
+        - "traefik.http.routers.kuma.entrypoints=websecure"
+        - "traefik.http.routers.kuma.tls.certresolver=myresolver"
         # Dit à Traefik sur quel port du container il doit router
         - "traefik.http.services.kuma.loadbalancer.server.port=3001"
       restart_policy:
@@ -293,7 +295,8 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.educareschool.me`)"
-        - "traefik.http.routers.pgadmin.entrypoints=web"
+        - "traefik.http.routers.pgadmin.entrypoints=websecure"
+        - "traefik.http.routers.pgadmin.tls.certresolver=myresolver"
         # Basic-auth supplémentaire (nom d'utilisateur : admin)
         - "traefik.http.routers.pgadmin.middlewares=auth-pgadmin"
         - "traefik.http.middlewares.auth-pgadmin.basicauth.users=admin:$$apr1$$vKml6Wvz$$G7Wchk2U2numP/43WdGZh."
@@ -301,7 +304,7 @@ services:
         # Redirection HTTP vers HTTPS
         - "traefik.http.routers.pgadmin-http.rule=Host(`pgadmin.educareschool.me`)"
         - "traefik.http.routers.pgadmin-http.entrypoints=web"
-        # - "traefik.http.routers.pgadmin-http.middlewares=redirect-to-https"
+        - "traefik.http.routers.pgadmin-http.middlewares=redirect-to-https"
 
   ########################################## MONGODB UI (MongoClient) ##########################################
   mongoclient:
@@ -321,16 +324,16 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.mongo.rule=Host(`mongo.educareschool.me`)"
-        - "traefik.http.routers.mongo.entrypoints=web"
+        - "traefik.http.routers.mongo.entrypoints=websecure"
+        - "traefik.http.routers.mongo.tls.certresolver=myresolver"
         - "traefik.http.routers.mongo.middlewares=auth-mongo"
         - "traefik.http.middlewares.auth-mongo.basicauth.users=admin:$$apr1$$vKml6Wvz$$G7Wchk2U2numP/43WdGZh."
         - "traefik.http.services.mongo.loadbalancer.server.port=3000"
         - "traefik.http.routers.mongo-http.rule=Host(`mongo.educareschool.me`)"
         - "traefik.http.routers.mongo-http.entrypoints=web"
-        # - "traefik.http.routers.mongo-http.middlewares=redirect-to-https"
+        - "traefik.http.routers.mongo-http.middlewares=redirect-to-https"
 
 volumes:
   postgres_data:
-  traefik_letsencrypt:
   kuma_data:
   mongodb_data:

@@ -373,29 +373,8 @@ export const useAuthStore = defineStore("auth", {
     async refresh() {
       const notification = useNotificationStore();
       try {
-        // Obtenir le token CSRF des cookies
-        const getCsrfTokenFromCookies = () => {
-          const cookies = document.cookie.split(";");
-          for (let cookie of cookies) {
-            const [name, value] = cookie.trim().split("=");
-            if (name === "csrf_token") {
-              return value;
-            }
-          }
-          return null;
-        };
-
-        const csrfToken = getCsrfTokenFromCookies();
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json",
-        };
-        if (csrfToken) {
-          headers["X-CSRF-Token"] = csrfToken;
-        }
-
         const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
           method: "POST",
-          headers,
           credentials: "include",
         });
         const data = await response.json();

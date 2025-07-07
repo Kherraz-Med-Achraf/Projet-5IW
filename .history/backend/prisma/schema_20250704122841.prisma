@@ -1,0 +1,490 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+/* =========================
+ * Utilisateurs et rôles
+ * ========================= */
+model User {
+  id                  String                @id @default(cuid())
+  email               String                @unique
+  emailVerified       Boolean               @default(false)
+  password            String
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt()
+  otpSecret           String?
+  passwordResets      PasswordReset[]
+  emailVerifications  EmailVerification[]
+  refreshToken        String?
+  role                Role                  @default(USER)
+  passwordChangedAt   DateTime              @default(now())
+  forcePasswordReset  Boolean               @default(false)
+  failedLoginAttempts Int                   @default(0)
+  lockUntil           DateTime?
+
+  /** relations vers profils spécifiques **/
+  parentProfile         ParentProfile?
+  childProfile          Child?           @relation(name: "ChildToUser")
+  secretaryProfile      SecretaryProfile?
+  directorProfile       DirectorProfile?
+  serviceManagerProfile ServiceManagerProfile?
+  staffProfile          StaffProfile?
+
+  /** relation "enfant référent" **/
+  referentOf            Child[]          @relation("ChildReferents")
+
+  /** relation "invitations émises" **/
+  invitationsSent       Invitation[]     @relation("InvitationInviter")
+
+  /** journaux mensuels rédigés **/
+  journals              JournalMensuel[] @relation("JournalEducator")
+
+  /** feuilles de présence validées par cet utilisateur **/
+  presenceSheets        PresenceSheet[]  @relation("PresenceSheetStaff")
+
+  /** planning semestriel en tant que staff **/
+  scheduleEntries       ScheduleEntry[]  @relation("ScheduleEntryStaff")
+
+  /// nouvelles relations évènements créés
+  eventsCreated   Event[]  @relation("UserEventsCreated")
+
+  /// Blog - Posts créés et réactions
+  blogPosts       BlogPost[]     @relation("BlogPostAuthor")
+  blogReactions   BlogReaction[] @relation("BlogReactionUser")
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  token     String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+}
+
+model EmailVerification {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+}
+
+/** Invitation **/
+model Invitation {
+  id           String   @id @default(uuid())
+  email        String
+  token        String   @unique
+  roleToAssign Role
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+  used         Boolean  @default(false)
+
+  invitedBy    String
+  inviter      User     @relation("InvitationInviter", fields: [invitedBy], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  USER
+  ADMIN
+  TEACHER
+  CHILD
+  PARENT
+  SECRETARY
+  DIRECTOR
+  SERVICE_MANAGER
+  STAFF
+}
+
+enum Discipline {
+  EDUCATOR
+  TECH_EDUCATOR
+  PSYCHOLOGIST
+  PSYCHIATRIST
+  ORTHOPEDIST
+}
+
+/* Profils parent/enfant */
+model ParentProfile {
+  id                  Int               @id @default(autoincrement())
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId              String            @unique
+  firstName           String
+  lastName            String
+  phone               String
+  address             String
+  legalResponsibility String
+  notificationPrefs   Json              @default("{}")
+  emergencyContacts   EmergencyContact[]
+  children            Child[]
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt()
+
+  eventRegistrations EventRegistration[] @relation("ParentProfileRegistrations")
+}
+
+model Child {
+  id               Int             @id @default(autoincrement())
+  firstName        String
+  lastName         String
+  birthDate        DateTime
+  imageConsent     Boolean         @default(false)  // Droit à l'image de l'enfant
+  parent           ParentProfile   @relation(fields: [parentProfileId], references: [id], onDelete: Cascade)
+  parentProfileId  Int
+  user             User?           @relation(name: "ChildToUser", fields: [userId], references: [id], onDelete: Cascade)
+  userId           String?         @unique
+  referents        User[]          @relation("ChildReferents")
+  missions         Mission[]
+  journals         JournalMensuel[]
+  presenceRecords  PresenceRecord[]
+  createdAt        DateTime        @default(now())
+
+  entryChildren    EntryChild[]    @relation("EntryChildren")
+
+  eventRegistrations EventRegistrationChild[] @relation("ChildEventRegistrations")
+}
+
+model EmergencyContact {
+  id               Int             @id @default(autoincrement())
+  name             String
+  relation         String
+  phone            String
+  parent           ParentProfile   @relation(fields: [parentProfileId], references: [id], onDelete: Cascade)
+  parentProfileId  Int
+}
+
+/* Profils staff / direction */
+model SecretaryProfile {
+  id           Int      @id @default(autoincrement())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String   @unique
+  specialty    String
+  startDate    DateTime
+  profileImage String?
+  firstName    String
+  lastName     String
+  birthDate    DateTime
+  phone        String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt()
+}
+
+model DirectorProfile {
+  id           Int      @id @default(autoincrement())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String   @unique
+  jobTitle     String
+  startDate    DateTime
+  profileImage String?
+  firstName    String
+  lastName     String
+  birthDate    DateTime
+  phone        String
+  specialty    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt()
+}
+
+model ServiceManagerProfile {
+  id           Int      @id @default(autoincrement())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String   @unique
+  jobTitle     String
+  startDate    DateTime
+  profileImage String?
+  firstName    String
+  lastName     String
+  birthDate    DateTime
+  phone        String
+  specialty    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt()
+}
+
+model StaffProfile {
+  id          Int        @id @default(autoincrement())
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String     @unique
+  firstName   String
+  lastName    String
+  phone       String
+  birthDate   DateTime
+  discipline  Discipline
+  specialty   String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt()
+}
+
+/* Année scolaire, missions, journaux */
+model AcademicYear {
+  id        Int               @id @default(autoincrement())
+  label     String            @unique
+  startDate DateTime
+  endDate   DateTime
+  missions  Mission[]
+  journals  JournalMensuel[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt()
+}
+
+model Mission {
+  id             Int           @id @default(autoincrement())
+  description    String
+  child          Child         @relation(fields: [childId], references: [id], onDelete: Cascade)
+  childId        Int
+  academicYear   AcademicYear  @relation(fields: [academicYearId], references: [id])
+  academicYearId Int
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt()
+}
+
+model JournalMensuel {
+  id                 Int               @id @default(autoincrement())
+  child              Child             @relation(fields: [childId], references: [id], onDelete: Cascade)
+  childId            Int
+  educator           User              @relation("JournalEducator", fields: [educatorId], references: [id])
+  educatorId         String
+  academicYear       AcademicYear      @relation(fields: [academicYearId], references: [id])
+  academicYearId     Int
+  month              Int
+  isDraft            Boolean           @default(true)
+  isSubmitted        Boolean           @default(false)
+  submittedAt        DateTime?
+  contenu            String?
+  progressionMissions Json?
+  attachments        JournalAttachment[]
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt()
+}
+
+model JournalAttachment {
+  id          Int              @id @default(autoincrement())
+  journal     JournalMensuel   @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  journalId   Int
+  filename    String
+  filepath    String
+  uploadedAt  DateTime         @default(now())
+}
+
+enum PresenceStatus {
+  PENDING_STAFF
+  PENDING_SECRETARY
+  VALIDATED
+}
+
+model PresenceSheet {
+  id                   Int                  @id @default(autoincrement())
+  date                 DateTime             @unique
+  staffId              String?
+  staff                User?                @relation("PresenceSheetStaff", fields: [staffId], references: [id])
+  validatedAtStaff     DateTime?
+  validatedBySecretary Boolean              @default(false)
+  validatedAtSecretary DateTime?
+  status               PresenceStatus       @default(PENDING_STAFF)
+  records              PresenceRecord[]
+  @@index([date])
+}
+
+model PresenceRecord {
+  id                 Int                   @id @default(autoincrement())
+  sheet              PresenceSheet         @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  sheetId            Int
+  child              Child                 @relation(fields: [childId], references: [id], onDelete: Cascade)
+  childId            Int
+  present            Boolean
+  justification      AbsenceJustification?
+  @@unique([sheetId, childId])
+}
+
+enum JustificationType {
+  ABSENCE
+  LATENESS
+}
+
+model AbsenceJustification {
+  id                Int             @id @default(autoincrement())
+  record            PresenceRecord  @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  recordId          Int             @unique
+  justificationDate DateTime
+  motif             String
+  filePath          String?
+  type              JustificationType    @default(ABSENCE)
+  createdAt         DateTime        @default(now())
+}
+
+model Semester {
+  id        String           @id @default(cuid())
+  name      String           @unique
+  startDate DateTime
+  endDate   DateTime
+  entries   ScheduleEntry[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt()
+}
+
+model ScheduleEntry {
+  id          String    @id @default(cuid())
+  staff       User      @relation("ScheduleEntryStaff", fields: [staffId], references: [id])
+  staffId     String
+  semester    Semester  @relation(fields: [semesterId], references: [id])
+  semesterId  String
+
+  /// 1 = lundi … 7 = dimanche (tu utiliseras 1 à 5)
+  dayOfWeek   Int
+
+  /// On stocke l'heure (la date complète est gérée au runtime)
+  startTime   DateTime
+  endTime     DateTime
+
+  activity    String
+
+  /// liaison many-to-many vers Child via EntryChild
+  entryChildren    EntryChild[]    @relation("EntryChildren")
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt()
+
+  @@index([staffId])
+  @@index([semesterId])
+}
+
+model EntryChild {
+  entry          ScheduleEntry @relation("EntryChildren", fields: [entryId], references: [id])
+  entryId        String
+  child          Child         @relation("EntryChildren", fields: [childId], references: [id])
+  childId        Int
+  
+  /// Champ pour tracer l'origine des transferts
+  /// Si un enfant est transféré, on garde l'ID du cours original
+  originalEntryId String?
+
+  @@id([entryId, childId])
+  @@index([childId])
+}
+
+/// =============================================
+///  Événements du samedi + inscriptions parents
+/// =============================================
+
+enum PaymentMethod {
+  CHEQUE
+  STRIPE
+  FREE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FREE
+}
+
+model Event {
+  id              String               @id @default(cuid())
+  title           String
+  description     String?
+  /// Date du samedi concerné (00:00 locale)
+  date            DateTime             @db.Date
+  startTime       DateTime             /// horodatage complet pour l'heure de début
+  endTime         DateTime             /// horodatage complet pour l'heure de fin
+  priceCt         Int                  /// prix par enfant en centimes d'euro (0 = gratuit)
+  capacity        Int?                 /// quota maximum d'enfants (null = illimité)
+  imageUrl        String?
+  createdAt       DateTime             @default(now())
+  createdByUser   User                 @relation("UserEventsCreated", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  createdByUserId String
+  isLocked        Boolean              @default(false)
+
+  registrations   EventRegistration[]
+
+  @@index([date])
+}
+
+model EventRegistration {
+  id               String          @id @default(cuid())
+  event            Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId          String
+  parentProfile    ParentProfile   @relation("ParentProfileRegistrations", fields: [parentProfileId], references: [id], onDelete: Cascade)
+  parentProfileId  Int
+
+  paymentMethod    PaymentMethod
+  paymentStatus    PaymentStatus
+  amountCt         Int             /// montant total payé / à payer en centimes
+  stripeSessionId  String?
+  createdAt        DateTime        @default(now())
+
+  children         EventRegistrationChild[]
+
+  @@unique([eventId, parentProfileId])
+  @@index([parentProfileId])
+}
+
+model EventRegistrationChild {
+  registration   EventRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  registrationId String
+  child          Child             @relation("ChildEventRegistrations", fields: [childId], references: [id], onDelete: Cascade)
+  childId        Int
+
+  @@id([registrationId, childId])
+  @@index([childId])
+}
+
+/// =============================================
+///  Blog - Posts et réactions
+/// =============================================
+
+enum PostMediaType {
+  IMAGE
+  VIDEO
+}
+
+enum ReactionType {
+  LIKE       // 👍
+  HEART      // ❤️
+  SMILE      // 😊
+  CLAP       // 👏
+  PARTY      // 🎉
+}
+
+model BlogPost {
+  id          String        @id @default(cuid())
+  title       String
+  description String        @db.Text
+  mediaUrl    String?       /// URL du fichier image ou vidéo
+  mediaType   PostMediaType?
+  
+  /// Métadonnées de publication
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt()
+  
+  /// Relations
+  author      User          @relation("BlogPostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId    String
+  reactions   BlogReaction[]
+  
+  @@index([createdAt])
+  @@index([authorId])
+}
+
+model BlogReaction {
+  id        String       @id @default(cuid())
+  type      ReactionType
+  
+  /// Relations
+  post      BlogPost     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+  user      User         @relation("BlogReactionUser", fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  
+  createdAt DateTime     @default(now())
+  
+  /// Un utilisateur ne peut avoir qu'une réaction par post
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}

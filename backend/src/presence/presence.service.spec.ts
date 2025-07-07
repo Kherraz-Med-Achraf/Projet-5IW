@@ -26,17 +26,25 @@ class PrismaMock {
     findUnique: jest.fn(async ({ where }: any) => {
       const s = this._sheets.find((sh) => {
         if (where.id !== undefined) return sh.id === where.id;
-        if (where.date !== undefined) return new Date(sh.date).getTime() === new Date(where.date).getTime();
+        if (where.date !== undefined)
+          return new Date(sh.date).getTime() === new Date(where.date).getTime();
         return false;
       });
       if (!s) return null;
       // enrich with records
-      const records = this._records.filter((r) => r.sheetId === s.id).map((r) => ({
-        ...r,
-        child: this._children.find((c) => c.id === r.childId) ?? {},
-        justification: this._justifs.find((j) => j.recordId === r.id) ?? null,
-      }));
-      return { ...s, records, staff: {}, validatedBySecretary: s.validatedBySecretary ?? false };
+      const records = this._records
+        .filter((r) => r.sheetId === s.id)
+        .map((r) => ({
+          ...r,
+          child: this._children.find((c) => c.id === r.childId) ?? {},
+          justification: this._justifs.find((j) => j.recordId === r.id) ?? null,
+        }));
+      return {
+        ...s,
+        records,
+        staff: {},
+        validatedBySecretary: s.validatedBySecretary ?? false,
+      };
     }),
     update: jest.fn(async ({ where, data }: any) => {
       const s = this._sheets.find((sh) => sh.id === where.id);
@@ -46,7 +54,9 @@ class PrismaMock {
   } as any;
 
   presenceRecord = {
-    findFirst: jest.fn(async ({ where }: any) => this._records.find((r) => r.sheetId === where.sheetId)),
+    findFirst: jest.fn(async ({ where }: any) =>
+      this._records.find((r) => r.sheetId === where.sheetId),
+    ),
     createMany: jest.fn(async ({ data }: any) => {
       data.forEach((d: any) => {
         this._records.push({ id: this._records.length + 1, ...d });
@@ -55,10 +65,16 @@ class PrismaMock {
     deleteMany: jest.fn(async ({ where }: any) => {
       this._records = this._records.filter((r) => r.sheetId !== where.sheetId);
     }),
-    findUnique: jest.fn(async ({ where }: any) => this._records.find((r) => r.id === where.id) ?? null),
+    findUnique: jest.fn(
+      async ({ where }: any) =>
+        this._records.find((r) => r.id === where.id) ?? null,
+    ),
     count: jest.fn(async ({ where }: any) => {
       return this._records.filter(
-        (r) => r.sheetId === where.sheetId && r.present === where.present && !this._justifs.some((j) => j.recordId === r.id),
+        (r) =>
+          r.sheetId === where.sheetId &&
+          r.present === where.present &&
+          !this._justifs.some((j) => j.recordId === r.id),
       ).length;
     }),
   } as any;
@@ -98,7 +114,9 @@ describe('PresenceService', () => {
   });
 
   it('validateSheet refuse si la feuille est inconnue', async () => {
-    await expect(svc.validateSheet(999, [], 'staff')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(svc.validateSheet(999, [], 'staff')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 
   it('validateSheet refuse si statut ≠ PENDING_STAFF', async () => {
@@ -106,7 +124,9 @@ describe('PresenceService', () => {
     const date = '2100-02-01';
     const sheet = await svc.createSheet(date, 's');
     prisma._sheets[0].status = 'VALIDATED';
-    await expect(svc.validateSheet((sheet as any).id, [], 's')).rejects.toBeInstanceOf(BadRequestException);
+    await expect(
+      svc.validateSheet((sheet as any).id, [], 's'),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('validateSheet met à jour les records et passe en PENDING_SECRETARY', async () => {
@@ -115,14 +135,23 @@ describe('PresenceService', () => {
 
     const res = await svc.validateSheet((sheet as any).id, [1], 's1');
 
-    expect(prisma.presenceRecord.deleteMany).toHaveBeenCalledWith({ where: { sheetId: (sheet as any).id } });
+    expect(prisma.presenceRecord.deleteMany).toHaveBeenCalledWith({
+      where: { sheetId: (sheet as any).id },
+    });
     expect(prisma.presenceRecord.createMany).toHaveBeenCalled();
     expect((res as any).status).toBe('PENDING_SECRETARY');
-    expect((res as any).records.find((r: any) => r.child.id === 1).present).toBe(true);
+    expect(
+      (res as any).records.find((r: any) => r.child.id === 1).present,
+    ).toBe(true);
   });
 
   it('justify refuse si record introuvable ou présent', async () => {
-    await expect(svc.justify(123, { type: JustificationType.ABSENCE, justificationDate: '2100-01-01' } as any)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(
+      svc.justify(123, {
+        type: JustificationType.ABSENCE,
+        justificationDate: '2100-01-01',
+      } as any),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('justify crée une justification et valide la feuille quand tout est justifié', async () => {
@@ -135,7 +164,11 @@ describe('PresenceService', () => {
     const recIds = prisma._records.map((r) => r.id);
 
     // justifie premier record
-    await svc.justify(recIds[0], { type: JustificationType.ABSENCE, justificationDate: '2100-04-01', motif: 'Malade' } as any);
+    await svc.justify(recIds[0], {
+      type: JustificationType.ABSENCE,
+      justificationDate: '2100-04-01',
+      motif: 'Malade',
+    } as any);
     expect(prisma.absenceJustification.create).toHaveBeenCalled();
 
     // feuille doit encore être PENDING_SECRETARY (1 absence restante non justifiée)
@@ -143,8 +176,11 @@ describe('PresenceService', () => {
     expect((after1 as any).status).toBe('PENDING_SECRETARY');
 
     // justifie deuxième record
-    await svc.justify(recIds[1], { type: JustificationType.LATENESS, justificationDate: '2100-04-01' } as any);
+    await svc.justify(recIds[1], {
+      type: JustificationType.LATENESS,
+      justificationDate: '2100-04-01',
+    } as any);
     const final = await svc.findByDate(date);
     expect((final as any).status).toBe('VALIDATED');
   });
-}); 
+});

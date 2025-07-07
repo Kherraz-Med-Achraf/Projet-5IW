@@ -45,8 +45,13 @@ class PrismaMock {
 /* Mocks externes                                     */
 /* -------------------------------------------------- */
 const jwtMock = {
-  sign : jest.fn(() => 'token'),
-  verify: jest.fn(() => ({ sub: 'uid', email: 'e', role: 'PARENT', iat: Date.now()/1000 })),
+  sign: jest.fn(() => 'token'),
+  verify: jest.fn(() => ({
+    sub: 'uid',
+    email: 'e',
+    role: 'PARENT',
+    iat: Date.now() / 1000,
+  })),
 } as unknown as JwtService;
 
 const mailMock = { sendMail: jest.fn() } as unknown as MailService;
@@ -74,7 +79,12 @@ describe('AuthService – sécurité connexion', () => {
 
   beforeEach(() => {
     prisma = new PrismaMock({ ...baseUser });
-    svc = new AuthService(prisma as unknown as PrismaService, jwtMock, mailMock, childMock);
+    svc = new AuthService(
+      prisma as unknown as PrismaService,
+      jwtMock,
+      mailMock,
+      childMock,
+    );
   });
 
   it('bloque le compte après 3 mots de passe erronés', async () => {
@@ -83,11 +93,17 @@ describe('AuthService – sécurité connexion', () => {
 
     // 3 premières tentatives → UNAUTHORIZED
     for (let i = 0; i < 3; i++) {
-      await expect(svc.login(baseUser.email, 'badpwd')).rejects.toHaveProperty('status', HttpStatus.UNAUTHORIZED);
+      await expect(svc.login(baseUser.email, 'badpwd')).rejects.toHaveProperty(
+        'status',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     // 4e tentative → compte verrouillé (status 423)
-    await expect(svc.login(baseUser.email, 'badpwd')).rejects.toHaveProperty('status', HttpStatus.LOCKED);
+    await expect(svc.login(baseUser.email, 'badpwd')).rejects.toHaveProperty(
+      'status',
+      HttpStatus.LOCKED,
+    );
   });
 });
 
@@ -99,7 +115,9 @@ describe('Rate limiter /auth', () => {
   const app = express();
   // Limite 2 requêtes / 100 ms pour accélérer le test
   app.use('/auth', rateLimit({ windowMs: 100, max: 2 }));
-  app.post('/auth/login', (_req: any, res: any) => { res.status(200).send('ok'); });
+  app.post('/auth/login', (_req: any, res: any) => {
+    res.status(200).send('ok');
+  });
 
   it('retourne 429 après dépassement', async () => {
     const agent = request(app);
@@ -130,15 +148,24 @@ describe('AuthService – forgotPassword()', () => {
 
   beforeEach(() => {
     prisma = new PrismaMock({ ...user });
-    svc = new AuthService(prisma as unknown as PrismaService, jwtMock, mailMock, childMock);
+    svc = new AuthService(
+      prisma as unknown as PrismaService,
+      jwtMock,
+      mailMock,
+      childMock,
+    );
     (jest.spyOn(bcrypt, 'hash') as any).mockResolvedValue('hashed');
-    jest.spyOn(crypto, 'randomBytes').mockReturnValue(Buffer.alloc(32, 1) as any);
+    jest
+      .spyOn(crypto, 'randomBytes')
+      .mockReturnValue(Buffer.alloc(32, 1) as any);
     (mailMock.sendMail as jest.Mock).mockClear();
   });
 
   it('envoie un mail de réinitialisation', async () => {
     const res = await svc.forgotPassword(user.email);
-    expect(res).toEqual({ message: "Si l'adresse existe, un lien vient d'être envoyé." });
+    expect(res).toEqual({
+      message: "Si l'adresse existe, un lien vient d'être envoyé.",
+    });
     expect(mailMock.sendMail).toHaveBeenCalledWith(
       user.email,
       expect.stringContaining('Réinitialisation'),
@@ -148,9 +175,16 @@ describe('AuthService – forgotPassword()', () => {
 
   it("ne révèle pas l'existence de l'email", async () => {
     prisma = new PrismaMock(undefined); // aucun user
-    svc = new AuthService(prisma as unknown as PrismaService, jwtMock, mailMock, childMock);
+    svc = new AuthService(
+      prisma as unknown as PrismaService,
+      jwtMock,
+      mailMock,
+      childMock,
+    );
     const res = await svc.forgotPassword('nobody@nowhere.com');
-    expect(res).toEqual({ message: "Si l'adresse existe, un lien vient d'être envoyé." });
+    expect(res).toEqual({
+      message: "Si l'adresse existe, un lien vient d'être envoyé.",
+    });
     expect(mailMock.sendMail).not.toHaveBeenCalled();
   });
 });
@@ -171,12 +205,18 @@ describe('AuthService – OTP enable / disable', () => {
     passwordChangedAt: new Date(),
   };
 
-  let prisma: PrismaMock; let svc: AuthService;
+  let prisma: PrismaMock;
+  let svc: AuthService;
 
   beforeEach(() => {
     process.env.NODE_ENV = 'test';
     prisma = new PrismaMock({ ...user });
-    svc    = new AuthService(prisma as unknown as PrismaService, jwtMock, mailMock, childMock);
+    svc = new AuthService(
+      prisma as unknown as PrismaService,
+      jwtMock,
+      mailMock,
+      childMock,
+    );
 
     // Mock hashing du refresh token
     (jest.spyOn(bcrypt, 'hash') as any).mockResolvedValue('HASH');
@@ -186,7 +226,9 @@ describe('AuthService – OTP enable / disable', () => {
       base32: 'BASE32SECRET',
       otpauth_url: 'otpauth://totp/MyApp?secret=BASE32SECRET',
     } as any);
-    jest.spyOn(require('qrcode'), 'toDataURL').mockResolvedValue('data:image/png;base64,AAA');
+    jest
+      .spyOn(require('qrcode'), 'toDataURL')
+      .mockResolvedValue('data:image/png;base64,AAA');
 
     // Mock jwt sign pour tokens
     (jwtMock.sign as jest.Mock).mockReturnValue('jwt-token');
@@ -196,22 +238,30 @@ describe('AuthService – OTP enable / disable', () => {
 
   it('enableOtp stocke un secret chiffré et renvoie QR', async () => {
     const res = await svc.enableOtp(user.id);
-    expect(res).toEqual({ secret: 'BASE32SECRET', qrCodeDataUrl: 'data:image/png;base64,AAA' });
+    expect(res).toEqual({
+      secret: 'BASE32SECRET',
+      qrCodeDataUrl: 'data:image/png;base64,AAA',
+    });
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: user.id },
-      data : { otpSecret: expect.any(String) },
+      data: { otpSecret: expect.any(String) },
     });
   });
 
   it('disableOtp réinitialise otpSecret et renvoie nouveaux tokens', async () => {
     // Prépare un user déjà équipé d un otpSecret
     prisma = new PrismaMock({ ...user, otpSecret: 'encrypted' });
-    svc    = new AuthService(prisma as unknown as PrismaService, jwtMock, mailMock, childMock);
+    svc = new AuthService(
+      prisma as unknown as PrismaService,
+      jwtMock,
+      mailMock,
+      childMock,
+    );
 
     const res = await svc.disableOtp(user.id);
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: user.id },
-      data : { otpSecret: null },
+      data: { otpSecret: null },
     });
     expect(res).toHaveProperty('access_token', 'jwt-token');
     expect(res).toHaveProperty('refresh_token', 'jwt-token');
@@ -223,7 +273,7 @@ describe('AuthService – OTP enable / disable', () => {
 /* -------------------------------------------------- */
 
 describe('AuthService – login() sans OTP', () => {
-  const PWD_HASH  = 'HASHED_PWD'
+  const PWD_HASH = 'HASHED_PWD';
   const baseUser = {
     id: 'uLogin',
     email: 'login@test.com',
@@ -233,16 +283,24 @@ describe('AuthService – login() sans OTP', () => {
     otpSecret: null,
     role: 'PARENT',
     passwordChangedAt: new Date(),
-  }
+  };
 
-  let prisma: PrismaMock; let svc: AuthService
+  let prisma: PrismaMock;
+  let svc: AuthService;
 
   beforeEach(() => {
     prisma = new PrismaMock({ ...baseUser });
-    svc    = new AuthService(prisma as unknown as PrismaService, jwtMock, mailMock, childMock);
+    svc = new AuthService(
+      prisma as unknown as PrismaService,
+      jwtMock,
+      mailMock,
+      childMock,
+    );
 
     (jest.spyOn(bcrypt as any, 'compare') as any).mockResolvedValue(true);
-    (jest.spyOn(bcrypt as any, 'hash') as any).mockResolvedValue('REFRESH_HASH');
+    (jest.spyOn(bcrypt as any, 'hash') as any).mockResolvedValue(
+      'REFRESH_HASH',
+    );
     (jwtMock.sign as jest.Mock).mockReturnValue('jwt-token');
   });
 
@@ -251,12 +309,16 @@ describe('AuthService – login() sans OTP', () => {
   it('retourne les tokens et réinitialise failedLoginAttempts + lockUntil', async () => {
     const res = await svc.login(baseUser.email, 'goodpwd');
 
-    expect(res).toEqual({ access_token: 'jwt-token', refresh_token: 'jwt-token', user: expect.any(Object) });
+    expect(res).toEqual({
+      access_token: 'jwt-token',
+      refresh_token: 'jwt-token',
+      user: expect.any(Object),
+    });
 
     // le user est mis à jour dans PrismaMock
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: baseUser.id },
-      data : { refreshToken: 'REFRESH_HASH' },
+      data: { refreshToken: 'REFRESH_HASH' },
     });
 
     expect((prisma as any)._user.failedLoginAttempts).toBe(0);
@@ -278,18 +340,26 @@ describe('AuthService – login() avec OTP', () => {
     otpSecret: encryptOtp('BASE32SECRET'),
     role: 'PARENT',
     passwordChangedAt: new Date(),
-  }
+  };
 
-  let prisma: PrismaMock; let svc: AuthService
-  let speakeasy: any
+  let prisma: PrismaMock;
+  let svc: AuthService;
+  let speakeasy: any;
 
   beforeEach(() => {
     speakeasy = require('speakeasy');
-    prisma    = new PrismaMock({ ...user });
-    svc       = new AuthService(prisma as unknown as PrismaService, jwtMock, mailMock, childMock);
+    prisma = new PrismaMock({ ...user });
+    svc = new AuthService(
+      prisma as unknown as PrismaService,
+      jwtMock,
+      mailMock,
+      childMock,
+    );
 
     (jest.spyOn(bcrypt as any, 'compare') as any).mockResolvedValue(true);
-    (jest.spyOn(bcrypt as any, 'hash') as any).mockResolvedValue('REFRESH_HASH');
+    (jest.spyOn(bcrypt as any, 'hash') as any).mockResolvedValue(
+      'REFRESH_HASH',
+    );
     (jwtMock.sign as jest.Mock).mockReturnValue('jwt-token');
   });
 
@@ -301,20 +371,26 @@ describe('AuthService – login() avec OTP', () => {
   });
 
   it('refuse un otpCode invalide', async () => {
-    const totpObj: any = (speakeasy as any).totp;
+    const totpObj: any = speakeasy.totp;
     totpObj.verify = jest.fn(() => false);
 
-    await expect(svc.login(user.email, 'pwd', '000000'))
-      .rejects.toHaveProperty('status', HttpStatus.UNAUTHORIZED);
+    await expect(svc.login(user.email, 'pwd', '000000')).rejects.toHaveProperty(
+      'status',
+      HttpStatus.UNAUTHORIZED,
+    );
   });
 
   it('accepte un otpCode valide et renvoie les tokens', async () => {
-    const totpObj: any = (speakeasy as any).totp;
+    const totpObj: any = speakeasy.totp;
     totpObj.verify = jest.fn(() => true);
 
     const res = await svc.login(user.email, 'pwd', '123456');
     expect(res).toHaveProperty('access_token', 'jwt-token');
     expect(res).toHaveProperty('refresh_token', 'jwt-token');
-    expect(res.user).toMatchObject({ id: user.id, email: user.email, otpEnabled: true });
+    expect(res.user).toMatchObject({
+      id: user.id,
+      email: user.email,
+      otpEnabled: true,
+    });
   });
-}); 
+});

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API</title>
+</head>
+<body>
+    <h1>Test API CSRF</h1>
+    <button onclick="testCSRF()">Test GET CSRF</button>
+    <button onclick="testLogin()">Test POST Login</button>
+    <div id="result"></div>
+
+    <script>
+        // Copie du code API
+        const API_BASE_URL = 'http://localhost:3000';
+
+        function getCSRFTokenFromCookie() {
+          const cookies = document.cookie.split(';');
+          for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'csrf_token') {
+              return value;
+            }
+          }
+          return null;
+        }
+
+        async function ensureCSRFToken() {
+          let csrfToken = getCSRFTokenFromCookie();
+          
+          if (!csrfToken) {
+            try {
+              const response = await fetch(`${API_BASE_URL}/auth/csrf`, {
+                method: 'GET',
+                credentials: 'include',
+              });
+              if (response.ok) {
+                const data = await response.json();
+                csrfToken = data.csrf_token;
+              }
+            } catch (error) {
+              console.warn('Impossible de récupérer un token CSRF:', error);
+            }
+          }
+          
+          return csrfToken;
+        }
+
+        async function setupSecureHeaders(options = {}) {
+          const headers = new Headers(options.headers);
+          
+          const token = localStorage.getItem('token');
+          if (token) {
+            headers.set('Authorization', `Bearer ${token}`);
+          }
+          
+          const method = options.method?.toUpperCase() || 'GET';
+          if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+            const csrfToken = await ensureCSRFToken();
+            if (csrfToken) {
+              headers.set('X-CSRF-Token', csrfToken);
+            }
+          }
+          
+          headers.set('X-Requested-With', 'XMLHttpRequest');
+          
+          return {
+            ...options,
+            headers,
+            credentials: 'include',
+          };
+        }
+
+        async function secureApiCall(url, options = {}) {
+          const secureOptions = await setupSecureHeaders(options);
+          return fetch(url, secureOptions);
+        }
+
+        async function secureJsonCall(url, options = {}) {
+          const headers = new Headers(options.headers);
+          if (!headers.has('Content-Type') && (options.body && typeof options.body === 'string')) {
+            headers.set('Content-Type', 'application/json');
+          }
+          
+          const response = await secureApiCall(url, { ...options, headers });
+          
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: 'Erreur inconnue' }));
+            throw new Error(errorData.message || `Erreur HTTP ${response.status}`);
+          }
+          
+          return response.json();
+        }
+
+        async function testCSRF() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/csrf`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `CSRF Token: ${data.csrf_token}`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `Erreur CSRF: ${error.message}`;
+            }
+        }
+
+        async function testLogin() {
+            try {
+                const data = await secureJsonCall(`${API_BASE_URL}/auth/initiate-login`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        email: 'admin@example.com',
+                        password: 'MonMotDePasse123!'
+                    }),
+                });
+                document.getElementById('result').innerHTML = `Login OK: ${JSON.stringify(data)}`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `Erreur Login: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html> 

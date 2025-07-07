@@ -12,4 +12,4 @@ export class GetMessagesQueryDto {
   @IsOptional()
   @IsDateString()
   before?: string;
-} 
+}

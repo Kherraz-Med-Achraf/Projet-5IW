@@ -40,8 +40,8 @@ export const useRegisterStore = defineStore("register", () => {
    * Affiche un toast d'erreur le cas échéant.
    */
   const addEmergencyContact = () => {
-    if (form.emergencyContacts.length >= 2) {
-      toast.error("Vous ne pouvez ajouter que deux contacts d'urgence");
+    if (form.emergencyContacts.length >= 1) {
+      toast.error("Vous ne pouvez ajouter qu'un seul contact d'urgence");
       return;
     }
 
@@ -199,21 +199,41 @@ export const useRegisterStore = defineStore("register", () => {
       if (contactsClean.length) payload.emergencyContacts = contactsClean;
       if (kidsClean.length) payload.children = kidsClean;
 
+      // Obtenir le token CSRF des cookies
+      const getCsrfTokenFromCookies = () => {
+        const cookies = document.cookie.split(';')
+        for (let cookie of cookies) {
+          const [name, value] = cookie.trim().split('=')
+          if (name === 'csrf_token') {
+            return value
+          }
+        }
+        return null
+      }
+
+      const csrfToken = getCsrfTokenFromCookies()
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken
+      }
+
       // Soumission selon le type d'inscription
       if (inviteToken.value) {
         payload.token = inviteToken.value;
         const res = await fetch(`${API_URL}/auth/register-by-invite`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify(payload),
+          credentials: 'include',
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message);
       } else {
         const res = await fetch(`${API_URL}/auth/register`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify(payload),
+          credentials: 'include',
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message);

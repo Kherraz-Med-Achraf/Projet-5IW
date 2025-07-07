@@ -180,7 +180,9 @@ describe('Auth (e2e)', () => {
         })
         .expect(400)
         .expect((res) => {
-          expect(res.body.message).toContain('adresse e-mail ne correspond pas');
+          expect(res.body.message).toContain(
+            'adresse e-mail ne correspond pas',
+          );
         });
     });
 
@@ -390,7 +392,9 @@ describe('Auth (e2e)', () => {
       });
 
       expect(updatedUser.password).not.toBe(oldUser.password);
-      expect(updatedUser.passwordChangedAt).not.toEqual(oldUser.passwordChangedAt);
+      expect(updatedUser.passwordChangedAt).not.toEqual(
+        oldUser.passwordChangedAt,
+      );
     });
   });
 
@@ -415,7 +419,10 @@ describe('Auth (e2e)', () => {
     it('should refresh token successfully', () => {
       return request(app.getHttpServer())
         .post('/auth/refresh')
-        .set('Cookie', [`refresh_token=${refreshToken}`, 'csrf_token=test-csrf'])
+        .set('Cookie', [
+          `refresh_token=${refreshToken}`,
+          'csrf_token=test-csrf',
+        ])
         .send()
         .expect(201)
         .expect((res) => {
@@ -462,7 +469,10 @@ describe('Auth (e2e)', () => {
     it('should logout successfully', () => {
       return request(app.getHttpServer())
         .post('/auth/logout')
-        .set('Cookie', [`refresh_token=${refreshToken}`, 'csrf_token=test-csrf'])
+        .set('Cookie', [
+          `refresh_token=${refreshToken}`,
+          'csrf_token=test-csrf',
+        ])
         .send()
         .expect(201)
         .expect((res) => {
@@ -474,7 +484,10 @@ describe('Auth (e2e)', () => {
     it('should clear refresh token from database', async () => {
       await request(app.getHttpServer())
         .post('/auth/logout')
-        .set('Cookie', [`refresh_token=${refreshToken}`, 'csrf_token=test-csrf'])
+        .set('Cookie', [
+          `refresh_token=${refreshToken}`,
+          'csrf_token=test-csrf',
+        ])
         .send()
         .expect(201);
 
@@ -536,8 +549,12 @@ describe('Auth (e2e)', () => {
 
       // 4. Use refresh token
       const cookies = loginResponse.headers['set-cookie'];
-      const refreshCookie = cookies.find(cookie => cookie.startsWith('refresh_token='));
-      const csrfCookie = cookies.find(cookie => cookie.startsWith('csrf_token='));
+      const refreshCookie = cookies.find((cookie) =>
+        cookie.startsWith('refresh_token='),
+      );
+      const csrfCookie = cookies.find((cookie) =>
+        cookie.startsWith('csrf_token='),
+      );
 
       await request(app.getHttpServer())
         .post('/auth/refresh')
@@ -553,4 +570,4 @@ describe('Auth (e2e)', () => {
         .expect(201);
     });
   });
-}); 
+});

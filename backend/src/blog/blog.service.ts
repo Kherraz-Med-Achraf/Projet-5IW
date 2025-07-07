@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
 import { CreateBlogPostDto } from './dto/create-blog-post.dto';
@@ -12,6 +17,21 @@ export class BlogService {
     private readonly prisma: PrismaService,
     private readonly aiService: AiService,
   ) {}
+
+  /**
+   * Fonction de sanitisation simple et sûre pour les textes
+   */
+  private sanitizeText(text: string): string {
+    if (!text) return '';
+    return text
+      .trim()
+      .replace(/[<>]/g, '') // Supprimer les caractères HTML de base
+      .replace(/javascript:/gi, '') // Supprimer les liens javascript
+      .replace(/data:/gi, '') // Supprimer les liens data
+      .replace(/script/gi, '') // Supprimer le mot script
+      .replace(/on\w+\s*=/gi, '') // Supprimer les événements onclick, onload, etc.
+      .substring(0, 5000); // Limiter la longueur
+  }
 
   /**
    * Helper pour récupérer les informations complètes d'un auteur
@@ -48,11 +68,18 @@ export class BlogService {
   /**
    * Créer un nouveau post (Secrétaire, Directeur, Service Manager)
    */
-  async createPost(dto: CreateBlogPostDto, authorId: string): Promise<BlogPostResponseDto> {
+  async createPost(
+    dto: CreateBlogPostDto,
+    authorId: string,
+  ): Promise<BlogPostResponseDto> {
+    // Sanitisation des données d'entrée
+    const sanitizedTitle = this.sanitizeText(dto.title);
+    const sanitizedDescription = this.sanitizeText(dto.description);
+
     const post = await this.prisma.blogPost.create({
       data: {
-        title: dto.title.trim(),
-        description: dto.description.trim(),
+        title: sanitizedTitle,
+        description: sanitizedDescription,
         mediaUrl: dto.mediaUrl,
         mediaType: dto.mediaType,
         authorId,
@@ -87,8 +114,10 @@ export class BlogService {
       });
     }
 
-    return posts.map(post => {
-      const userReaction = userReactions.find(r => r.postId === post.id)?.type;
+    return posts.map((post) => {
+      const userReaction = userReactions.find(
+        (r) => r.postId === post.id,
+      )?.type;
       return this.formatPostResponse(post, userReaction);
     });
   }
@@ -96,7 +125,10 @@ export class BlogService {
   /**
    * Récupérer un post par ID
    */
-  async getPostById(postId: string, userId?: string): Promise<BlogPostResponseDto> {
+  async getPostById(
+    postId: string,
+    userId?: string,
+  ): Promise<BlogPostResponseDto> {
     const post = await this.prisma.blogPost.findUnique({
       where: { id: postId },
       include: {
@@ -123,7 +155,11 @@ export class BlogService {
   /**
    * Ajouter ou modifier une réaction
    */
-  async toggleReaction(postId: string, userId: string, dto: CreateReactionDto) {
+  async toggleReaction(
+    postId: string,
+    userId: string,
+    dto: CreateReactionDto,
+  ): Promise<BlogPostResponseDto> {
     // Vérifier que le post existe
     const post = await this.prisma.blogPost.findUnique({
       where: { id: postId },
@@ -144,14 +180,12 @@ export class BlogService {
         await this.prisma.blogReaction.delete({
           where: { id: existingReaction.id },
         });
-        return { message: 'Réaction supprimée' };
       } else {
         // Modifier la réaction
         await this.prisma.blogReaction.update({
           where: { id: existingReaction.id },
           data: { type: dto.type },
         });
-        return { message: 'Réaction modifiée' };
       }
     } else {
       // Créer une nouvelle réaction
@@ -162,15 +196,22 @@ export class BlogService {
           userId,
         },
       });
-      return { message: 'Réaction ajoutée' };
     }
+
+    // Retourner le post mis à jour avec les nouvelles réactions
+    return this.getPostById(postId, userId);
   }
 
   /**
-   * Modifier un post (Secrétaire, Directeur, Service Manager - auteur uniquement)
+   * Modifier un post (Admin et Directeur peuvent modifier tous les posts, autres seulement les leurs)
    */
-  async updatePost(postId: string, dto: CreateBlogPostDto, userId: string): Promise<BlogPostResponseDto> {
-    // Vérifier que le post existe et appartient à l'utilisateur
+  async updatePost(
+    postId: string,
+    dto: CreateBlogPostDto,
+    userRole: Role,
+    userId: string,
+  ): Promise<BlogPostResponseDto> {
+    // Vérifier que le post existe
     const existingPost = await this.prisma.blogPost.findUnique({
       where: { id: postId },
       select: { id: true, authorId: true, mediaUrl: true },
@@ -180,14 +221,21 @@ export class BlogService {
       throw new NotFoundException('Post introuvable');
     }
 
-    if (existingPost.authorId !== userId) {
-      throw new ForbiddenException('Vous ne pouvez modifier que vos propres posts');
+    // Vérification des permissions
+    const canModifyAll = userRole === Role.ADMIN || userRole === Role.DIRECTOR;
+    const canModifyOwn =
+      userRole === Role.SERVICE_MANAGER || userRole === Role.SECRETARY;
+
+    if (!canModifyAll && (!canModifyOwn || existingPost.authorId !== userId)) {
+      throw new ForbiddenException(
+        'Vous ne pouvez modifier que vos propres posts',
+      );
     }
 
-    // Préparer les données de mise à jour
+    // Préparer les données de mise à jour avec sanitisation
     const updateData: any = {
-      title: dto.title.trim(),
-      description: dto.description.trim(),
+      title: this.sanitizeText(dto.title),
+      description: this.sanitizeText(dto.description),
     };
 
     // Gestion du média
@@ -209,9 +257,13 @@ export class BlogService {
   }
 
   /**
-   * Supprimer un post (Secrétaire, Directeur, Service Manager)
+   * Supprimer un post (Admin et Directeur peuvent supprimer tous les posts, autres seulement les leurs)
    */
-  async deletePost(postId: string, userRole: Role, userId: string): Promise<void> {
+  async deletePost(
+    postId: string,
+    userRole: Role,
+    userId: string,
+  ): Promise<void> {
     const post = await this.prisma.blogPost.findUnique({
       where: { id: postId },
       select: { id: true, authorId: true },
@@ -222,13 +274,14 @@ export class BlogService {
     }
 
     // Vérification des permissions
-    const canDelete = 
-      userRole === Role.DIRECTOR ||
-      userRole === Role.SERVICE_MANAGER ||
-      (userRole === Role.SECRETARY && post.authorId === userId);
+    const canDeleteAll = userRole === Role.ADMIN || userRole === Role.DIRECTOR;
+    const canDeleteOwn =
+      userRole === Role.SERVICE_MANAGER || userRole === Role.SECRETARY;
 
-    if (!canDelete) {
-      throw new ForbiddenException('Vous n\'avez pas le droit de supprimer ce post');
+    if (!canDeleteAll && (!canDeleteOwn || post.authorId !== userId)) {
+      throw new ForbiddenException(
+        "Vous n'avez pas le droit de supprimer ce post",
+      );
     }
 
     // Suppression en cascade (réactions supprimées automatiquement)
@@ -247,21 +300,21 @@ export class BlogService {
         lastName: author.secretaryProfile.lastName,
       };
     }
-    
+
     if (author.directorProfile) {
       return {
         firstName: author.directorProfile.firstName,
         lastName: author.directorProfile.lastName,
       };
     }
-    
+
     if (author.serviceManagerProfile) {
       return {
         firstName: author.serviceManagerProfile.firstName,
         lastName: author.serviceManagerProfile.lastName,
       };
     }
-    
+
     return {
       firstName: 'Auteur',
       lastName: 'Inconnu',
@@ -271,7 +324,10 @@ export class BlogService {
   /**
    * Formater la réponse d'un post avec les statistiques de réactions
    */
-  private formatPostResponse(post: any, userReaction?: ReactionType): BlogPostResponseDto {
+  private formatPostResponse(
+    post: any,
+    userReaction?: ReactionType,
+  ): BlogPostResponseDto {
     // Compter les réactions par type
     const reactionCounts = {
       LIKE: 0,
@@ -304,4 +360,4 @@ export class BlogService {
       userReaction,
     };
   }
-} 
+}

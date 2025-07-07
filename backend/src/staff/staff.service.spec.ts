@@ -106,10 +106,12 @@ describe('StaffService', () => {
     });
 
     it('should throw BadRequestException when email already exists', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue({ id: 'existing-user' });
+      mockPrismaService.user.findUnique.mockResolvedValue({
+        id: 'existing-user',
+      });
 
       await expect(service.create(createStaffDto)).rejects.toThrow(
-        new BadRequestException('Email déjà utilisé')
+        new BadRequestException('Email déjà utilisé'),
       );
 
       expect(mockPrismaService.staffProfile.findFirst).not.toHaveBeenCalled();
@@ -124,19 +126,25 @@ describe('StaffService', () => {
       });
 
       await expect(service.create(createStaffDto)).rejects.toThrow(
-        new BadRequestException('Un profil staff "John Doe" existe déjà.')
+        new BadRequestException('Un profil staff "John Doe" existe déjà.'),
       );
     });
 
     it('should hash password before storing', async () => {
-      const mockUser = { id: 'user-id', email: 'staff@example.com', role: Role.STAFF };
+      const mockUser = {
+        id: 'user-id',
+        email: 'staff@example.com',
+        role: Role.STAFF,
+      };
       const mockProfile = { id: 1, userId: 'user-id' };
 
       mockPrismaService.user.findUnique.mockResolvedValue(null);
       mockPrismaService.staffProfile.findFirst.mockResolvedValue(null);
 
       const mockTxUser = { create: jest.fn().mockResolvedValue(mockUser) };
-      const mockTxProfile = { create: jest.fn().mockResolvedValue(mockProfile) };
+      const mockTxProfile = {
+        create: jest.fn().mockResolvedValue(mockProfile),
+      };
 
       mockPrismaService.$transaction.mockImplementation(async (callback) => {
         return callback({
@@ -170,14 +178,20 @@ describe('StaffService', () => {
       ];
 
       for (const discipline of disciplines) {
-        const dto = { ...createStaffDto, discipline, email: `${discipline}@example.com` };
-        
+        const dto = {
+          ...createStaffDto,
+          discipline,
+          email: `${discipline}@example.com`,
+        };
+
         mockPrismaService.user.findUnique.mockResolvedValue(null);
         mockPrismaService.staffProfile.findFirst.mockResolvedValue(null);
         mockPrismaService.$transaction.mockImplementation(async (callback) => {
           return callback({
             user: { create: jest.fn().mockResolvedValue({ id: 'user-id' }) },
-            staffProfile: { create: jest.fn().mockResolvedValue({ id: 1, discipline }) },
+            staffProfile: {
+              create: jest.fn().mockResolvedValue({ id: 1, discipline }),
+            },
           });
         });
 
@@ -204,7 +218,9 @@ describe('StaffService', () => {
         },
       ];
 
-      mockPrismaService.staffProfile.findMany.mockResolvedValue(mockStaffProfiles);
+      mockPrismaService.staffProfile.findMany.mockResolvedValue(
+        mockStaffProfiles,
+      );
 
       const result = await service.findAll();
 
@@ -247,7 +263,7 @@ describe('StaffService', () => {
       mockPrismaService.staffProfile.findUnique.mockResolvedValue(null);
 
       await expect(service.findOne(999)).rejects.toThrow(
-        new NotFoundException('Staff 999 introuvable')
+        new NotFoundException('Staff 999 introuvable'),
       );
     });
   });
@@ -310,7 +326,9 @@ describe('StaffService', () => {
       });
 
       await expect(service.update(1, updateDto)).rejects.toThrow(
-        new BadRequestException('Un autre profil staff "Jane Smith" existe déjà.')
+        new BadRequestException(
+          'Un autre profil staff "Jane Smith" existe déjà.',
+        ),
       );
 
       expect(mockPrismaService.staffProfile.update).not.toHaveBeenCalled();
@@ -384,7 +402,7 @@ describe('StaffService', () => {
       mockPrismaService.staffProfile.deleteMany.mockResolvedValue({ count: 0 });
 
       await expect(service.remove(999)).rejects.toThrow(
-        new NotFoundException('Staff 999 introuvable')
+        new NotFoundException('Staff 999 introuvable'),
       );
     });
   });
@@ -407,7 +425,9 @@ describe('StaffService', () => {
       mockPrismaService.$transaction.mockImplementation(async (callback) => {
         return callback({
           user: { create: jest.fn().mockResolvedValue({ id: 'user-id' }) },
-          staffProfile: { create: jest.fn().mockResolvedValue({ id: 1, specialty: '' }) },
+          staffProfile: {
+            create: jest.fn().mockResolvedValue({ id: 1, specialty: '' }),
+          },
         });
       });
 
@@ -432,13 +452,13 @@ describe('StaffService', () => {
       mockPrismaService.$transaction.mockImplementation(async (callback) => {
         return callback({
           user: { create: jest.fn().mockResolvedValue({ id: 'user-id' }) },
-          staffProfile: { 
-            create: jest.fn().mockResolvedValue({ 
-              id: 1, 
-              firstName: 'José', 
+          staffProfile: {
+            create: jest.fn().mockResolvedValue({
+              id: 1,
+              firstName: 'José',
               lastName: 'González',
-              specialty: 'Éducation spécialisée'
-            }) 
+              specialty: 'Éducation spécialisée',
+            }),
           },
         });
       });
@@ -452,7 +472,7 @@ describe('StaffService', () => {
     it('should handle future birth dates', async () => {
       const futureDate = new Date();
       futureDate.setFullYear(futureDate.getFullYear() + 1);
-      
+
       const updateDto = { birthDate: futureDate.toISOString().split('T')[0] };
 
       jest.spyOn(service, 'findOne').mockResolvedValue({
@@ -471,4 +491,4 @@ describe('StaffService', () => {
       expect(result.birthDate).toEqual(futureDate);
     });
   });
-}); 
+});

@@ -31,6 +31,7 @@ import { BlogModule } from './blog/blog.module';
 
 // **Nouvel import**
 import { ChatModule } from './chat/chat.module';
+import { EmergencyContactModule } from './emergency-contact/emergency-contact.module';
 
 function readSecret(path: string, envVar: string): string {
   // si la variable d’environnement est présente (mode docker-compose), on la prend
@@ -72,7 +73,7 @@ function readSecret(path: string, envVar: string): string {
         };
       },
     }),
-    ScheduleModule.forRoot(), 
+    ScheduleModule.forRoot(),
     // Modules métiers
     AuthModule,
     AcademicYearModule,
@@ -92,6 +93,7 @@ function readSecret(path: string, envVar: string): string {
     PlanningModule,
     EventModule,
     BlogModule,
+    EmergencyContactModule,
 
     // **Module Chat pour la messagerie instantanée**
     ChatModule,

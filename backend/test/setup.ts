@@ -33,16 +33,20 @@ jest.mock('openai', () => ({
   OpenAI: jest.fn(() => ({
     chat: {
       completions: {
-        create: jest.fn(() => Promise.resolve({
-          choices: [{
-            message: {
-              content: 'Mocked AI response'
-            }
-          }]
-        }))
-      }
-    }
-  }))
+        create: jest.fn(() =>
+          Promise.resolve({
+            choices: [
+              {
+                message: {
+                  content: 'Mocked AI response',
+                },
+              },
+            ],
+          }),
+        ),
+      },
+    },
+  })),
 }));
 
 // Cleanup après chaque test
@@ -57,4 +61,4 @@ beforeAll(() => {
 
 afterAll(() => {
   // Cleanup global
-}); 
+});

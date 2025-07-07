@@ -4,7 +4,7 @@ import { ref, reactive } from "vue";
 import { socket, initSocket } from "@/plugins/socket";
 import router from "@/router";
 import { useAuthStore } from "./auth";
-import { API_BASE_URL } from "@/utils/api";
+import { secureJsonCall, API_BASE_URL } from "@/utils/api";
 
 /* URL racine de l'API Nest */
 const API = API_BASE_URL ?? import.meta.env.VITE_NEST_API_URL ?? '';
@@ -48,34 +48,28 @@ export const useChatStore = defineStore("chat", () => {
       "Content-Type": "application/json",
     };
   }
-  async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
-    const res = await fetch(url, init);
-    if (!res.ok) throw new Error(await res.text());
-    return res.json() as Promise<T>;
-  }
 
   /* actions */
 
   async function fetchChats() {
-    const raw = await fetchJSON<any[]>(`${API}/chats`, {
-      headers: authHeaders(),
-    });
-    console.log("Chats reçus du backend:", raw);
-    chats.value = raw.map((c) => ({
-      ...c,
-      id: c.id ?? c._id,
-      updatedAt: c.updatedAt,
-      lastMessage: c.lastMessage,
-      createdAt: c.createdAt,
-      unreadCount: c.unreadCount ?? 0,
-    }));
+    try {
+      const raw = await secureJsonCall(`${API}/chats`);
+      chats.value = raw.map((c: any) => ({
+        ...c,
+        id: c.id ?? c._id,
+        updatedAt: c.updatedAt,
+        lastMessage: c.lastMessage,
+        createdAt: c.createdAt,
+        unreadCount: c.unreadCount ?? 0,
+      }));
+    } catch (error) {
+      console.error("Erreur fetchChats:", error);
+    }
   }
 
   async function fetchContacts() {
     try {
-      contacts.value = await fetchJSON<Contact[]>(`${API}/chats/contacts`, {
-        headers: authHeaders(),
-      });
+      contacts.value = await secureJsonCall(`${API}/chats/contacts`);
     } catch (err: any) {
       console.error("Erreur chargement contacts", err);
       const notification = (
@@ -89,21 +83,24 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   async function fetchMessages(chatId: string, limit = 100) {
-    const raw = await fetchJSON<any[]>(
-      `${API}/chats/${chatId}/messages?limit=${limit}`,
-      { headers: authHeaders() }
-    );
-    messages[chatId] = raw
-      .map((m) => ({
-        id: m._id ?? m.id,
-        authorId: m.authorId ?? m.author,
-        content: m.content,
-        sentAt: m.sentAt,
-        editedAt: m.editedAt,
-      }))
-      .sort(
-        (a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()
+    try {
+      const raw = await secureJsonCall(
+        `${API}/chats/${chatId}/messages?limit=${limit}`
       );
+      messages[chatId] = raw
+        .map((m: any) => ({
+          id: m._id ?? m.id,
+          authorId: m.authorId ?? m.author,
+          content: m.content,
+          sentAt: m.sentAt,
+          editedAt: m.editedAt,
+        }))
+        .sort(
+          (a: ChatMessage, b: ChatMessage) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()
+        );
+    } catch (error) {
+      console.error("Erreur fetchMessages:", error);
+    }
   }
 
   async function createChatWith(userId: string) {
@@ -116,14 +113,10 @@ export const useChatStore = defineStore("chat", () => {
       return;
     }
     try {
-      const res = await fetchJSON<{ id?: string; _id?: string }>(
-        `${API}/chats`,
-        {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ participants: [myId, userId] }),
-        }
-      );
+      const res = await secureJsonCall(`${API}/chats`, {
+        method: "POST",
+        body: JSON.stringify({ participants: [myId, userId] }),
+      });
       const chatId = res.id ?? res._id;
       if (!chatId) throw new Error("id manquant dans la réponse createChat");
 
@@ -199,11 +192,10 @@ export const useChatStore = defineStore("chat", () => {
     // Réinitialise localement
     chat.unreadCount = 0;
 
-    // Signale au backend pour persistance
+    // Signale au backend pour persistance avec CSRF
     try {
-      await fetch(`${API}/chats/${chatId}/read`, {
+      await secureJsonCall(`${API}/chats/${chatId}/read`, {
         method: "PATCH",
-        headers: authHeaders(),
       });
     } catch (err) {
       console.error("Erreur markAsRead", err);

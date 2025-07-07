@@ -1,6 +1,7 @@
-// frontend/src/stores/journalStore.ts
-import { defineStore } from "pinia";
-import { API_BASE_URL } from "@/utils/api";
+import { defineStore } from 'pinia'
+import { useAuthStore } from './auth'
+import { secureApiCall, secureJsonCall, API_BASE_URL } from '@/utils/api'
+import { AuthService } from '@/utils/auth'
 
 /* --------------------------------------------------------------------------- */
 /*                               Type definitions                              */
@@ -54,10 +55,10 @@ interface Journal {
 export const useJournalStore = defineStore("journal", {
   state: () => ({
     childrenRefered: [] as Child[],
-    academicYears: [] as AcademicYear[],
-    missions: [] as Mission[],
-    journals: [] as Journal[],
-    entries: [] as Journal[], // ajout pour Home.vue
+    academicYears  : [] as AcademicYear[],
+    missions       : [] as Mission[],
+    journals       : [] as Journal[],
+    entries        : [] as Journal[],
 
     selectedYearId: null as number | null,
     currentChildId: null as number | null,
@@ -66,87 +67,87 @@ export const useJournalStore = defineStore("journal", {
     educatorName: "" as string,
 
     loading: false,
-    error: "" as string,
+    error  : '' as string,
+    
+    currentUserId: null as string | null,
   }),
 
   actions: {
-    /* --------------------------------------------------------------------- */
-    /*                               Helpers                                 */
-    /* --------------------------------------------------------------------- */
-    getAuthHeaders() {
-      const token = localStorage.getItem("token");
-      const headers: Record<string, string> = {};
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-      return headers;
+    resetStore() {
+      this.childrenRefered = []
+      this.academicYears = []
+      this.missions = []
+      this.journals = []
+      this.entries = []
+      this.selectedYearId = null
+      this.currentChildId = null
+      this.childName = ''
+      this.educatorName = ''
+      this.loading = false
+      this.error = ''
+      this.currentUserId = null
     },
 
-    /* --------------------------------------------------------------------- */
-    /*            ✨ IA – suggestion d'amélioration de mission ✨              */
-    /* --------------------------------------------------------------------- */
-    async proposeMissionImprovement(prompt: string): Promise<string> {
-      const headers = {
-        ...this.getAuthHeaders(),
-        "Content-Type": "application/json",
-      };
-
-      const res = await fetch(`${API_BASE_URL}/ai/mission-improve`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ prompt }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || res.statusText);
+    checkUserChange() {
+      const authStore = useAuthStore()
+      const newUserId = authStore.user?.id || null
+      
+      if (this.currentUserId !== newUserId) {
+        this.resetStore()
+        this.currentUserId = newUserId
       }
-
-      const data = await res.json();
-      return (data.suggestion ?? data.content ?? "").toString();
     },
 
-    /* --------------------------------------------------------------------- */
-    /*                               Children                                */
-    /* --------------------------------------------------------------------- */
+    async proposeMissionImprovement(prompt: string, type: 'mission' | 'observation' | 'progression' | 'blog' = 'mission'): Promise<string> {
+      const data = await secureJsonCall(`${API_BASE_URL}/ai/mission-improve`, {
+        method: 'POST',
+        body: JSON.stringify({ prompt, type }),
+      })
+      return (data.suggestion ?? data.content ?? '').toString()
+    },
+
     async fetchReferentChildren() {
-      this.loading = true;
-      this.error = "";
+      this.checkUserChange()
+      
+      this.loading = true
+      this.error   = ''
       try {
-        const headers = {
-          ...this.getAuthHeaders(),
-          "Content-Type": "application/json",
-        };
-        const res = await fetch(`${API_BASE_URL}/children/referents`, {
-          headers,
-        });
-        if (!res.ok)
-          throw new Error(
-            (await res.json().catch(() => ({}))).message || res.statusText
-          );
-        this.childrenRefered = await res.json();
+        const authStore = useAuthStore()
+        const userRole = authStore.user?.role
+        
+        let url = `${API_BASE_URL}/children`
+        
+        if (userRole === 'CHILD') {
+          url = `${API_BASE_URL}/children/me`
+        } else if (userRole === 'PARENT') {
+          url = `${API_BASE_URL}/children`
+        } else if (['STAFF', 'TEACHER', 'SERVICE_MANAGER', 'SECRETARY', 'DIRECTOR', 'ADMIN'].includes(userRole || '')) {
+          url = `${API_BASE_URL}/children/referents`
+        } else {
+          throw new Error('Accès non autorisé : rôle inconnu ou non autorisé')
+        }
+
+        const data = await secureJsonCall(url)
+        
+        if (userRole === 'CHILD') {
+          this.childrenRefered = [data]
+        } else {
+          this.childrenRefered = data
+        }
+        
       } catch (e: any) {
-        this.error = e.message;
+        this.error = e.message
+        this.childrenRefered = []
       } finally {
         this.loading = false;
       }
     },
 
-    /* --------------------------------------------------------------------- */
-    /*                             Academic years                            */
-    /* --------------------------------------------------------------------- */
     async fetchAcademicYears() {
       this.loading = true;
       this.error = "";
       try {
-        const headers = {
-          ...this.getAuthHeaders(),
-          "Content-Type": "application/json",
-        };
-        const res = await fetch(`${API_BASE_URL}/academic-year`, { headers });
-        if (!res.ok)
-          throw new Error(
-            (await res.json().catch(() => ({}))).message || res.statusText
-          );
-        this.academicYears = await res.json();
+        this.academicYears = await secureJsonCall(`${API_BASE_URL}/academic-year`)
       } catch (e: any) {
         this.error = e.message;
       } finally {
@@ -154,24 +155,12 @@ export const useJournalStore = defineStore("journal", {
       }
     },
 
-    /* --------------------------------------------------------------------- */
-    /*                                 Missions                              */
-    /* --------------------------------------------------------------------- */
     async fetchMissions(childId: number, yearId: number) {
       this.loading = true;
       this.error = "";
       try {
-        const headers = {
-          ...this.getAuthHeaders(),
-          "Content-Type": "application/json",
-        };
-        const url = `${API_BASE_URL}/mission/child/${childId}/year/${yearId}`;
-        const res = await fetch(url, { headers });
-        if (!res.ok)
-          throw new Error(
-            (await res.json().catch(() => ({}))).message || res.statusText
-          );
-        this.missions = await res.json();
+        const url = `${API_BASE_URL}/mission/child/${childId}/year/${yearId}`
+        this.missions = await secureJsonCall(url)
       } catch (e: any) {
         this.error = e.message;
       } finally {
@@ -187,29 +176,22 @@ export const useJournalStore = defineStore("journal", {
       this.error = "";
       this.loading = true;
       try {
-        const headers = {
-          ...this.getAuthHeaders(),
-          "Content-Type": "application/json",
-        };
-
         /* 1) Delete existantes */
         for (const m of this.missions) {
-          await fetch(`${API_BASE_URL}/mission/${m.id}`, {
-            method: "DELETE",
-            headers,
-          });
+          await secureApiCall(`${API_BASE_URL}/mission/${m.id}`, {
+            method: 'DELETE',
+          })
         }
 
         /* 2) Create */
-        const createUrl = `${API_BASE_URL}/mission/child/${childId}/year/${yearId}`;
+        const createUrl = `${API_BASE_URL}/mission/child/${childId}/year/${yearId}`
         for (const m of payload) {
           const desc = m.description.trim();
           if (desc) {
-            await fetch(createUrl, {
-              method: "POST",
-              headers,
+            await secureJsonCall(createUrl, {
+              method: 'POST',
               body: JSON.stringify({ description: desc }),
-            });
+            })
           }
         }
 
@@ -223,27 +205,12 @@ export const useJournalStore = defineStore("journal", {
       }
     },
 
-    /* --------------------------------------------------------------------- */
-    /*                                 Journaux                              */
-    /* --------------------------------------------------------------------- */
-    /**
-     * Récupère les journaux d'un enfant pour une année scolaire
-     */
     async fetchJournals(childId: number, yearId: number) {
       this.loading = true;
       this.error = "";
       try {
-        const headers = {
-          ...this.getAuthHeaders(),
-          "Content-Type": "application/json",
-        };
-        const url = `${API_BASE_URL}/journal/child/${childId}?yearId=${yearId}`;
-        const res = await fetch(url, { headers });
-        if (!res.ok)
-          throw new Error(
-            (await res.json().catch(() => ({}))).message || res.statusText
-          );
-        this.journals = await res.json();
+        const url = `${API_BASE_URL}/journal/child/${childId}?yearId=${yearId}`
+        this.journals = await secureJsonCall(url)
       } catch (e: any) {
         this.error = e.message;
       } finally {
@@ -251,26 +218,12 @@ export const useJournalStore = defineStore("journal", {
       }
     },
 
-    /**
-     * Récupère toutes les entrées de journal pour le mois donné (format 'YYYY-MM').
-     */
     async fetchEntries(month: string) {
       this.loading = true;
       this.error = "";
       try {
-        const headers = {
-          ...this.getAuthHeaders(),
-          "Content-Type": "application/json",
-        };
-        const url = `${API_BASE_URL}/journal?month=${encodeURIComponent(
-          month
-        )}`;
-        const res = await fetch(url, { headers });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.message || res.statusText);
-        }
-        this.entries = await res.json();
+        const url = `${API_BASE_URL}/journal?month=${encodeURIComponent(month)}`
+        this.entries = await secureJsonCall(url)
       } catch (e: any) {
         this.error = e.message;
       } finally {
@@ -287,20 +240,10 @@ export const useJournalStore = defineStore("journal", {
     }) {
       this.error = "";
       try {
-        const headers = {
-          ...this.getAuthHeaders(),
-          "Content-Type": "application/json",
-        };
-        const res = await fetch(`${API_BASE_URL}/journal`, {
-          method: "POST",
-          headers,
+        return await secureJsonCall(`${API_BASE_URL}/journal`, {
+          method: 'POST',
           body: JSON.stringify(payload),
-        });
-        if (!res.ok)
-          throw new Error(
-            (await res.json().catch(() => ({}))).message || res.statusText
-          );
-        return (await res.json()) as Journal;
+        }) as Journal
       } catch (e: any) {
         this.error = e.message;
         throw e;
@@ -313,20 +256,10 @@ export const useJournalStore = defineStore("journal", {
     ) {
       this.error = "";
       try {
-        const headers = {
-          ...this.getAuthHeaders(),
-          "Content-Type": "application/json",
-        };
-        const res = await fetch(`${API_BASE_URL}/journal/${journalId}`, {
-          method: "PATCH",
-          headers,
+        return await secureJsonCall(`${API_BASE_URL}/journal/${journalId}`, {
+          method: 'PATCH',
           body: JSON.stringify(payload),
-        });
-        if (!res.ok)
-          throw new Error(
-            (await res.json().catch(() => ({}))).message || res.statusText
-          );
-        return (await res.json()) as Journal;
+        }) as Journal
       } catch (e: any) {
         this.error = e.message;
         throw e;
@@ -336,17 +269,9 @@ export const useJournalStore = defineStore("journal", {
     async submitJournal(journalId: number) {
       this.error = "";
       try {
-        // On n'envoie pas de Content-Type pour accepter un corps vide
-        const headers = this.getAuthHeaders();
-        const res = await fetch(`${API_BASE_URL}/journal/${journalId}/submit`, {
-          method: "POST",
-          headers,
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.message || res.statusText);
-        }
-        return (await res.json()) as Journal;
+        return await secureJsonCall(`${API_BASE_URL}/journal/${journalId}/submit`, {
+          method: 'POST',
+        }) as Journal
       } catch (e: any) {
         this.error = e.message;
         throw e;
@@ -356,48 +281,33 @@ export const useJournalStore = defineStore("journal", {
     async reopenJournal(journalId: number, reason: string) {
       this.error = "";
       try {
-        const headers = {
-          ...this.getAuthHeaders(),
-          "Content-Type": "application/json",
-        };
-        const res = await fetch(`${API_BASE_URL}/journal/${journalId}/reopen`, {
-          method: "POST",
-          headers,
+        return await secureJsonCall(`${API_BASE_URL}/journal/${journalId}/reopen`, {
+          method: 'POST',
           body: JSON.stringify({ reason }),
-        });
-        if (!res.ok)
-          throw new Error(
-            (await res.json().catch(() => ({}))).message || res.statusText
-          );
-        return (await res.json()) as Journal;
+        }) as Journal
       } catch (e: any) {
         this.error = e.message;
         throw e;
       }
     },
 
-    /* --------------------------------------------------------------------- */
-    /*                             Pièces jointes                            */
-    /* --------------------------------------------------------------------- */
     async uploadAttachment(journalId: number, file: File) {
       this.error = "";
       try {
-        const headers = this.getAuthHeaders();
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await fetch(
-          `${API_BASE_URL}/journal/${journalId}/attachment`,
-          {
-            method: "POST",
-            headers,
-            body: formData,
-          }
-        );
-        if (!res.ok)
-          throw new Error(
-            (await res.json().catch(() => ({}))).message || res.statusText
-          );
-        return await res.json();
+        const formData = new FormData()
+        formData.append('file', file)
+        
+        const res = await secureApiCall(`${API_BASE_URL}/journal/${journalId}/attachment`, {
+          method: 'POST',
+          body: formData,
+        })
+        
+        if (!res.ok) {
+          const errorData = await res.json()
+          throw new Error(errorData.message || res.statusText)
+        }
+        
+        return await res.json()
       } catch (e: any) {
         this.error = e.message;
         throw e;
@@ -407,19 +317,9 @@ export const useJournalStore = defineStore("journal", {
     async deleteAttachment(attachmentId: number) {
       this.error = "";
       try {
-        const headers = this.getAuthHeaders();
-        const res = await fetch(
-          `${API_BASE_URL}/journal/attachment/${attachmentId}`,
-          {
-            method: "DELETE",
-            headers,
-          }
-        );
-        if (!res.ok)
-          throw new Error(
-            (await res.json().catch(() => ({}))).message || res.statusText
-          );
-        return true;
+        await secureApiCall(`${API_BASE_URL}/journal/attachment/${attachmentId}`, {
+          method: 'DELETE',
+        })
       } catch (e: any) {
         this.error = e.message;
         throw e;

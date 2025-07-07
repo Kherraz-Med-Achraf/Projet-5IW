@@ -8,7 +8,7 @@ export class BlogPostResponseDto {
   mediaType?: PostMediaType;
   createdAt: Date;
   updatedAt: Date;
-  
+
   // Informations sur l'auteur
   author: {
     id: string;
@@ -23,4 +23,4 @@ export class BlogPostResponseDto {
 
   // Réaction de l'utilisateur actuel (si connecté)
   userReaction?: ReactionType;
-} 
+}

@@ -138,8 +138,6 @@ describe('Presence DTOs', () => {
         expect(errors).toHaveLength(0);
       });
 
-
-
       it('should reject ABSENCE with empty motif', async () => {
         const dto = plainToClass(JustifyAbsenceDto, {
           type: JustificationType.ABSENCE,
@@ -151,8 +149,6 @@ describe('Presence DTOs', () => {
         expect(errors).toHaveLength(1);
         expect(errors[0].property).toBe('motif');
       });
-
-
     });
 
     describe('LATENESS type validation', () => {
@@ -229,7 +225,7 @@ describe('Presence DTOs', () => {
       it('should handle future dates', async () => {
         const futureDate = new Date();
         futureDate.setFullYear(futureDate.getFullYear() + 1);
-        
+
         const dto = plainToClass(JustifyAbsenceDto, {
           type: JustificationType.ABSENCE,
           justificationDate: futureDate.toISOString().split('T')[0],
@@ -267,7 +263,7 @@ describe('Presence DTOs', () => {
         const dto = plainToClass(JustifyAbsenceDto, {
           type: JustificationType.ABSENCE,
           justificationDate: '2025-01-15',
-          motif: 'Rendez-vous médical à l\'hôpital (urgence) - 15h30',
+          motif: "Rendez-vous médical à l'hôpital (urgence) - 15h30",
         });
 
         const errors = await validate(dto);
@@ -303,4 +299,4 @@ describe('Presence DTOs', () => {
       expect(values).toContain('LATENESS');
     });
   });
-}); 
+});

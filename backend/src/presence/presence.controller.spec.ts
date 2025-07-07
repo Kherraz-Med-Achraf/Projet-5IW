@@ -76,18 +76,22 @@ describe('PresenceController', () => {
 
       const result = await controller.createSheet(dto, mockRequest as any);
 
-      expect(service.createSheet).toHaveBeenCalledWith('2025-01-15', 'user-123');
+      expect(service.createSheet).toHaveBeenCalledWith(
+        '2025-01-15',
+        'user-123',
+      );
       expect(result).toEqual(mockSheet);
     });
 
     it('should handle service errors', async () => {
       const dto = { date: '2025-01-15' };
       mockPresenceService.createSheet.mockRejectedValue(
-        new BadRequestException('Feuille déjà existante')
+        new BadRequestException('Feuille déjà existante'),
       );
 
-      await expect(controller.createSheet(dto, mockRequest as any))
-        .rejects.toThrow(BadRequestException);
+      await expect(
+        controller.createSheet(dto, mockRequest as any),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -96,27 +100,30 @@ describe('PresenceController', () => {
       const sheetId = 1;
       const dto = { presentChildIds: [1, 2] };
       const validatedSheet = { ...mockSheet, status: 'PENDING_SECRETARY' };
-      
+
       mockPresenceService.validateSheet.mockResolvedValue(validatedSheet);
 
-      const result = await controller.validateSheet(sheetId, dto, mockRequest as any);
+      const result = await controller.validateSheet(
+        sheetId,
+        dto,
+        mockRequest as any,
+      );
 
       expect(service.validateSheet).toHaveBeenCalledWith(1, [1, 2], 'user-123');
       expect(result).toEqual(validatedSheet);
     });
 
-
-
     it('should handle non-existent sheet', async () => {
       const sheetId = 999;
       const dto = { presentChildIds: [1] };
-      
+
       mockPresenceService.validateSheet.mockRejectedValue(
-        new NotFoundException('Feuille introuvable')
+        new NotFoundException('Feuille introuvable'),
       );
 
-      await expect(controller.validateSheet(sheetId, dto, mockRequest as any))
-        .rejects.toThrow(NotFoundException);
+      await expect(
+        controller.validateSheet(sheetId, dto, mockRequest as any),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -141,7 +148,7 @@ describe('PresenceController', () => {
       expect(service.justify).toHaveBeenCalledWith(
         1,
         dto,
-        '/uploads/justifications/certificat.pdf'
+        '/uploads/justifications/certificat.pdf',
       );
       expect(result).toEqual(justifiedSheet);
     });
@@ -171,11 +178,12 @@ describe('PresenceController', () => {
       };
 
       mockPresenceService.justify.mockRejectedValue(
-        new NotFoundException('Enregistrement introuvable')
+        new NotFoundException('Enregistrement introuvable'),
       );
 
-      await expect(controller.justify(recordId, dto, undefined))
-        .rejects.toThrow(NotFoundException);
+      await expect(
+        controller.justify(recordId, dto, undefined),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -189,23 +197,15 @@ describe('PresenceController', () => {
       expect(service.findByDate).toHaveBeenCalledWith('2025-01-15');
       expect(result).toEqual(mockSheet);
     });
-
-
-
-
   });
 
-  describe('phone number masking', () => {
-
-
-
-  });
+  describe('phone number masking', () => {});
 
   describe('role-based access', () => {
     it('should allow STAFF to create and validate sheets', async () => {
       const dto = { date: '2025-01-15' };
       const staffRequest = { user: { id: 'staff-1', role: 'STAFF' } };
-      
+
       mockPresenceService.createSheet.mockResolvedValue(mockSheet);
 
       const result = await controller.createSheet(dto, staffRequest as any);
@@ -233,19 +233,21 @@ describe('PresenceController', () => {
     it('should handle service unavailable', async () => {
       const dto = { date: '2025-01-15' };
       mockPresenceService.createSheet.mockRejectedValue(
-        new Error('Database connection failed')
+        new Error('Database connection failed'),
       );
 
-      await expect(controller.createSheet(dto, mockRequest as any))
-        .rejects.toThrow('Database connection failed');
+      await expect(
+        controller.createSheet(dto, mockRequest as any),
+      ).rejects.toThrow('Database connection failed');
     });
 
     it('should handle malformed request data', async () => {
       const dto = { date: null };
-      
+
       // This would normally be caught by validation pipes
-      await expect(controller.createSheet(dto as any, mockRequest as any))
-        .rejects.toThrow();
+      await expect(
+        controller.createSheet(dto as any, mockRequest as any),
+      ).rejects.toThrow();
     });
   });
-}); 
+});

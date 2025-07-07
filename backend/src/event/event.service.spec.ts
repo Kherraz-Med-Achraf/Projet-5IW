@@ -3,7 +3,7 @@ jest.mock('stripe', () => {
   const MockStripe = class {
     public checkout: any;
     public refunds: any;
-    
+
     constructor() {
       this.checkout = {
         sessions: {
@@ -22,7 +22,7 @@ jest.mock('stripe', () => {
       };
     }
   };
-  
+
   return {
     __esModule: true,
     default: MockStripe,
@@ -33,7 +33,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { EventService } from './event.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PaymentMethod, PaymentStatus, Role } from '@prisma/client';
 
 describe('EventService', () => {
@@ -151,14 +155,16 @@ describe('EventService', () => {
       // Reset all mocks completely
       mockPrismaService.event.findMany.mockReset();
       mockPrismaService.eventRegistrationChild.count.mockReset();
-      
+
       mockPrismaService.event.findMany.mockResolvedValue(mockEvents);
       mockPrismaService.eventRegistrationChild.count.mockResolvedValue(8); // More than capacity
 
       const result = await service.listUpcoming();
 
-      expect(mockPrismaService.eventRegistrationChild.count).toHaveBeenCalledWith({
-        where: { registration: { eventId: 'event-1' } }
+      expect(
+        mockPrismaService.eventRegistrationChild.count,
+      ).toHaveBeenCalledWith({
+        where: { registration: { eventId: 'event-1' } },
       });
       expect(result[0].capacityLeft).toBe(0); // Math.max(5 - 8, 0) = 0
     });
@@ -171,7 +177,7 @@ describe('EventService', () => {
       date: '2024-01-06', // Saturday
       startTime: '10:00',
       endTime: '12:00',
-      price: 25.50,
+      price: 25.5,
       capacity: 20,
     };
 
@@ -191,7 +197,11 @@ describe('EventService', () => {
 
       mockPrismaService.event.create.mockResolvedValue(mockEvent);
 
-      const result = await service.create(createEventDto, 'user-1', 'test-image.jpg');
+      const result = await service.create(
+        createEventDto,
+        'user-1',
+        'test-image.jpg',
+      );
 
       expect(mockPrismaService.event.create).toHaveBeenCalledWith({
         data: {
@@ -213,20 +223,24 @@ describe('EventService', () => {
       const invalidDto = { ...createEventDto, date: '2024-01-05' }; // Friday
 
       await expect(service.create(invalidDto, 'user-1')).rejects.toThrow(
-        new BadRequestException('La date doit être un samedi')
+        new BadRequestException('La date doit être un samedi'),
       );
     });
 
     it('should throw BadRequestException when end time is before start time', async () => {
-      const invalidDto = { ...createEventDto, startTime: '12:00', endTime: '10:00' };
+      const invalidDto = {
+        ...createEventDto,
+        startTime: '12:00',
+        endTime: '10:00',
+      };
 
       await expect(service.create(invalidDto, 'user-1')).rejects.toThrow(
-        new BadRequestException('Heure de fin invalide')
+        new BadRequestException('Heure de fin invalide'),
       );
     });
 
-         it('should handle null capacity', async () => {
-       const { capacity, ...dtoWithoutCapacity } = createEventDto;
+    it('should handle null capacity', async () => {
+      const { capacity, ...dtoWithoutCapacity } = createEventDto;
 
       const mockEvent = { id: 'event-1', capacity: null };
       mockPrismaService.event.create.mockResolvedValue(mockEvent);
@@ -311,17 +325,19 @@ describe('EventService', () => {
     it('should throw NotFoundException when event not found', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(null);
 
-      await expect(service.update('event-1', updateDto, Role.DIRECTOR)).rejects.toThrow(
-        new NotFoundException('Événement introuvable')
-      );
+      await expect(
+        service.update('event-1', updateDto, Role.DIRECTOR),
+      ).rejects.toThrow(new NotFoundException('Événement introuvable'));
     });
 
     it('should throw ForbiddenException when event is locked', async () => {
       const lockedEvent = { ...existingEvent, isLocked: true };
       mockPrismaService.event.findUnique.mockResolvedValue(lockedEvent);
 
-      await expect(service.update('event-1', updateDto, Role.DIRECTOR)).rejects.toThrow(
-        new ForbiddenException('Événement verrouillé après inscriptions')
+      await expect(
+        service.update('event-1', updateDto, Role.DIRECTOR),
+      ).rejects.toThrow(
+        new ForbiddenException('Événement verrouillé après inscriptions'),
       );
     });
 
@@ -331,9 +347,9 @@ describe('EventService', () => {
       const unauthorizedRoles = [Role.PARENT, Role.STAFF, Role.SECRETARY];
 
       for (const role of unauthorizedRoles) {
-        await expect(service.update('event-1', updateDto, role)).rejects.toThrow(
-          new ForbiddenException()
-        );
+        await expect(
+          service.update('event-1', updateDto, role),
+        ).rejects.toThrow(new ForbiddenException());
       }
     });
 
@@ -341,9 +357,9 @@ describe('EventService', () => {
       const invalidDto = { ...updateDto, price: -10 };
       mockPrismaService.event.findUnique.mockResolvedValue(existingEvent);
 
-      await expect(service.update('event-1', invalidDto, Role.DIRECTOR)).rejects.toThrow(
-        new BadRequestException('Le prix doit être positif')
-      );
+      await expect(
+        service.update('event-1', invalidDto, Role.DIRECTOR),
+      ).rejects.toThrow(new BadRequestException('Le prix doit être positif'));
     });
 
     it('should handle partial updates', async () => {
@@ -394,13 +410,15 @@ describe('EventService', () => {
       date: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
     };
 
-         const registerDto = {
-       childIds: [1, 2],
-       paymentMethod: PaymentMethod.CHEQUE,
-     };
+    const registerDto = {
+      childIds: [1, 2],
+      paymentMethod: PaymentMethod.CHEQUE,
+    };
 
     beforeEach(() => {
-      mockPrismaService.parentProfile.findUnique.mockResolvedValue(mockParentProfile);
+      mockPrismaService.parentProfile.findUnique.mockResolvedValue(
+        mockParentProfile,
+      );
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
       mockPrismaService.eventRegistration.findUnique.mockResolvedValue(null);
     });
@@ -420,21 +438,28 @@ describe('EventService', () => {
       };
 
       mockPrismaService.child.findMany.mockResolvedValue(mockChildren);
-      
+
       // Mock transaction
       mockPrismaService.$transaction.mockImplementation(async (callback) => {
         const mockTx = {
           event: { findUnique: jest.fn().mockResolvedValue(mockEvent) },
-          eventRegistrationChild: { 
+          eventRegistrationChild: {
             count: jest.fn().mockResolvedValue(0),
-            createMany: jest.fn().mockResolvedValue({ count: 2 })
+            createMany: jest.fn().mockResolvedValue({ count: 2 }),
           },
-          eventRegistration: { create: jest.fn().mockResolvedValue(mockRegistration) },
+          eventRegistration: {
+            create: jest.fn().mockResolvedValue(mockRegistration),
+          },
         };
         return callback(mockTx);
       });
 
-      const result = await service.register('event-1', 'user-1', registerDto, 'http://localhost');
+      const result = await service.register(
+        'event-1',
+        'user-1',
+        registerDto,
+        'http://localhost',
+      );
 
       expect(mockPrismaService.parentProfile.findUnique).toHaveBeenCalledWith({
         where: { userId: 'user-1' },
@@ -452,15 +477,17 @@ describe('EventService', () => {
     it('should throw NotFoundException when parent profile not found', async () => {
       mockPrismaService.parentProfile.findUnique.mockResolvedValue(null);
 
-      await expect(service.register('event-1', 'user-1', registerDto, 'http://localhost'))
-        .rejects.toThrow(new NotFoundException('Profil parent introuvable'));
+      await expect(
+        service.register('event-1', 'user-1', registerDto, 'http://localhost'),
+      ).rejects.toThrow(new NotFoundException('Profil parent introuvable'));
     });
 
     it('should throw NotFoundException when event not found', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(null);
 
-      await expect(service.register('event-1', 'user-1', registerDto, 'http://localhost'))
-        .rejects.toThrow(new NotFoundException('Événement introuvable'));
+      await expect(
+        service.register('event-1', 'user-1', registerDto, 'http://localhost'),
+      ).rejects.toThrow(new NotFoundException('Événement introuvable'));
     });
 
     it('should throw BadRequestException for past events', async () => {
@@ -470,8 +497,9 @@ describe('EventService', () => {
       };
       mockPrismaService.event.findUnique.mockResolvedValue(pastEvent);
 
-      await expect(service.register('event-1', 'user-1', registerDto, 'http://localhost'))
-        .rejects.toThrow(new BadRequestException('Événement passé'));
+      await expect(
+        service.register('event-1', 'user-1', registerDto, 'http://localhost'),
+      ).rejects.toThrow(new BadRequestException('Événement passé'));
     });
 
     it('should throw BadRequestException when already registered', async () => {
@@ -479,15 +507,19 @@ describe('EventService', () => {
         id: 'existing-reg',
       });
 
-      await expect(service.register('event-1', 'user-1', registerDto, 'http://localhost'))
-        .rejects.toThrow(new BadRequestException('Vous êtes déjà inscrit'));
+      await expect(
+        service.register('event-1', 'user-1', registerDto, 'http://localhost'),
+      ).rejects.toThrow(new BadRequestException('Vous êtes déjà inscrit'));
     });
 
     it('should throw BadRequestException when no children selected', async () => {
       const emptyDto = { ...registerDto, childIds: [] };
 
-      await expect(service.register('event-1', 'user-1', emptyDto, 'http://localhost'))
-        .rejects.toThrow(new BadRequestException('Au moins un enfant doit être inscrit'));
+      await expect(
+        service.register('event-1', 'user-1', emptyDto, 'http://localhost'),
+      ).rejects.toThrow(
+        new BadRequestException('Au moins un enfant doit être inscrit'),
+      );
     });
 
     it('should handle different payment methods', async () => {
@@ -507,25 +539,34 @@ describe('EventService', () => {
         // Mock transaction for each payment method
         mockPrismaService.$transaction.mockImplementation(async (callback) => {
           const mockTx = {
-            event: { 
+            event: {
               findUnique: jest.fn().mockResolvedValue(mockEvent),
-              update: jest.fn().mockResolvedValue(mockEvent)
+              update: jest.fn().mockResolvedValue(mockEvent),
             },
-            eventRegistrationChild: { 
+            eventRegistrationChild: {
               count: jest.fn().mockResolvedValue(0),
-              createMany: jest.fn().mockResolvedValue({ count: 1 })
+              createMany: jest.fn().mockResolvedValue({ count: 1 }),
             },
-            eventRegistration: { create: jest.fn().mockResolvedValue(mockRegistration) },
+            eventRegistration: {
+              create: jest.fn().mockResolvedValue(mockRegistration),
+            },
           };
           return callback(mockTx);
         });
 
         // Mock additional Prisma methods for Stripe
         if (paymentMethod === PaymentMethod.STRIPE) {
-          mockPrismaService.eventRegistration.update.mockResolvedValue(mockRegistration);
+          mockPrismaService.eventRegistration.update.mockResolvedValue(
+            mockRegistration,
+          );
         }
 
-        const result = await service.register('event-1', 'user-1', dto, 'http://localhost');
+        const result = await service.register(
+          'event-1',
+          'user-1',
+          dto,
+          'http://localhost',
+        );
         expect(result).toBeDefined();
       }
     });
@@ -548,17 +589,21 @@ describe('EventService', () => {
         },
       ];
 
-      mockPrismaService.eventRegistration.findMany.mockResolvedValue(mockRegistrations);
+      mockPrismaService.eventRegistration.findMany.mockResolvedValue(
+        mockRegistrations,
+      );
 
       const result = await service.listRegistrations('event-1');
 
-      expect(mockPrismaService.eventRegistration.findMany).toHaveBeenCalledWith({
-        where: { eventId: 'event-1' },
-        include: {
-          parentProfile: { include: { user: true } },
-          children: { include: { child: true } },
+      expect(mockPrismaService.eventRegistration.findMany).toHaveBeenCalledWith(
+        {
+          where: { eventId: 'event-1' },
+          include: {
+            parentProfile: { include: { user: true } },
+            children: { include: { child: true } },
+          },
         },
-      });
+      );
       expect(result).toEqual(mockRegistrations);
     });
   });
@@ -574,16 +619,18 @@ describe('EventService', () => {
             title: 'Test Event',
             date: new Date('2024-01-06'),
           },
-          children: [
-            { child: { firstName: 'Child1', lastName: 'Doe' } },
-          ],
+          children: [{ child: { firstName: 'Child1', lastName: 'Doe' } }],
           paymentStatus: PaymentStatus.PENDING,
           createdAt: new Date(),
         },
       ];
 
-      mockPrismaService.parentProfile.findUnique.mockResolvedValue(mockParentProfile);
-      mockPrismaService.eventRegistration.findMany.mockResolvedValue(mockRegistrations);
+      mockPrismaService.parentProfile.findUnique.mockResolvedValue(
+        mockParentProfile,
+      );
+      mockPrismaService.eventRegistration.findMany.mockResolvedValue(
+        mockRegistrations,
+      );
 
       const result = await service.listMyEvents('user-1');
 
@@ -633,7 +680,7 @@ describe('EventService', () => {
 
         if (shouldFail) {
           await expect(service.create(dto, 'user-1')).rejects.toThrow(
-            new BadRequestException('La date doit être un samedi')
+            new BadRequestException('La date doit être un samedi'),
           );
         } else {
           mockPrismaService.event.create.mockResolvedValue({ id: 'test' });
@@ -679,4 +726,4 @@ describe('EventService', () => {
       await expect(service.create(dto, 'user-1')).resolves.toBeDefined();
     });
   });
-}); 
+});

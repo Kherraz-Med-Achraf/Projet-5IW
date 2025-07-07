@@ -122,11 +122,31 @@ describe('Blog (e2e)', () => {
     staffId = staff.id;
 
     // Generate JWT tokens
-    secretaryToken = jwtService.sign({ sub: secretaryId, email: secretary.email, role: Role.SECRETARY });
-    directorToken = jwtService.sign({ sub: directorId, email: director.email, role: Role.DIRECTOR });
-    serviceManagerToken = jwtService.sign({ sub: serviceManagerId, email: serviceManager.email, role: Role.SERVICE_MANAGER });
-    parentToken = jwtService.sign({ sub: parentId, email: parent.email, role: Role.PARENT });
-    staffToken = jwtService.sign({ sub: staffId, email: staff.email, role: Role.STAFF });
+    secretaryToken = jwtService.sign({
+      sub: secretaryId,
+      email: secretary.email,
+      role: Role.SECRETARY,
+    });
+    directorToken = jwtService.sign({
+      sub: directorId,
+      email: director.email,
+      role: Role.DIRECTOR,
+    });
+    serviceManagerToken = jwtService.sign({
+      sub: serviceManagerId,
+      email: serviceManager.email,
+      role: Role.SERVICE_MANAGER,
+    });
+    parentToken = jwtService.sign({
+      sub: parentId,
+      email: parent.email,
+      role: Role.PARENT,
+    });
+    staffToken = jwtService.sign({
+      sub: staffId,
+      email: staff.email,
+      role: Role.STAFF,
+    });
   });
 
   afterAll(async () => {
@@ -293,14 +313,14 @@ describe('Blog (e2e)', () => {
       for (let i = 0; i < response.body.length - 1; i++) {
         const currentDate = new Date(response.body[i].createdAt);
         const nextDate = new Date(response.body[i + 1].createdAt);
-        expect(currentDate.getTime()).toBeGreaterThanOrEqual(nextDate.getTime());
+        expect(currentDate.getTime()).toBeGreaterThanOrEqual(
+          nextDate.getTime(),
+        );
       }
     });
 
     it('should reject unauthenticated requests', async () => {
-      await request(app.getHttpServer())
-        .get('/blog')
-        .expect(401);
+      await request(app.getHttpServer()).get('/blog').expect(401);
     });
   });
 
@@ -579,4 +599,4 @@ describe('Blog (e2e)', () => {
       expect(response.body.description).toBe('Trimmed Description');
     });
   });
-}); 
+});

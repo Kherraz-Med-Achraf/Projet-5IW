@@ -135,6 +135,7 @@ model Child {
   firstName        String
   lastName         String
   birthDate        DateTime
+  imageConsent     Boolean         @default(false)  // Droit à l'image de l'enfant
   parent           ParentProfile   @relation(fields: [parentProfileId], references: [id], onDelete: Cascade)
   parentProfileId  Int
   user             User?           @relation(name: "ChildToUser", fields: [userId], references: [id], onDelete: Cascade)
@@ -355,10 +356,14 @@ model ScheduleEntry {
 }
 
 model EntryChild {
-  entry     ScheduleEntry @relation("EntryChildren", fields: [entryId], references: [id])
-  entryId   String
-  child     Child         @relation("EntryChildren", fields: [childId], references: [id])
-  childId   Int
+  entry          ScheduleEntry @relation("EntryChildren", fields: [entryId], references: [id])
+  entryId        String
+  child          Child         @relation("EntryChildren", fields: [childId], references: [id])
+  childId        Int
+  
+  /// Champ pour tracer l'origine des transferts
+  /// Si un enfant est transféré, on garde l'ID du cours original
+  originalEntryId String?
 
   @@id([entryId, childId])
   @@index([childId])

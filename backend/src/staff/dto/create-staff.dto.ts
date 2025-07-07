@@ -10,7 +10,7 @@ import {
   IsPhoneNumber,
   IsDateString,
 } from 'class-validator';
-import { PASSWORD_REGEX } from '../../common/constants/pasword.regex';
+import { PASSWORD_REGEX } from '../../common/constants/password.regex';
 import { Discipline } from '@prisma/client';
 
 export class CreateStaffDto {
@@ -21,7 +21,9 @@ export class CreateStaffDto {
 
   @Transform(({ value }) => value?.trim())
   @IsString()
-  @MinLength(12, { message: 'Le mot de passe doit contenir au moins 12 caractères' })
+  @MinLength(12, {
+    message: 'Le mot de passe doit contenir au moins 12 caractères',
+  })
   @Matches(PASSWORD_REGEX, {
     message:
       'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractère spécial',
@@ -42,7 +44,9 @@ export class CreateStaffDto {
   lastName: string;
 
   @Transform(({ value }) => value?.trim())
-  @IsPhoneNumber('FR', { message: 'Le téléphone doit être un numéro français valide' })
+  @IsPhoneNumber('FR', {
+    message: 'Le téléphone doit être un numéro français valide',
+  })
   phone: string;
 
   @IsEnum(Discipline, { message: 'Discipline invalide' })

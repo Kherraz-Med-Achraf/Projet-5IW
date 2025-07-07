@@ -77,6 +77,12 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: true },
   },
   {
+    path: "/profile",
+    name: "Profile",
+    component: () => import("@/views/ProfileView.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
     path: "/dashboard",
     name: "Dashboard",
     component: Dashboard,
@@ -195,13 +201,18 @@ const routes: Array<RouteRecordRaw> = [
     props: true,
     meta: { requiresAuth: true, requiredRole: "STAFF" },
   },
-  // Détail/édition d'un mois pour un enfant et une année (accessible au staff et au parent)
+  // Détail/édition d'un mois pour un enfant et une année (SÉCURITÉ: interdire aux enfants)
   {
     path: "/journal/:childId/:yearId/:month",
     name: "JournalMonth",
     component: JournalMonth,
     props: true,
-    meta: { requiresAuth: true },
+    meta: { 
+      requiresAuth: true, 
+      requiredRoles: ["STAFF", "DIRECTOR", "ADMIN", "SERVICE_MANAGER", "PARENT"],
+      // Explicitement interdire aux enfants (rôle CHILD)
+      forbiddenRoles: ["CHILD"]
+    },
   },
 
   // Vue principale du journal pour le parent
@@ -261,6 +272,14 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import("@/views/PrivacyPolicy.vue"),
   },
   
+  // Page d'accès refusé
+  {
+    path: "/access-denied",
+    name: "AccessDenied",
+    component: () => import("@/views/AccessDenied.vue"),
+    meta: { requiresAuth: true },
+  },
+  
   // Route 404 (catch-all)
   {
     path: "/:pathMatch(.*)*",
@@ -283,6 +302,44 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/blog/BlogAdminView.vue'),
     meta: { requiresAuth: true, requiredRoles: ['SECRETARY', 'DIRECTOR', 'SERVICE_MANAGER'] },
   },
+
+  // Routes CRUD pour ADMIN
+  {
+    path: '/admin/directors',
+    name: 'DirectorAdmin',
+    component: () => import('@/views/admin/DirectorAdminView.vue'),
+    meta: { requiresAuth: true, requiredRole: 'ADMIN' },
+  },
+  {
+    path: '/admin/service-managers',
+    name: 'ServiceManagerAdmin',
+    component: () => import('@/views/admin/ServiceManagerAdminView.vue'),
+    meta: { requiresAuth: true, requiredRole: 'ADMIN' },
+  },
+  {
+    path: '/admin/staff',
+    name: 'StaffAdmin',
+    component: () => import('@/views/admin/StaffAdminView.vue'),
+    meta: { requiresAuth: true, requiredRole: 'ADMIN' },
+  },
+  {
+    path: '/admin/secretaries',
+    name: 'SecretaryAdmin',
+    component: () => import('@/views/admin/SecretaryAdminView.vue'),
+    meta: { requiresAuth: true, requiredRole: 'ADMIN' },
+  },
+  {
+    path: '/admin/parents',
+    name: 'ParentAdmin',
+    component: () => import('@/views/admin/ParentAdminView.vue'),
+    meta: { requiresAuth: true, requiredRole: 'ADMIN' },
+  },
+  {
+    path: '/admin/children',
+    name: 'ChildAdmin',
+    component: () => import('@/views/admin/ChildAdminView.vue'),
+    meta: { requiresAuth: true, requiredRole: 'ADMIN' },
+  },
 ]
 
 const router = createRouter({
@@ -292,21 +349,42 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const auth = useAuthStore();
+  
   const {
     requiresAuth,
     requiresGuest,
     requiredRole,
     requiredRoles,
     requiresInvite,
+    forbiddenRoles,
   } = to.meta as {
     requiresAuth?: boolean;
     requiresGuest?: boolean;
     requiredRole?: string;
     requiredRoles?: string[];
     requiresInvite?: boolean;
+    forbiddenRoles?: string[];
   };
 
-  // 1) Si la page requiert un token d'invitation (ex. /register)
+  // Special handling for /register route
+  if (to.path.startsWith('/register')) {
+    const token = (to.query.token as string) || "";
+    
+    // If user is authenticated, redirect to home
+    if (auth.isAuthenticated) {
+      return next({ name: "Home" });
+    }
+    
+    // If user is not authenticated and no token, redirect to login
+    if (!token) {
+      return next({ name: "Login" });
+    }
+    
+    // If user is not authenticated and has token, allow access
+    return next();
+  }
+
+  // 1) Si la page requiert un token d'invitation (ex. /register-old)
   if (requiresInvite) {
     const token = (to.query.token as string) || "";
     if (!token) {
@@ -325,13 +403,19 @@ router.beforeEach((to, from, next) => {
     return next({ name: "Login" });
   }
 
-  // 4) Si un rôle précis est requis
+  // 4) SÉCURITÉ CRITIQUE: Vérifier les rôles interdits (ex: empêcher les enfants d'accéder au journal)
+  if (forbiddenRoles && forbiddenRoles.includes(auth.user?.role || "")) {
+    console.warn(`🚫 Accès bloqué: le rôle ${auth.user?.role} est interdit sur cette route`);
+    return next({ name: "AccessDenied" });
+  }
+
+  // 5) Si un rôle précis est requis
   if (requiredRole && auth.user?.role !== requiredRole) {
-    return next({ name: "Home" });
+    return next({ name: "AccessDenied" });
   }
 
   if (requiredRoles && !requiredRoles.includes(auth.user?.role || "")) {
-    return next({ name: "Home" });
+    return next({ name: "AccessDenied" });
   }
 
   next();

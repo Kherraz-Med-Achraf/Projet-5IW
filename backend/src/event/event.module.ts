@@ -17,4 +17,4 @@ import { RolesGuard } from '../common/guards/roles.guard';
   ],
   exports: [EventService],
 })
-export class EventModule {} 
+export class EventModule {}

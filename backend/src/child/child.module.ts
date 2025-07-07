@@ -8,10 +8,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 
 @Module({
-  imports: [
-    PrismaModule,
-    MailModule,
-  ],
+  imports: [PrismaModule, MailModule],
   controllers: [ChildController],
   providers: [
     ChildService,

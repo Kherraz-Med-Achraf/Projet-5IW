@@ -29,11 +29,16 @@ export const useAuthStore = defineStore("auth", {
 
   actions: {
     // Persistance centralisée
-    setAuth(token: string, user: User) {
-      this.token = token;
-      this.user = user;
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
+    async setAuth(token: string, user: User) {
+      this.token = token
+      this.user = user
+      localStorage.setItem('token', token)
+      localStorage.setItem('user', JSON.stringify(user))
+      
+      // Notifier le journal store du changement d'utilisateur
+      const { useJournalStore } = await import('./journalStore')
+      const journalStore = useJournalStore()
+      journalStore.checkUserChange()
     },
     clearAuth() {
       this.token = null;
@@ -60,9 +65,9 @@ export const useAuthStore = defineStore("auth", {
             data.message || "Erreur lors de l'inscription parent"
           );
 
-        this.setAuth(data.access_token, data.user);
-        notification.showNotification("Inscription réussie", "success");
-        return data;
+        await this.setAuth(data.access_token, data.user)
+        notification.showNotification('Inscription réussie', 'success')
+        return data
       } catch (err: any) {
         this.error = err.message || "Erreur lors de l'inscription parent";
         notification.showNotification(this.error, "error");
@@ -77,9 +82,27 @@ export const useAuthStore = defineStore("auth", {
       this.loading = true;
       const notification = useNotificationStore();
       try {
-        const response = await fetch(`${API_BASE_URL}/auth/initiate-login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        // Obtenir le token CSRF des cookies
+        const getCsrfTokenFromCookies = () => {
+          const cookies = document.cookie.split(';')
+          for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=')
+            if (name === 'csrf_token') {
+              return value
+            }
+          }
+          return null
+        }
+
+        const csrfToken = getCsrfTokenFromCookies()
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+        if (csrfToken) {
+          headers['X-CSRF-Token'] = csrfToken
+        }
+
+        const response = await fetch('http://localhost:3000/auth/initiate-login', {
+          method: 'POST',
+          headers,
           body: JSON.stringify(credentials),
           credentials: "include",
         });
@@ -110,9 +133,27 @@ export const useAuthStore = defineStore("auth", {
       this.loading = true;
       const notification = useNotificationStore();
       try {
-        const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        // Obtenir le token CSRF des cookies
+        const getCsrfTokenFromCookies = () => {
+          const cookies = document.cookie.split(';')
+          for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=')
+            if (name === 'csrf_token') {
+              return value
+            }
+          }
+          return null
+        }
+
+        const csrfToken = getCsrfTokenFromCookies()
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+        if (csrfToken) {
+          headers['X-CSRF-Token'] = csrfToken
+        }
+
+        const response = await fetch('http://localhost:3000/auth/verify-otp', {
+          method: 'POST',
+          headers,
           body: JSON.stringify(payload),
           credentials: "include",
         });
@@ -176,17 +217,16 @@ export const useAuthStore = defineStore("auth", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
-          credentials: "include",
-        });
-        const resData = await response.json();
-        if (!response.ok)
-          throw new Error(resData.message || "Erreur lors de l'inscription");
-        notification.showNotification("Inscription réussie", "success");
-        return resData;
+          credentials: 'include',
+        })
+        const resData = await response.json()
+        if (!response.ok) throw new Error(resData.message || "Erreur lors de l'inscription")
+        notification.showNotification('Inscription réussie', 'success')
+        return resData
       } catch (error: any) {
-        this.error = error.message || "Erreur lors de l'inscription";
-        notification.showNotification(this.error, "error");
-        throw error;
+        this.error = error.message || "Erreur lors de l'inscription"
+        notification.showNotification(this.error, 'error')
+        throw error
       } finally {
         this.loading = false;
       }
@@ -203,8 +243,14 @@ export const useAuthStore = defineStore("auth", {
       } catch (error) {
         console.error("Erreur lors de la déconnexion", error);
       }
-      this.clearAuth();
-      notification.showNotification("Déconnexion réussie", "success");
+      
+      // Vider le cache du journal lors de la déconnexion
+      const { useJournalStore } = await import('./journalStore')
+      const journalStore = useJournalStore()
+      journalStore.resetStore()
+      
+      this.clearAuth()
+      notification.showNotification('Déconnexion réussie', 'success')
     },
 
     /* ─────────────────────────── PASSWORD FLOWS ─────────────────────────── */
@@ -275,10 +321,10 @@ export const useAuthStore = defineStore("auth", {
         if (!response.ok)
           throw new Error(data.message || "Impossible de rafraîchir le token");
 
-        this.token = data.access_token;
-        localStorage.setItem("token", this.token);
-        notification.showNotification("Token rafraîchi", "success");
-        return true;
+        this.token = data.access_token
+        localStorage.setItem('token', this.token || '')
+        notification.showNotification('Token rafraîchi', 'success')
+        return true
       } catch (error: any) {
         console.error("Erreur refresh token:", error.message);
         await this.logout();
@@ -346,13 +392,10 @@ export const useAuthStore = defineStore("auth", {
           this.user.otpSecret = null
           localStorage.setItem('user', JSON.stringify(this.user))
         }
-        this.token = data.access_token;
-        localStorage.setItem("token", data.access_token);
-        notification.showNotification(
-          data.message || "OTP désactivé avec succès",
-          "success"
-        );
-        return data;
+        this.token = data.access_token
+        localStorage.setItem('token', data.access_token || '')
+        notification.showNotification(data.message || 'OTP désactivé avec succès', 'success')
+        return data
       } catch (err: any) {
         this.error = err.message || "Erreur lors de la désactivation OTP";
         notification.showNotification(this.error, "error");

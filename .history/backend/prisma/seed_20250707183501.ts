@@ -278,11 +278,7 @@ async function main() {
       const randomStaff = allStaff[Math.floor(Math.random() * allStaff.length)];
       await prisma.child.update({
         where: { id: child.id },
-        data: { 
-          referents: {
-            connect: { id: randomStaff.userId }
-          }
-        },
+        data: { referentId: randomStaff.id },
       });
     }
   }
@@ -304,12 +300,13 @@ async function main() {
           await prisma.presenceSheet.create({
             data: {
               date: new Date(current),
-                              records: {
-                  create: allChildren.map(child => ({
-                    childId: child.id,
-                    present: Math.random() > 0.2,
-                  })),
-                },
+              records: {
+                create: allChildren.map(child => ({
+                  childId: child.id,
+                  present: Math.random() > 0.2,
+                  justificationPath: Math.random() > 0.8 ? 'sample-justification.pdf' : null,
+                })),
+              },
             },
           });
         }
@@ -320,9 +317,9 @@ async function main() {
 
   // Génération des missions
   const missions = [
-    { description: 'Développer l\'autonomie - Favoriser l\'acquisition d\'autonomie dans les gestes du quotidien' },
-    { description: 'Socialisation - Développer les compétences sociales et relationnelles' },
-    { description: 'Communication - Améliorer les capacités de communication verbale et non verbale' },
+    { title: 'Développer l\'autonomie', description: 'Favoriser l\'acquisition d\'autonomie dans les gestes du quotidien' },
+    { title: 'Socialisation', description: 'Développer les compétences sociales et relationnelles' },
+    { title: 'Communication', description: 'Améliorer les capacités de communication verbale et non verbale' },
   ];
 
   for (const child of allChildren) {
@@ -330,24 +327,21 @@ async function main() {
       const existing = await prisma.mission.findFirst({
         where: { 
           childId: child.id,
-          description: mission.description,
+          title: mission.title,
         },
       });
       
       if (!existing) {
-        const currentAcademicYear = await prisma.academicYear.findFirst({
-          where: { label: '2024-2025' },
+        const assignedStaff = allStaff[Math.floor(Math.random() * allStaff.length)];
+        await prisma.mission.create({
+          data: {
+            title: mission.title,
+            description: mission.description,
+            childId: child.id,
+            assignedStaffId: assignedStaff.id,
+            status: 'IN_PROGRESS',
+          },
         });
-        
-        if (currentAcademicYear) {
-          await prisma.mission.create({
-            data: {
-              description: mission.description,
-              childId: child.id,
-              academicYearId: currentAcademicYear.id,
-            },
-          });
-        }
       }
     }
   }
@@ -357,7 +351,7 @@ async function main() {
   const previousAcademicYear = '2023-2024';
   
   const months = [9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8];
-  const periods: { month: number; year: number; academicYear: string }[] = [];
+  const periods = [];
   
   for (const month of months) {
     const year = month >= 9 ? 2023 : 2024;
@@ -400,10 +394,11 @@ async function main() {
     }
 
     for (const child of allChildren) {
-      const existingJournal = await prisma.journalMensuel.findFirst({
+      const existingJournal = await prisma.monthlyJournal.findFirst({
         where: {
           childId: child.id,
           month,
+          year,
           academicYearId: academicYearRecord.id,
         },
       });
@@ -416,13 +411,14 @@ async function main() {
           `${child.firstName} développe de bonnes relations avec ses pairs.`,
         ];
 
-        await prisma.journalMensuel.create({
+        await prisma.monthlyJournal.create({
           data: {
             childId: child.id,
             month,
+            year,
             academicYearId: academicYearRecord.id,
-            contenu: observations[Math.floor(Math.random() * observations.length)],
-            educatorId: assignedStaff.userId,
+            observations: observations[Math.floor(Math.random() * observations.length)],
+            educatorId: assignedStaff.id,
           },
         });
         

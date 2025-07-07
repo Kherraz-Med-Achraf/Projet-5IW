@@ -357,7 +357,7 @@ async function main() {
   const previousAcademicYear = '2023-2024';
   
   const months = [9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8];
-  const periods: { month: number; year: number; academicYear: string }[] = [];
+  const periods: Array<{ month: number; year: number; academicYear: string }> = [];
   
   for (const month of months) {
     const year = month >= 9 ? 2023 : 2024;

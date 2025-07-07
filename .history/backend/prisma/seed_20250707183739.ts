@@ -357,7 +357,7 @@ async function main() {
   const previousAcademicYear = '2023-2024';
   
   const months = [9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8];
-  const periods: { month: number; year: number; academicYear: string }[] = [];
+  const periods = [];
   
   for (const month of months) {
     const year = month >= 9 ? 2023 : 2024;
@@ -400,10 +400,11 @@ async function main() {
     }
 
     for (const child of allChildren) {
-      const existingJournal = await prisma.journalMensuel.findFirst({
+      const existingJournal = await prisma.monthlyJournal.findFirst({
         where: {
           childId: child.id,
           month,
+          year,
           academicYearId: academicYearRecord.id,
         },
       });
@@ -416,13 +417,14 @@ async function main() {
           `${child.firstName} développe de bonnes relations avec ses pairs.`,
         ];
 
-        await prisma.journalMensuel.create({
+        await prisma.monthlyJournal.create({
           data: {
             childId: child.id,
             month,
+            year,
             academicYearId: academicYearRecord.id,
-            contenu: observations[Math.floor(Math.random() * observations.length)],
-            educatorId: assignedStaff.userId,
+            observations: observations[Math.floor(Math.random() * observations.length)],
+            educatorId: assignedStaff.id,
           },
         });
         

@@ -12,6 +12,7 @@ import { Role } from '@prisma/client';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
+import { readSecret } from '../utils/secret';
 
 @Injectable()
 export class PresenceService {
@@ -30,6 +31,16 @@ export class PresenceService {
    * Getter pour la clé de chiffrement (maintenant dynamique)
    */
   private get encryptionKey(): string {
+    if (!process.env.FILE_ENCRYPTION_KEY) {
+      try {
+        process.env.FILE_ENCRYPTION_KEY = readSecret(
+          '/run/secrets/file_encryption_key',
+          'FILE_ENCRYPTION_KEY',
+        );
+      } catch (_) {
+        // On laisse la validation gérer l'erreur si aucune clé n'est dispo
+      }
+    }
     const key = process.env.FILE_ENCRYPTION_KEY;
     if (!key) {
       throw new Error('Clé de chiffrement non disponible');
@@ -43,6 +54,19 @@ export class PresenceService {
   private validateEncryptionKey(): void {
     const nodeEnv = process.env.NODE_ENV || 'development';
     const isProduction = nodeEnv === 'production';
+
+    // Charger via Docker secret si non défini
+    if (!process.env.FILE_ENCRYPTION_KEY) {
+      try {
+        process.env.FILE_ENCRYPTION_KEY = readSecret(
+          '/run/secrets/file_encryption_key',
+          'FILE_ENCRYPTION_KEY',
+        );
+      } catch (_) {
+        // ignoré – validations ci-dessous s'en chargeront
+      }
+    }
+
     const encryptionKey = process.env.FILE_ENCRYPTION_KEY;
 
     // En production : validation stricte obligatoire

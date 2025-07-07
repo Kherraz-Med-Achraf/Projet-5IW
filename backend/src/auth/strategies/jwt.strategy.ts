@@ -3,8 +3,12 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UnauthorizedException } from '@nestjs/common';
+import { readSecret } from '../../utils/secret';
 
-const ACCESS_TOKEN_SECRET: string = process.env.ACCESS_TOKEN_SECRET!;
+const ACCESS_TOKEN_SECRET: string = readSecret(
+  '/run/secrets/access_token_secret',
+  'ACCESS_TOKEN_SECRET',
+);
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

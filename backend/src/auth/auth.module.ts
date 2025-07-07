@@ -2,6 +2,7 @@
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { readSecret } from '../utils/secret';
 
 import { AuthService } from './auth.service';
 import { AuthController } from './controllers/auth.controller';
@@ -24,7 +25,10 @@ import { CsrfGuard } from '../common/guards/csrf.guard';
     ChildModule,
 
     JwtModule.register({
-      secret: process.env.ACCESS_TOKEN_SECRET,
+      secret: readSecret(
+        '/run/secrets/access_token_secret',
+        'ACCESS_TOKEN_SECRET',
+      ),
       signOptions: { expiresIn: '1d' },
     }),
 

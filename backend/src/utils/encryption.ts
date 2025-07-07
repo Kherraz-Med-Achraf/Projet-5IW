@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+import { readSecret } from './secret';
 
 /*
  * Encrypt / decrypt helpers for protecting secrets at rest (e.g. OTP secret).
@@ -14,17 +15,32 @@ const IV_LENGTH = 12; // 96 bits recommended for GCM
 function getKey(): Buffer {
   let keyHex = process.env.OTP_ENC_KEY;
 
-  // En développement / test, on génère une clé unique au premier appel si elle est absente.
+  // Si absent, tenter de lire via secrets Docker/K8s
+  if (!keyHex) {
+    try {
+      keyHex = readSecret('/run/secrets/otp_enc_key', 'OTP_ENC_KEY');
+      // Stocker dans process.env pour usages ultérieurs
+      process.env.OTP_ENC_KEY = keyHex;
+    } catch (_) {
+      // Ignoré – on gérera plus bas
+    }
+  }
+
+  // En développement / test, générer une clé si toujours absente
   if (!keyHex) {
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('OTP_ENC_KEY env variable must be a 32-byte hex string');
+      throw new Error(
+        'OTP_ENC_KEY env variable (ou secret file) doit contenir une chaîne hexadécimale de 32 octets',
+      );
     }
     keyHex = crypto.randomBytes(32).toString('hex');
     process.env.OTP_ENC_KEY = keyHex;
   }
 
   if (keyHex.length !== 64) {
-    throw new Error('OTP_ENC_KEY env variable must be a 32-byte hex string');
+    throw new Error(
+      'OTP_ENC_KEY doit être une chaîne hexadécimale de 32 octets',
+    );
   }
 
   return Buffer.from(keyHex, 'hex');

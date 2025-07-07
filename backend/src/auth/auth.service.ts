@@ -21,19 +21,15 @@ import {
   encrypt as encryptOtp,
   decrypt as decryptOtp,
 } from '../utils/encryption';
+import { readSecret } from '../utils/secret';
 
 const PASSWORD_EXPIRATION_DAYS = 60;
 const MAX_FAILED_ATTEMPTS = 3;
 const LOCK_DURATION_MS = 5 * 60 * 1000; // 5 min après la démo remettre a 1h
 
-// Exiger la présence de clés JWT distinctes
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
-if (!ACCESS_TOKEN_SECRET || !REFRESH_TOKEN_SECRET) {
-  throw new Error(
-    'ACCESS_TOKEN_SECRET and REFRESH_TOKEN_SECRET env vars must be defined',
-  );
-}
+// Exiger la présence de clés JWT distinctes (env var > Docker secret file)
+const ACCESS_TOKEN_SECRET = readSecret('/run/secrets/access_token_secret', 'ACCESS_TOKEN_SECRET');
+const REFRESH_TOKEN_SECRET = readSecret('/run/secrets/refresh_token_secret', 'REFRESH_TOKEN_SECRET');
 
 @Injectable()
 export class AuthService {

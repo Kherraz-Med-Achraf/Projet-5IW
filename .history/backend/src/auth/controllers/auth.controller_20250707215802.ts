@@ -117,12 +117,14 @@ export class AuthController {
 
   /* ──────────────── 2FA (initiate / verify) ──────────────── */
   @Public()
+  @UseGuards(CsrfGuard)
   @Post('initiate-login')
   initiateLogin(@Body() body: { email: string; password: string }) {
     return this.authService.initiateLogin(body.email, body.password);
   }
 
   @Public()
+  @UseGuards(CsrfGuard)
   @Post('verify-otp')
   async verifyOtp(
     @Body() body: { tempToken: string; otpCode: string },

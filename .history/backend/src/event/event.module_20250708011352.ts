@@ -5,7 +5,6 @@ import { MailModule } from '../mail/mail.module';
 import { EventService } from './event.service';
 import { EventController } from './event.controller';
 import { StripeWebhookController } from './stripe-webhook.controller';
-import { EventCleanupService } from './event-cleanup.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 
@@ -14,7 +13,6 @@ import { RolesGuard } from '../common/guards/roles.guard';
   controllers: [EventController, StripeWebhookController],
   providers: [
     EventService,
-    EventCleanupService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],

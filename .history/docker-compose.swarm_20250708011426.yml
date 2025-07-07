@@ -147,7 +147,6 @@ services:
       - openai_api_key
       - yousign_api_key
       - stripe_secret
-      - stripe_webhook_secret
       - access_token_secret
       - refresh_token_secret
       - otp_enc_key

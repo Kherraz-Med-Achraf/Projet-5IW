@@ -383,7 +383,6 @@ enum PaymentStatus {
   PENDING
   PAID
   FREE
-  FAILED
 }
 
 model Event {

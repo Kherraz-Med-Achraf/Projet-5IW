@@ -9,7 +9,9 @@ export interface Staff {
   lastName: string;
   birthDate: string;
   phone: string;
-  discipline: string;
+  jobTitle: string;
+  startDate: string;
+  profileImage?: string;
   specialty?: string;
   userId?: string;
   user?: {
@@ -28,7 +30,9 @@ export interface CreateStaffDto {
   lastName: string;
   birthDate: string;
   phone: string;
-  discipline: string;
+  jobTitle: string;
+  startDate: string;
+  profileImage?: string;
   specialty?: string;
 }
 
@@ -37,7 +41,9 @@ export interface UpdateStaffDto {
   lastName?: string;
   birthDate?: string;
   phone?: string;
-  discipline?: string;
+  jobTitle?: string;
+  startDate?: string;
+  profileImage?: string;
   specialty?: string;
 }
 
@@ -51,7 +57,7 @@ export const DISCIPLINE_OPTIONS = [
 ];
 
 export const useStaffStore = defineStore("staff", () => {
-  const staff = ref<Staff[]>([]);
+  const staffList = ref<Staff[]>([]);
   const loading = ref(false);
   const error = ref("");
 
@@ -73,10 +79,10 @@ export const useStaffStore = defineStore("staff", () => {
       }
 
       const data = await response.json();
-      staff.value = data;
+      staffList.value = data;
       return data;
     } catch (err: any) {
-      error.value = err.message || "Erreur lors du chargement du staff";
+      error.value = err.message || "Erreur lors du chargement du personnel";
       throw err;
     } finally {
       loading.value = false;
@@ -99,32 +105,21 @@ export const useStaffStore = defineStore("staff", () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        // Si c'est une erreur de validation, afficher le message détaillé
-        if (response.status === 400 && errorData.message) {
-          if (Array.isArray(errorData.message)) {
-            throw new Error(errorData.message.join(", "));
-          } else {
-            throw new Error(errorData.message);
-          }
-        }
         throw new Error(errorData.message || "Erreur lors de la création");
       }
 
       const newStaff = await response.json();
-      staff.value.push(newStaff);
+      staffList.value.push(newStaff);
       return newStaff;
     } catch (err: any) {
-      error.value = err.message || "Erreur lors de la création du staff";
+      error.value = err.message || "Erreur lors de la création du personnel";
       throw err;
     } finally {
       loading.value = false;
     }
   }
 
-  async function updateStaff(
-    id: number,
-    staffData: UpdateStaffDto
-  ): Promise<Staff> {
+  async function updateStaff(id: number, staffData: UpdateStaffDto): Promise<Staff> {
     loading.value = true;
     error.value = "";
     try {
@@ -140,25 +135,17 @@ export const useStaffStore = defineStore("staff", () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        // Si c'est une erreur de validation, afficher le message détaillé
-        if (response.status === 400 && errorData.message) {
-          if (Array.isArray(errorData.message)) {
-            throw new Error(errorData.message.join(", "));
-          } else {
-            throw new Error(errorData.message);
-          }
-        }
-        throw new Error(errorData.message || "Erreur lors de la modification");
+        throw new Error(errorData.message || "Erreur lors de la mise à jour");
       }
 
       const updatedStaff = await response.json();
-      const index = staff.value.findIndex((s) => s.id === id);
+      const index = staffList.value.findIndex((staff) => staff.id === id);
       if (index !== -1) {
-        staff.value[index] = updatedStaff;
+        staffList.value[index] = updatedStaff;
       }
       return updatedStaff;
     } catch (err: any) {
-      error.value = err.message || "Erreur lors de la modification du staff";
+      error.value = err.message || "Erreur lors de la mise à jour du personnel";
       throw err;
     } finally {
       loading.value = false;
@@ -182,9 +169,9 @@ export const useStaffStore = defineStore("staff", () => {
         throw new Error(errorData.message || "Erreur lors de la suppression");
       }
 
-      staff.value = staff.value.filter((s) => s.id !== id);
+      staffList.value = staffList.value.filter((staff) => staff.id !== id);
     } catch (err: any) {
-      error.value = err.message || "Erreur lors de la suppression du staff";
+      error.value = err.message || "Erreur lors de la suppression du personnel";
       throw err;
     } finally {
       loading.value = false;
@@ -211,7 +198,7 @@ export const useStaffStore = defineStore("staff", () => {
 
       return await response.json();
     } catch (err: any) {
-      error.value = err.message || "Erreur lors du chargement du staff";
+      error.value = err.message || "Erreur lors du chargement du personnel";
       throw err;
     } finally {
       loading.value = false;
@@ -225,7 +212,7 @@ export const useStaffStore = defineStore("staff", () => {
   }
 
   return {
-    staff,
+    staffList,
     loading,
     error,
     fetchStaff,

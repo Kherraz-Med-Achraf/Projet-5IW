@@ -8,13 +8,30 @@ export interface Child {
   firstName: string;
   lastName: string;
   birthDate: string;
-  parentProfileId?: number;
+  parentProfileId: number;
+  userId?: string;
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+  };
+  parent?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    user?: {
+      email: string;
+    };
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateChildDto {
   firstName: string;
   lastName: string;
   birthDate: string;
+  parentProfileId: number;
 }
 
 export interface UpdateChildDto {
@@ -61,7 +78,7 @@ export const useChildStore = defineStore("child", () => {
     error.value = "";
     try {
       const auth = useAuthStore();
-      const response = await fetch(`${API_BASE}/children`, {
+      const response = await fetch(`${API_BASE}/children/${childData.parentProfileId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -86,10 +103,7 @@ export const useChildStore = defineStore("child", () => {
     }
   }
 
-  async function updateChild(
-    id: number,
-    childData: UpdateChildDto
-  ): Promise<Child> {
+  async function updateChild(id: number, childData: UpdateChildDto): Promise<Child> {
     loading.value = true;
     error.value = "";
     try {
@@ -105,7 +119,7 @@ export const useChildStore = defineStore("child", () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Erreur lors de la modification");
+        throw new Error(errorData.message || "Erreur lors de la mise à jour");
       }
 
       const updatedChild = await response.json();
@@ -115,7 +129,7 @@ export const useChildStore = defineStore("child", () => {
       }
       return updatedChild;
     } catch (err: any) {
-      error.value = err.message || "Erreur lors de la modification de l'enfant";
+      error.value = err.message || "Erreur lors de la mise à jour de l'enfant";
       throw err;
     } finally {
       loading.value = false;

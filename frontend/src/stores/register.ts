@@ -35,7 +35,16 @@ export const useRegisterStore = defineStore("register", () => {
   });
 
   // Helper functions
+  /**
+   * Ajoute un contact d'urgence si la limite de deux n'est pas dépassée.
+   * Affiche un toast d'erreur le cas échéant.
+   */
   const addEmergencyContact = () => {
+    if (form.emergencyContacts.length >= 1) {
+      toast.error("Vous ne pouvez ajouter qu'un seul contact d'urgence");
+      return;
+    }
+
     form.emergencyContacts.push({
       firstName: "",
       lastName: "",
@@ -61,11 +70,15 @@ export const useRegisterStore = defineStore("register", () => {
     form.children.splice(index, 1);
   };
 
+  /**
+   * Vérifie que chaque enfant a un âge compris entre 9 et 20 ans (inclus).
+   */
   const validateChildren = () => {
     const now = Date.now();
     return form.children.every((c: any) => {
       if (!c.birthDate) return false;
-      return (now - new Date(c.birthDate).getTime()) / 3.15576e10 >= 9;
+      const age = (now - new Date(c.birthDate).getTime()) / 3.15576e10;
+      return age >= 9 && age <= 20;
     });
   };
 
@@ -83,14 +96,16 @@ export const useRegisterStore = defineStore("register", () => {
       form.address.country.trim() &&
       form.legalResponsibility.trim();
 
-    // Au moins un contact d'urgence complet
-    const emergencyContactValid = form.emergencyContacts.some(
-      (contact: any) =>
-        contact.firstName?.trim() &&
-        contact.lastName?.trim() &&
-        contact.phone?.trim() &&
-        contact.relation?.trim()
-    );
+    // Contacts d'urgence facultatifs : s'ils existent, au moins un doit être complet
+    const emergencyContactValid =
+      form.emergencyContacts.length === 0 ||
+      form.emergencyContacts.some(
+        (contact: any) =>
+          contact.firstName?.trim() &&
+          contact.lastName?.trim() &&
+          contact.phone?.trim() &&
+          contact.relation?.trim()
+      );
 
     return parentValid && emergencyContactValid;
   };
@@ -105,12 +120,12 @@ export const useRegisterStore = defineStore("register", () => {
       ) {
         return false;
       }
-      // Vérifier l'âge (minimum 9 ans)
+      // Vérifier l'âge (entre 9 et 20 ans)
       const birthDate = new Date(child.birthDate);
       const now = new Date();
       const age =
         (now.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 365);
-      return age >= 9;
+      return age >= 9 && age <= 20;
     });
 
     return hasValidChildren;
@@ -149,7 +164,7 @@ export const useRegisterStore = defineStore("register", () => {
 
       // Validation de l'âge des enfants
       if (form.children.length && !validateChildren()) {
-        toast.error("Chaque enfant doit avoir au moins 9 ans");
+        toast.error("Chaque enfant doit avoir entre 9 et 20 ans");
         return false;
       }
 
@@ -184,21 +199,41 @@ export const useRegisterStore = defineStore("register", () => {
       if (contactsClean.length) payload.emergencyContacts = contactsClean;
       if (kidsClean.length) payload.children = kidsClean;
 
+      // Obtenir le token CSRF des cookies
+      const getCsrfTokenFromCookies = () => {
+        const cookies = document.cookie.split(';')
+        for (let cookie of cookies) {
+          const [name, value] = cookie.trim().split('=')
+          if (name === 'csrf_token') {
+            return value
+          }
+        }
+        return null
+      }
+
+      const csrfToken = getCsrfTokenFromCookies()
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken
+      }
+
       // Soumission selon le type d'inscription
       if (inviteToken.value) {
         payload.token = inviteToken.value;
         const res = await fetch(`${API_URL}/auth/register-by-invite`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify(payload),
+          credentials: 'include',
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message);
       } else {
         const res = await fetch(`${API_URL}/auth/register`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify(payload),
+          credentials: 'include',
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message);

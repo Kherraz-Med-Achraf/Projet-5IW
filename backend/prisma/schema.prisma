@@ -53,6 +53,10 @@ model User {
 
   /// nouvelles relations évènements créés
   eventsCreated   Event[]  @relation("UserEventsCreated")
+
+  /// Blog - Posts créés et réactions
+  blogPosts       BlogPost[]     @relation("BlogPostAuthor")
+  blogReactions   BlogReaction[] @relation("BlogReactionUser")
 }
 
 model PasswordReset {
@@ -131,6 +135,7 @@ model Child {
   firstName        String
   lastName         String
   birthDate        DateTime
+  imageConsent     Boolean         @default(false)  // Droit à l'image de l'enfant
   parent           ParentProfile   @relation(fields: [parentProfileId], references: [id], onDelete: Cascade)
   parentProfileId  Int
   user             User?           @relation(name: "ChildToUser", fields: [userId], references: [id], onDelete: Cascade)
@@ -351,10 +356,14 @@ model ScheduleEntry {
 }
 
 model EntryChild {
-  entry     ScheduleEntry @relation("EntryChildren", fields: [entryId], references: [id])
-  entryId   String
-  child     Child         @relation("EntryChildren", fields: [childId], references: [id])
-  childId   Int
+  entry          ScheduleEntry @relation("EntryChildren", fields: [entryId], references: [id])
+  entryId        String
+  child          Child         @relation("EntryChildren", fields: [childId], references: [id])
+  childId        Int
+  
+  /// Champ pour tracer l'origine des transferts
+  /// Si un enfant est transféré, on garde l'ID du cours original
+  originalEntryId String?
 
   @@id([entryId, childId])
   @@index([childId])
@@ -424,4 +433,59 @@ model EventRegistrationChild {
 
   @@id([registrationId, childId])
   @@index([childId])
+}
+
+/// =============================================
+///  Blog - Posts et réactions
+/// =============================================
+
+enum PostMediaType {
+  IMAGE
+  VIDEO
+}
+
+enum ReactionType {
+  LIKE       // 👍
+  HEART      // ❤️
+  SMILE      // 😊
+  CLAP       // 👏
+  PARTY      // 🎉
+}
+
+model BlogPost {
+  id          String        @id @default(cuid())
+  title       String
+  description String        @db.Text
+  mediaUrl    String?       /// URL du fichier image ou vidéo
+  mediaType   PostMediaType?
+  
+  /// Métadonnées de publication
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt()
+  
+  /// Relations
+  author      User          @relation("BlogPostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId    String
+  reactions   BlogReaction[]
+  
+  @@index([createdAt])
+  @@index([authorId])
+}
+
+model BlogReaction {
+  id        String       @id @default(cuid())
+  type      ReactionType
+  
+  /// Relations
+  post      BlogPost     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+  user      User         @relation("BlogReactionUser", fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  
+  createdAt DateTime     @default(now())
+  
+  /// Un utilisateur ne peut avoir qu'une réaction par post
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
 }

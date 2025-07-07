@@ -1,0 +1,152 @@
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import { ChatService } from './chat.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { Model, Types } from 'mongoose';
+import { Chat } from './schemas/chat.schema';
+import { Message } from './schemas/message.schema';
+
+// -------------------- Mocks utilitaires --------------------
+class ChatModelMock {
+  docs: any[] = [];
+  create = jest.fn((data: any) => {
+    const doc = { _id: new Types.ObjectId(), updatedAt: new Date(), ...data };
+    this.docs.push(doc);
+    return doc;
+  });
+  findById = jest.fn((id: string) => ({
+    exec: () => this.docs.find((d) => d._id.toString() === id),
+  }));
+  findByIdAndUpdate = jest.fn();
+  findOne = jest.fn((filter: any) => ({
+    exec: () =>
+      this.docs.find(
+        (d) =>
+          Array.isArray(filter.participants) &&
+          JSON.stringify(d.participants) ===
+            JSON.stringify(filter.participants),
+      ),
+  }));
+  find = jest.fn((filter: any) => ({
+    exec: () =>
+      this.docs.filter((d) => d.participants.includes(filter.participants)),
+  }));
+}
+
+class MsgModelMock {
+  msgs: any[] = [];
+  create = jest.fn((data: any) => {
+    const m = {
+      id: new Types.ObjectId().toString(),
+      sentAt: new Date(),
+      ...data,
+    };
+    this.msgs.push(m);
+    return m;
+  });
+  findById = jest.fn((id: string) => ({
+    exec: () => this.msgs.find((m) => m.id === id),
+  }));
+  deleteOne = jest.fn();
+}
+
+class PrismaMock {
+  user = { findUnique: jest.fn(), findMany: jest.fn() } as any;
+  child = { findMany: jest.fn() } as any;
+}
+
+// Helper pour créer un service avec les mocks
+function makeService() {
+  const chatModel = new ChatModelMock() as unknown as Model<Chat>;
+  const msgModel = new MsgModelMock() as unknown as Model<Message>;
+  const prisma = new PrismaMock() as unknown as PrismaService;
+  const svc = new ChatService(chatModel, msgModel, prisma);
+  return { svc, chatModel, msgModel, prisma };
+}
+
+// -------------------- Tests --------------------
+
+describe('ChatService – règles d’autorisation isAllowed() (matrice complète)', () => {
+  const { svc } = makeService();
+
+  const MATRIX: Record<string, string[]> = {
+    DIRECTOR: ['DIRECTOR', 'SERVICE_MANAGER', 'SECRETARY', 'STAFF'],
+    SERVICE_MANAGER: ['DIRECTOR', 'SERVICE_MANAGER', 'SECRETARY', 'STAFF'],
+    SECRETARY: ['DIRECTOR', 'SERVICE_MANAGER', 'STAFF'],
+    STAFF: ['DIRECTOR', 'SERVICE_MANAGER', 'SECRETARY', 'PARENT'],
+    PARENT: ['STAFF'],
+    CHILD: [],
+  };
+
+  Object.keys(MATRIX).forEach((src) => {
+    const allowed = MATRIX[src];
+    const allRoles = Object.keys(MATRIX);
+
+    if (allowed.length) {
+      it.each(allowed)(`${src} peut parler à %s`, (dest) => {
+        expect((svc as any).isAllowed(src, dest)).toBe(true);
+      });
+    } else {
+      it(`${src} n'a aucun destinataire autorisé`, () => {
+        expect(allowed.length).toBe(0);
+      });
+    }
+
+    it.each(allRoles.filter((r) => !allowed.includes(r)))(
+      `${src} ne peut pas parler à %s`,
+      (dest) => {
+        expect((svc as any).isAllowed(src, dest)).toBe(false);
+      },
+    );
+  });
+});
+
+describe('ChatService – createChat & createMessage', () => {
+  let svc: ChatService;
+  let chatModel: any;
+  let msgModel: any;
+  let prisma: any;
+  beforeEach(() => {
+    const obj = makeService();
+    svc = obj.svc;
+    chatModel = obj.chatModel;
+    msgModel = obj.msgModel;
+    prisma = obj.prisma;
+  });
+
+  it('refuse qu’un PARENT crée un chat avec un autre PARENT', async () => {
+    prisma.user.findUnique.mockResolvedValue({ id: 'other', role: 'PARENT' });
+    await expect(
+      svc.createChat(['other'], 'me', 'PARENT'),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('autorise DIRECTOR -> STAFF et enregistre le chat', async () => {
+    prisma.user.findUnique.mockResolvedValue({ id: 'staff1', role: 'STAFF' });
+    const chat = await svc.createChat(['staff1'], 'director1', 'DIRECTOR');
+    expect(chatModel.create).toHaveBeenCalled();
+    expect(chat.participants).toContain('staff1');
+  });
+
+  it('enregistre un message et met à jour updatedAt', async () => {
+    // crée d’abord un chat valide
+    prisma.user.findUnique.mockResolvedValue({ id: 'staff1', role: 'STAFF' });
+    const chat: any = await svc.createChat(['staff1'], 'director1', 'DIRECTOR');
+    // autorise l’accès
+    const saved = await svc.createMessage(
+      chat._id.toString(),
+      'staff1',
+      'hello',
+    );
+    expect(msgModel.create).toHaveBeenCalled();
+    expect(saved.content).toBe('hello');
+    expect(chatModel.findByIdAndUpdate).toHaveBeenCalled();
+  });
+
+  it('empêche un utilisateur hors chat de poster un message', async () => {
+    const fakeChatId = new Types.ObjectId().toString();
+    chatModel.docs.push({ _id: fakeChatId, participants: ['userA'] });
+    await expect(
+      svc.createMessage(fakeChatId, 'intrus', 'oops'),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});

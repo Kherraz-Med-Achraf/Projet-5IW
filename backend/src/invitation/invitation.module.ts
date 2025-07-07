@@ -8,6 +8,6 @@ import { InvitationController } from './invitation.controller';
   imports: [PrismaModule, MailModule],
   providers: [InvitationService],
   controllers: [InvitationController],
-  exports: [InvitationService], 
+  exports: [InvitationService],
 })
 export class InvitationModule {}

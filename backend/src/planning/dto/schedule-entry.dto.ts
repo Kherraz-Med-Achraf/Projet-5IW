@@ -23,7 +23,7 @@ export class ChildDto {
 export class ScheduleEntryDto {
   @IsOptional()
   @IsString()
-  id?: string;           // optionnel en mode preview
+  id?: string; // optionnel en mode preview
 
   @IsString()
   staffId: string;

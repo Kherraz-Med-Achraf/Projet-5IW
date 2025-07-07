@@ -5,6 +5,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
 //import { SentryModule, SentryGlobalFilter } from "@sentry/nestjs/setup";
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -25,9 +27,11 @@ import { PresenceModule } from './presence/presence.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PlanningModule } from './planning/planning.module';
 import { EventModule } from './event/event.module';
+import { BlogModule } from './blog/blog.module';
 
 // **Nouvel import**
 import { ChatModule } from './chat/chat.module';
+import { EmergencyContactModule } from './emergency-contact/emergency-contact.module';
 
 function readSecret(path: string, envVar: string): string {
   // si la variable d’environnement est présente (mode docker-compose), on la prend
@@ -69,7 +73,7 @@ function readSecret(path: string, envVar: string): string {
         };
       },
     }),
-    ScheduleModule.forRoot(), 
+    ScheduleModule.forRoot(),
     // Modules métiers
     AuthModule,
     AcademicYearModule,
@@ -88,12 +92,23 @@ function readSecret(path: string, envVar: string): string {
     PresenceModule,
     PlanningModule,
     EventModule,
+    BlogModule,
+    EmergencyContactModule,
 
     // **Module Chat pour la messagerie instantanée**
     ChatModule,
+
+    // Global rate-limiting : 10 requêtes / minute par IP
+    ThrottlerModule.forRoot([{ ttl: 60, limit: 10 }]),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
 

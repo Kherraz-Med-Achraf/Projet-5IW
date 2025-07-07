@@ -10,7 +10,7 @@ import {
   IsOptional,
   IsUrl,
 } from 'class-validator';
-import { PASSWORD_REGEX } from '../../common/constants/pasword.regex';
+import { PASSWORD_REGEX } from '../../common/constants/password.regex';
 
 export class CreateSecretaryDto {
   /* 1) Infos de connexion */
@@ -20,7 +20,9 @@ export class CreateSecretaryDto {
 
   @Transform(({ value }) => value?.trim())
   @IsString()
-  @MinLength(12, { message: 'Le mot de passe doit contenir au moins 12 caractères' })
+  @MinLength(12, {
+    message: 'Le mot de passe doit contenir au moins 12 caractères',
+  })
   @Matches(PASSWORD_REGEX, {
     message:
       'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractère spécial',
@@ -37,7 +39,9 @@ export class CreateSecretaryDto {
   @IsDateString({}, { message: 'La date de naissance doit être au format ISO' })
   birthDate: string;
 
-  @IsPhoneNumber('FR', { message: 'Le téléphone doit être un numéro français valide' })
+  @IsPhoneNumber('FR', {
+    message: 'Le téléphone doit être un numéro français valide',
+  })
   phone: string;
 
   @IsDateString({}, { message: 'La date de début doit être au format ISO' })

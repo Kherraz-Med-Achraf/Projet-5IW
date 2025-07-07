@@ -1,0 +1,563 @@
+/* =============================================================================
+   ACCESSIBILITÉ GLOBALE
+   Améliorations d'accessibilité pour toute l'application
+   ============================================================================= */
+
+/* Focus visible amélioré */
+*:focus {
+  outline: 2px solid #4338ca;
+  outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid #4338ca;
+  outline-offset: 2px;
+}
+
+/* Boutons et liens focusables */
+button:focus,
+a:focus,
+[role="button"]:focus,
+[tabindex="0"]:focus {
+  outline: 2px solid #4338ca;
+  outline-offset: 2px;
+}
+
+/* Champs de formulaire */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #4338ca;
+  box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.1);
+}
+
+input:invalid,
+select:invalid,
+textarea:invalid {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* Amélioration des contrastes */
+.text-muted {
+  color: #374151 !important; /* Au lieu de #6b7280 */
+}
+
+.text-secondary {
+  color: #4b5563 !important; /* Au lieu de #6b7280 */
+}
+
+/* Skip links globaux */
+.skip-links {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  z-index: 1000;
+}
+
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #4338ca;
+  color: white;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  border-radius: 0 0 0.5rem 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  transform: translateY(-100%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.skip-link:hover {
+  background: #3730a3;
+}
+
+/* Classes utilitaires pour l'accessibilité */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.sr-only-focusable:focus {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  padding: inherit !important;
+  margin: inherit !important;
+  overflow: visible !important;
+  clip: auto !important;
+  white-space: normal !important;
+}
+
+/* États de chargement accessibles */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { 
+    transform: rotate(0deg); 
+  }
+  to { 
+    transform: rotate(360deg); 
+  }
+}
+
+/* Indicateurs d'état accessibles */
+[aria-live] {
+  position: relative;
+}
+
+[role="alert"] {
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+}
+
+[role="status"] {
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+/* Amélioration des modalités */
+[role="dialog"] {
+  position: relative;
+}
+
+[role="dialog"]:focus {
+  outline: none;
+}
+
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+/* Amélioration des listes */
+[role="list"] {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+[role="listitem"] {
+  position: relative;
+}
+
+/* Amélioration des groupes */
+[role="group"] {
+  position: relative;
+}
+
+[role="radiogroup"] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Amélioration des boutons */
+button:disabled,
+[role="button"][aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Amélioration des liens */
+a:not([class]) {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+a:not([class]):hover {
+  color: #1d4ed8;
+}
+
+a:not([class]):focus {
+  outline: 2px solid #4338ca;
+  outline-offset: 2px;
+}
+
+/* Amélioration des titres */
+h1, h2, h3, h4, h5, h6 {
+  color: #1f2937;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* Amélioration des icônes */
+[aria-hidden="true"] {
+  speak: none;
+}
+
+.material-icons[aria-hidden="true"] {
+  user-select: none;
+  pointer-events: none;
+}
+
+/* =============================================================================
+   MEDIA QUERIES D'ACCESSIBILITÉ
+   ============================================================================= */
+
+/* Mode contraste élevé */
+@media (prefers-contrast: high) {
+  /* Bordures plus visibles */
+  *,
+  *::before,
+  *::after {
+    border-color: #000 !important;
+  }
+  
+  /* Texte en noir */
+  body,
+  p,
+  span,
+  div {
+    color: #000 !important;
+  }
+  
+  /* Liens en bleu foncé */
+  a {
+    color: #0000ee !important;
+  }
+  
+  a:visited {
+    color: #551a8b !important;
+  }
+  
+  /* Boutons avec bordures épaisses */
+  button,
+  [role="button"] {
+    border: 2px solid #000 !important;
+  }
+  
+  /* Champs de formulaire */
+  input,
+  select,
+  textarea {
+    border: 2px solid #000 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+  
+  /* Focus encore plus visible */
+  *:focus,
+  *:focus-visible {
+    outline: 3px solid #000 !important;
+    outline-offset: 2px !important;
+  }
+}
+
+/* Mode mouvement réduit */
+@media (prefers-reduced-motion: reduce) {
+  /* Désactiver les animations */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  /* Désactiver les transformations hover */
+  *:hover {
+    transform: none !important;
+  }
+  
+  /* Garder les animations essentielles mais réduites */
+  .loading-spinner {
+    animation: none !important;
+  }
+  
+  .loading-spinner::after {
+    content: "Chargement...";
+    display: block;
+    text-align: center;
+  }
+}
+
+/* Mode sombre */
+@media (prefers-color-scheme: dark) {
+  /* Variables pour le mode sombre */
+  :root {
+    --bg-primary: #1f2937;
+    --bg-secondary: #374151;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --border-color: #4b5563;
+  }
+  
+  /* Application du mode sombre si supporté */
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+  }
+  
+  .modal-content,
+  .profile-section {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+  }
+}
+
+/* Préférence pour un affichage sans transparence */
+@media (prefers-reduced-transparency: reduce) {
+  .modal-backdrop,
+  .loading-overlay {
+    backdrop-filter: none !important;
+  }
+  
+  *[style*="opacity"] {
+    opacity: 1 !important;
+  }
+}
+
+/* =============================================================================
+   AMÉLIORATION DES COMPOSANTS SPÉCIFIQUES
+   ============================================================================= */
+
+/* FullCalendar accessibilité */
+.fc-event {
+  cursor: pointer;
+  position: relative;
+}
+
+.fc-event:focus {
+  outline: 2px solid #1f2937 !important;
+  outline-offset: 2px;
+  z-index: 10;
+}
+
+.fc-event[role="button"] {
+  border-radius: 0.25rem;
+}
+
+.fc-button {
+  transition: all 0.2s ease;
+}
+
+.fc-button:focus {
+  outline: 2px solid #4338ca !important;
+  outline-offset: 2px;
+}
+
+.fc-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Tables accessibles */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+th {
+  background-color: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Messages d'erreur accessibles */
+.error-message {
+  color: #dc2626;
+  font-weight: 500;
+  padding: 0.75rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+.success-message {
+  color: #059669;
+  font-weight: 500;
+  padding: 0.75rem;
+  background-color: #ecfdf5;
+  border: 1px solid #d1fae5;
+  border-radius: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+.warning-message {
+  color: #d97706;
+  font-weight: 500;
+  padding: 0.75rem;
+  background-color: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+/* =============================================================================
+   SUPPORT DES LECTEURS D'ÉCRAN
+   ============================================================================= */
+
+/* Amélioration pour VoiceOver et autres lecteurs */
+[aria-label] {
+  position: relative;
+}
+
+[aria-describedby] {
+  position: relative;
+}
+
+/* Indication des éléments interactifs */
+[role="button"],
+[role="tab"],
+[role="menuitem"],
+button,
+a[href] {
+  cursor: pointer;
+}
+
+[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Groupes de formulaires */
+fieldset {
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+legend {
+  font-weight: 600;
+  color: #374151;
+  padding: 0 0.5rem;
+}
+
+/* Labels obligatoires */
+.required::after {
+  content: " *";
+  color: #dc2626;
+  font-weight: bold;
+}
+
+/* =============================================================================
+   NAVIGATION AU CLAVIER
+   ============================================================================= */
+
+/* Amélioration de la navigation Tab */
+[tabindex="0"]:focus,
+[tabindex="-1"]:focus {
+  outline: 2px solid #4338ca;
+  outline-offset: 2px;
+}
+
+/* Navigation dans les listes */
+[role="listbox"] [role="option"]:focus,
+[role="menu"] [role="menuitem"]:focus {
+  background-color: #e0e7ff;
+  outline: 2px solid #4338ca;
+  outline-offset: -2px;
+}
+
+/* Navigation dans les onglets */
+[role="tablist"] [role="tab"]:focus {
+  outline: 2px solid #4338ca;
+  outline-offset: 2px;
+}
+
+[role="tab"][aria-selected="true"] {
+  background-color: #4338ca;
+  color: white;
+}
+
+/* =============================================================================
+   RESPONSIVE ET MOBILE
+   ============================================================================= */
+
+/* Amélioration pour les petits écrans */
+@media (max-width: 768px) {
+  /* Taille de touch target minimale */
+  button,
+  [role="button"],
+  a,
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Espacement amélioré */
+  .modal-content {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+  
+  /* Navigation mobile */
+  .skip-links {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1001;
+  }
+}
+
+/* =============================================================================
+   PRINT STYLES ACCESSIBLES
+   ============================================================================= */
+
+@media print {
+  /* Assurer que le texte reste lisible à l'impression */
+  *,
+  *::before,
+  *::after {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  
+  /* Afficher les URLs des liens */
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+  
+  /* Éviter les coupures dans les éléments importants */
+  .profile-section,
+  .modal-content {
+    page-break-inside: avoid;
+  }
+  
+  /* Masquer les éléments non pertinents */
+  .skip-links,
+  .loading-overlay,
+  button:not(.print-visible) {
+    display: none !important;
+  }
+} 

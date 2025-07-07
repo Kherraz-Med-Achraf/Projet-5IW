@@ -1,4 +1,10 @@
-import { IsOptional, IsString, IsDateString, IsInt } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsDateString,
+  IsInt,
+  IsBoolean,
+} from 'class-validator';
 
 export class UpdateChildDto {
   @IsOptional()
@@ -16,4 +22,8 @@ export class UpdateChildDto {
   @IsOptional()
   @IsInt()
   parentProfileId?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  imageConsent?: boolean;
 }

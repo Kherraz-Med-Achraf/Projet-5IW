@@ -7,8 +7,10 @@ import {
   Length,
   Matches,
   IsOptional,
+  IsArray,
+  ArrayMaxSize,
 } from 'class-validator';
-import { PASSWORD_REGEX } from '../../common/constants/pasword.regex';
+import { PASSWORD_REGEX } from '../../common/constants/password.regex';
 
 export class RegisterByInviteDto {
   @IsNotEmpty()
@@ -20,7 +22,9 @@ export class RegisterByInviteDto {
 
   @Transform(({ value }) => value?.trim())
   @IsString()
-  @MinLength(8)
+  @MinLength(12, {
+    message: 'Le mot de passe doit contenir au moins 12 caractères',
+  })
   @Matches(PASSWORD_REGEX, {
     message:
       'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractère spécial',
@@ -29,7 +33,9 @@ export class RegisterByInviteDto {
 
   @Transform(({ value }) => value?.trim())
   @IsString()
-  @MinLength(8)
+  @MinLength(12, {
+    message: 'La confirmation doit contenir au moins 12 caractères',
+  })
   passwordConfirm: string;
 
   // → Informations du ParentProfile
@@ -67,6 +73,8 @@ export class RegisterByInviteDto {
   }[];
 
   @IsOptional()
+  @IsArray({ message: 'Les contacts d’urgence doivent être un tableau' })
+  @ArrayMaxSize(2, { message: 'Au maximum 2 contacts d’urgence' })
   emergencyContacts?: {
     name: string;
     phone: string;

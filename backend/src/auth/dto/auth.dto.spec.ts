@@ -104,7 +104,10 @@ describe('Auth DTOs', () => {
         email: 'user@example.com',
       };
 
-      const forgotPasswordDto = plainToClass(ForgotPasswordDto, forgotPasswordData);
+      const forgotPasswordDto = plainToClass(
+        ForgotPasswordDto,
+        forgotPasswordData,
+      );
       const errors = await validate(forgotPasswordDto);
 
       expect(errors).toHaveLength(0);
@@ -113,7 +116,10 @@ describe('Auth DTOs', () => {
     it('should fail validation when email is missing', async () => {
       const forgotPasswordData = {};
 
-      const forgotPasswordDto = plainToClass(ForgotPasswordDto, forgotPasswordData);
+      const forgotPasswordDto = plainToClass(
+        ForgotPasswordDto,
+        forgotPasswordData,
+      );
       const errors = await validate(forgotPasswordDto);
 
       expect(errors).toHaveLength(1);
@@ -126,7 +132,10 @@ describe('Auth DTOs', () => {
         email: 'invalid-email',
       };
 
-      const forgotPasswordDto = plainToClass(ForgotPasswordDto, forgotPasswordData);
+      const forgotPasswordDto = plainToClass(
+        ForgotPasswordDto,
+        forgotPasswordData,
+      );
       const errors = await validate(forgotPasswordDto);
 
       expect(errors).toHaveLength(1);
@@ -139,7 +148,10 @@ describe('Auth DTOs', () => {
         email: '  USER@EXAMPLE.COM  ',
       };
 
-      const forgotPasswordDto = plainToClass(ForgotPasswordDto, forgotPasswordData);
+      const forgotPasswordDto = plainToClass(
+        ForgotPasswordDto,
+        forgotPasswordData,
+      );
       const errors = await validate(forgotPasswordDto);
 
       expect(errors).toHaveLength(0);
@@ -155,13 +167,14 @@ describe('Auth DTOs', () => {
         newPassword: 'NewPassword123!',
       };
 
-      const resetPasswordDto = plainToClass(ResetPasswordDto, resetPasswordData);
+      const resetPasswordDto = plainToClass(
+        ResetPasswordDto,
+        resetPasswordData,
+      );
       const errors = await validate(resetPasswordDto);
 
       expect(errors).toHaveLength(0);
     });
-
-
 
     it('should fail validation when token is missing', async () => {
       const resetPasswordData = {
@@ -169,15 +182,16 @@ describe('Auth DTOs', () => {
         newPassword: 'NewPassword123!',
       };
 
-      const resetPasswordDto = plainToClass(ResetPasswordDto, resetPasswordData);
+      const resetPasswordDto = plainToClass(
+        ResetPasswordDto,
+        resetPasswordData,
+      );
       const errors = await validate(resetPasswordDto);
 
       expect(errors).toHaveLength(1);
       expect(errors[0].property).toBe('token');
       expect(errors[0].constraints).toHaveProperty('isNotEmpty');
     });
-
-
 
     it('should fail validation when newPassword is too short', async () => {
       const resetPasswordData = {
@@ -186,7 +200,10 @@ describe('Auth DTOs', () => {
         newPassword: '123',
       };
 
-      const resetPasswordDto = plainToClass(ResetPasswordDto, resetPasswordData);
+      const resetPasswordDto = plainToClass(
+        ResetPasswordDto,
+        resetPasswordData,
+      );
       const errors = await validate(resetPasswordDto);
 
       expect(errors).toHaveLength(1);
@@ -201,7 +218,10 @@ describe('Auth DTOs', () => {
         newPassword: 'weakpassword',
       };
 
-      const resetPasswordDto = plainToClass(ResetPasswordDto, resetPasswordData);
+      const resetPasswordDto = plainToClass(
+        ResetPasswordDto,
+        resetPasswordData,
+      );
       const errors = await validate(resetPasswordDto);
 
       expect(errors).toHaveLength(1);
@@ -224,7 +244,10 @@ describe('Auth DTOs', () => {
           newPassword: password,
         };
 
-        const resetPasswordDto = plainToClass(ResetPasswordDto, resetPasswordData);
+        const resetPasswordDto = plainToClass(
+          ResetPasswordDto,
+          resetPasswordData,
+        );
         const errors = await validate(resetPasswordDto);
 
         expect(errors).toHaveLength(0);
@@ -238,7 +261,10 @@ describe('Auth DTOs', () => {
         newPassword: 'Password123!',
       };
 
-      const resetPasswordDto = plainToClass(ResetPasswordDto, resetPasswordData);
+      const resetPasswordDto = plainToClass(
+        ResetPasswordDto,
+        resetPasswordData,
+      );
       const errors = await validate(resetPasswordDto);
 
       expect(errors).toHaveLength(0);
@@ -260,9 +286,5 @@ describe('Auth DTOs', () => {
 
       expect(errors).toHaveLength(0);
     });
-
-
-
-
   });
-}); 
+});

@@ -9,4 +9,4 @@ export class RegisterEventDto {
 
   @IsEnum(PaymentMethod)
   paymentMethod!: PaymentMethod;
-} 
+}

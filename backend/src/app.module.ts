@@ -31,6 +31,7 @@ import { BlogModule } from './blog/blog.module';
 
 // **Nouvel import**
 import { ChatModule } from './chat/chat.module';
+import { EmergencyContactModule } from './emergency-contact/emergency-contact.module';
 
 @Module({
   imports: [
@@ -60,7 +61,7 @@ import { ChatModule } from './chat/chat.module';
       }),
       inject: [ConfigService],
     }),
-    ScheduleModule.forRoot(), 
+    ScheduleModule.forRoot(),
     // Modules métiers
     AuthModule,
     AcademicYearModule,
@@ -80,6 +81,7 @@ import { ChatModule } from './chat/chat.module';
     PlanningModule,
     EventModule,
     BlogModule,
+    EmergencyContactModule,
 
     // **Module Chat pour la messagerie instantanée**
     ChatModule,

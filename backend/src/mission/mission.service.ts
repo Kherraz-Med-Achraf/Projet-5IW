@@ -35,10 +35,7 @@ export class MissionService {
   /**
    * Met à jour la description d'une mission existante.
    */
-  async update(
-    id: number,
-    data: Prisma.MissionUpdateInput,
-  ): Promise<Mission> {
+  async update(id: number, data: Prisma.MissionUpdateInput): Promise<Mission> {
     const existing = await this.prisma.mission.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`Mission ${id} introuvable`);

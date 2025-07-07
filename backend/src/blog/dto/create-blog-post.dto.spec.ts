@@ -190,7 +190,8 @@ describe('Blog DTOs', () => {
     it('should handle unicode characters in title and description', async () => {
       const dto = new CreateBlogPostDto();
       dto.title = '🎉 Événement spécial avec émojis 🎊';
-      dto.description = 'Description avec caractères spéciaux: àáâãäåæçèéêëìíîïñòóôõöøùúûüý';
+      dto.description =
+        'Description avec caractères spéciaux: àáâãäåæçèéêëìíîïñòóôõöøùúûüý';
 
       const errors = await validate(dto);
       expect(errors).toHaveLength(0);
@@ -227,4 +228,4 @@ describe('Blog DTOs', () => {
       expect(errors[0].property).toBe('mediaType');
     });
   });
-}); 
+});

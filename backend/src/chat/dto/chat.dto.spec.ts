@@ -272,7 +272,7 @@ describe('Chat DTOs', () => {
     it('should reject future dates reasonably', async () => {
       const futureDate = new Date();
       futureDate.setFullYear(futureDate.getFullYear() + 10);
-      
+
       const dto = plainToClass(GetMessagesQueryDto, {
         before: futureDate.toISOString(),
       });
@@ -352,7 +352,8 @@ describe('Chat DTOs', () => {
     });
 
     it('should handle special characters', async () => {
-      const specialContent = 'Message with émojis 🎉 and special chars: @#$%^&*()';
+      const specialContent =
+        'Message with émojis 🎉 and special chars: @#$%^&*()';
       const dto = plainToClass(UpdateMessageDto, {
         content: specialContent,
       });
@@ -378,7 +379,7 @@ describe('Chat DTOs', () => {
       - Another point
       
       And a new paragraph.`;
-      
+
       const dto = plainToClass(UpdateMessageDto, {
         content: formattedContent,
       });
@@ -388,7 +389,8 @@ describe('Chat DTOs', () => {
     });
 
     it('should handle HTML-like content', async () => {
-      const htmlContent = '<p>This looks like HTML but should be treated as text</p>';
+      const htmlContent =
+        '<p>This looks like HTML but should be treated as text</p>';
       const dto = plainToClass(UpdateMessageDto, {
         content: htmlContent,
       });
@@ -398,7 +400,8 @@ describe('Chat DTOs', () => {
     });
 
     it('should handle markdown-like content', async () => {
-      const markdownContent = '**Bold text** and *italic text* with [links](http://example.com)';
+      const markdownContent =
+        '**Bold text** and *italic text* with [links](http://example.com)';
       const dto = plainToClass(UpdateMessageDto, {
         content: markdownContent,
       });
@@ -414,7 +417,7 @@ describe('Chat DTOs', () => {
         console.log("Hello world!");
       }
       \`\`\``;
-      
+
       const dto = plainToClass(UpdateMessageDto, {
         content: codeContent,
       });
@@ -494,4 +497,4 @@ describe('Chat DTOs', () => {
       expect(errors).toHaveLength(0); // Validation passes, MongoDB is NoSQL anyway
     });
   });
-}); 
+});

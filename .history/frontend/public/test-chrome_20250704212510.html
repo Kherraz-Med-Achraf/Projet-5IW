@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Chrome - Diagnostic Backend</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #cce7ff; color: #004085; border: 1px solid #b3d7ff; }
+        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button { padding: 10px 20px; margin: 10px 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .chrome-info { background: #e3f2fd; padding: 15px; border-left: 4px solid #2196F3; margin-bottom: 20px; }
+        .step { margin: 10px 0; padding: 10px; background: #f8f9fa; border-left: 3px solid #28a745; }
+        .step.active { background: #fff3cd; border-left-color: #ffc107; }
+        .step.complete { background: #d4edda; border-left-color: #28a745; }
+        .step.failed { background: #f8d7da; border-left-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Diagnostic Chrome - Backend IME</h1>
+        
+        <div class="chrome-info">
+            <strong>ℹ️ Informations Chrome:</strong><br>
+            User Agent: <span id="userAgent"></span><br>
+            URL actuelle: <span id="currentUrl"></span><br>
+            Protocole: <span id="protocol"></span>
+        </div>
+
+        <div class="test-section">
+            <h2>🚀 Tests automatiques</h2>
+            <button onclick="runAllTests()">▶️ Lancer tous les tests</button>
+            <button onclick="clearResults()">🗑️ Effacer résultats</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Étapes de diagnostic</h2>
+            <div id="step1" class="step">
+                <strong>Étape 1:</strong> Vérifier la connectivité backend
+                <button onclick="testStep1()">Test</button>
+            </div>
+            <div id="step2" class="step">
+                <strong>Étape 2:</strong> Récupérer token CSRF
+                <button onclick="testStep2()">Test</button>
+            </div>
+            <div id="step3" class="step">
+                <strong>Étape 3:</strong> Test connexion POST basique
+                <button onclick="testStep3()">Test</button>
+            </div>
+            <div id="step4" class="step">
+                <strong>Étape 4:</strong> Test connexion POST avec CSRF
+                <button onclick="testStep4()">Test</button>
+            </div>
+            <div id="step5" class="step">
+                <strong>Étape 5:</strong> Test connexion POST complète
+                <button onclick="testStep5()">Test</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Résultats</h2>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let csrfToken = null;
+        const API_BASE = 'http://localhost:3000';
+        
+        // Afficher les informations Chrome
+        document.getElementById('userAgent').textContent = navigator.userAgent;
+        document.getElementById('currentUrl').textContent = window.location.href;
+        document.getElementById('protocol').textContent = window.location.protocol;
+        
+        // Fonctions utilitaires
+        function logResult(message, type = 'info') {
+            const resultDiv = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            resultDiv.appendChild(div);
+            resultDiv.scrollTop = resultDiv.scrollHeight;
+        }
+        
+        function updateStepStatus(stepId, status) {
+            const step = document.getElementById(stepId);
+            step.className = `step ${status}`;
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            // Reset steps
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`step${i}`).className = 'step';
+            }
+        }
+        
+        // Tests individuels
+        async function testStep1() {
+            logResult('=== ÉTAPE 1: Test connectivité backend ===', 'info');
+            updateStepStatus('step1', 'active');
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/csrf`);
+                logResult(`Status: ${response.status}`, response.ok ? 'success' : 'error');
+                logResult(`Headers: ${JSON.stringify(Object.fromEntries(response.headers))}`, 'info');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    logResult(`Réponse: ${JSON.stringify(data)}`, 'success');
+                    updateStepStatus('step1', 'complete');
+                } else {
+                    logResult(`Erreur HTTP: ${response.status} ${response.statusText}`, 'error');
+                    updateStepStatus('step1', 'failed');
+                }
+            } catch (error) {
+                logResult(`Erreur fetch: ${error.message}`, 'error');
+                logResult(`Stack: ${error.stack}`, 'error');
+                updateStepStatus('step1', 'failed');
+            }
+        }
+        
+        async function testStep2() {
+            logResult('=== ÉTAPE 2: Récupération token CSRF ===', 'info');
+            updateStepStatus('step2', 'active');
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/csrf`);
+                if (response.ok) {
+                    const data = await response.json();
+                    csrfToken = data.csrf_token;
+                    logResult(`Token CSRF récupéré: ${csrfToken}`, 'success');
+                    updateStepStatus('step2', 'complete');
+                } else {
+                    logResult(`Erreur récupération CSRF: ${response.status}`, 'error');
+                    updateStepStatus('step2', 'failed');
+                }
+            } catch (error) {
+                logResult(`Erreur CSRF: ${error.message}`, 'error');
+                updateStepStatus('step2', 'failed');
+            }
+        }
+        
+        async function testStep3() {
+            logResult('=== ÉTAPE 3: Test POST basique ===', 'info');
+            updateStepStatus('step3', 'active');
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/initiate-login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@example.com',
+                        password: 'MonMotDePasse123!'
+                    })
+                });
+                
+                logResult(`Status POST basique: ${response.status}`, response.status === 400 ? 'warning' : 'error');
+                
+                if (response.status === 400) {
+                    logResult('✅ POST basique OK (400 attendu - pas de CSRF)', 'success');
+                    updateStepStatus('step3', 'complete');
+                } else {
+                    logResult('❌ POST basique échoué', 'error');
+                    updateStepStatus('step3', 'failed');
+                }
+            } catch (error) {
+                logResult(`Erreur POST basique: ${error.message}`, 'error');
+                updateStepStatus('step3', 'failed');
+            }
+        }
+        
+        async function testStep4() {
+            logResult('=== ÉTAPE 4: Test POST avec CSRF ===', 'info');
+            updateStepStatus('step4', 'active');
+            
+            if (!csrfToken) {
+                logResult('❌ Pas de token CSRF - lancez d\'abord l\'étape 2', 'error');
+                updateStepStatus('step4', 'failed');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/initiate-login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken,
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@example.com',
+                        password: 'MonMotDePasse123!'
+                    })
+                });
+                
+                logResult(`Status POST avec CSRF: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    logResult(`✅ Connexion réussie! Token reçu: ${data.access_token ? 'OUI' : 'NON'}`, 'success');
+                    updateStepStatus('step4', 'complete');
+                } else {
+                    logResult(`❌ Connexion échouée: ${response.status}`, 'error');
+                    updateStepStatus('step4', 'failed');
+                }
+            } catch (error) {
+                logResult(`Erreur POST avec CSRF: ${error.message}`, 'error');
+                updateStepStatus('step4', 'failed');
+            }
+        }
+        
+        async function testStep5() {
+            logResult('=== ÉTAPE 5: Test POST complet (avec cookies) ===', 'info');
+            updateStepStatus('step5', 'active');
+            
+            if (!csrfToken) {
+                logResult('❌ Pas de token CSRF - lancez d\'abord l\'étape 2', 'error');
+                updateStepStatus('step5', 'failed');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/initiate-login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken,
+                        'Origin': window.location.origin,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'admin@example.com',
+                        password: 'MonMotDePasse123!'
+                    })
+                });
+                
+                logResult(`Status POST complet: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    logResult(`✅ Connexion complète réussie!`, 'success');
+                    logResult(`User: ${data.user.email} (${data.user.role})`, 'success');
+                    updateStepStatus('step5', 'complete');
+                } else {
+                    const errorText = await response.text();
+                    logResult(`❌ Connexion complète échouée: ${response.status}\n${errorText}`, 'error');
+                    updateStepStatus('step5', 'failed');
+                }
+            } catch (error) {
+                logResult(`Erreur POST complet: ${error.message}`, 'error');
+                updateStepStatus('step5', 'failed');
+            }
+        }
+        
+        // Lancer tous les tests
+        async function runAllTests() {
+            clearResults();
+            logResult('🚀 Démarrage des tests automatiques...', 'info');
+            
+            await testStep1();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testStep2();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testStep3();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testStep4();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testStep5();
+            
+            logResult('✅ Tests terminés!', 'success');
+        }
+        
+        // Lancer le test initial
+        logResult('🔍 Page de diagnostic chargée. Cliquez sur "Lancer tous les tests" pour commencer.', 'info');
+    </script>
+</body>
+</html> 

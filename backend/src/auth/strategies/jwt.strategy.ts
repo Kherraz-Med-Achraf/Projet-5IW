@@ -18,10 +18,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     // Vérifie que le mot de passe n'a pas été changé APRÈS l'émission du token
-    const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+    });
     if (!user) throw new UnauthorizedException();
 
-    if (user.passwordChangedAt && payload.iat * 1000 < new Date(user.passwordChangedAt).getTime()) {
+    if (
+      user.passwordChangedAt &&
+      payload.iat * 1000 < new Date(user.passwordChangedAt).getTime()
+    ) {
       throw new UnauthorizedException('Token périmé (mot de passe modifié)');
     }
 

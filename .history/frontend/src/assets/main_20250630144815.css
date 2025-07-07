@@ -1,0 +1,732 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  font-weight: normal;
+}
+
+h1 {
+  font-family: "Archivo Black", sans-serif;
+}
+h2, h3, h4 {
+  font-family: "Roboto", sans-serif;
+}
+
+p, span, a, label, button {
+  font-family: "Roboto", sans-serif;
+}
+
+/* ================================
+   STYLES GLOBAUX POUR PROFILS ET PAGES MODERNES
+   ================================ */
+
+/* Variables CSS globales */
+:root {
+  --primary-color: #667eea;
+  --primary-light: #764ba2;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --info-color: #3b82f6;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --background-light: #f8fafc;
+  --border-color: #e5e7eb;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --radius-md: 12px;
+  --radius-sm: 8px;
+}
+
+/* Skip links pour accessibilité */
+.skip-links {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  z-index: 1000;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: var(--primary-color);
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1001;
+  transition: top 0.3s;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* Container principal */
+.profile-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Contenu principal */
+.profile-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Grille de contenu */
+.content-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Sections */
+.profile-section {
+  background: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.profile-section:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* En-têtes de section */
+.section-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(135deg, #fafbfc 0%, #f1f5f9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.section-header h1,
+.section-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.section-header h1 {
+  font-size: 1.875rem;
+}
+
+.section-header h2 {
+  font-size: 1.5rem;
+}
+
+.section-header .material-icons {
+  color: var(--primary-color);
+  font-size: 1.5rem;
+}
+
+/* Notes d'information */
+.info-note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--info-color);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.info-note .material-icons {
+  font-size: 16px;
+}
+
+/* Grille d'informations */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.info-item label {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.info-item p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Boutons d'édition */
+.edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.edit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.edit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.edit-btn .material-icons {
+  font-size: 18px;
+}
+
+.edit-btn-success {
+  background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+}
+
+.edit-btn-blue {
+  background: linear-gradient(135deg, var(--info-color) 0%, #1d4ed8 100%);
+}
+
+.edit-btn-custom {
+  background: #4444ac !important;
+}
+
+.edit-btn-custom:hover:not(:disabled) {
+  background: #3333a0 !important;
+}
+
+/* États vides */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty-state .material-icons {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  color: var(--border-color);
+}
+
+.empty-state p {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state small {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+/* Indicateurs de chargement */
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem 2rem;
+  color: var(--text-secondary);
+}
+
+.loading-indicator .material-icons {
+  font-size: 2rem;
+}
+
+.loading-indicator .material-icons.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Sélecteurs de formulaire */
+.form-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: white;
+  font-size: 1rem;
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* ================================
+   STYLES SPÉCIFIQUES JOURNAL
+   ================================ */
+
+/* Missions */
+.missions-display {
+  padding: 2rem;
+}
+
+.mission-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.mission-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mission-header .material-icons {
+  color: var(--primary-color);
+}
+
+.mission-count {
+  background: var(--primary-color);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.missions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.mission-card {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
+  animation: slideInUp 0.6s ease forwards;
+  animation-delay: var(--delay, 0s);
+  opacity: 0;
+  transform: translateY(20px);
+  border: 1px solid var(--border-color);
+}
+
+.mission-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+@keyframes slideInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mission-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.mission-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mission-icon .material-icons {
+  font-size: 24px;
+  color: white;
+}
+
+.mission-text {
+  margin: 0;
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+/* Calendrier mensuel */
+.months-container {
+  padding: 2rem;
+}
+
+.months-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.month-card {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 2px solid transparent;
+  position: relative;
+}
+
+.month-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+
+.month-card:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.month-card--submitted {
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+  border-color: var(--success-color);
+}
+
+.month-card--submitted .month-icon.submitted {
+  color: var(--success-color);
+}
+
+.month-card--draft {
+  background: linear-gradient(135deg, #fef3c7 0%, #fef7cd 100%);
+  border-color: var(--warning-color);
+}
+
+.month-card--draft .month-icon.draft {
+  color: var(--warning-color);
+}
+
+.month-card--editable {
+  background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%);
+  border-color: var(--info-color);
+}
+
+.month-card--editable .month-icon.editable {
+  color: var(--info-color);
+}
+
+.month-card--future {
+  background: #f9fafb;
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
+.month-card--future .month-icon.future {
+  color: var(--text-secondary);
+}
+
+.month-card--future:hover {
+  transform: none;
+  box-shadow: var(--shadow-sm);
+  border-color: transparent;
+}
+
+.month-card--disabled,
+.month-card--no-missions {
+  background: #f3f4f6;
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
+.month-card--disabled:hover,
+.month-card--no-missions:hover {
+  transform: none;
+  box-shadow: var(--shadow-sm);
+  border-color: transparent;
+}
+
+.month-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.month-label {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.month-status {
+  display: flex;
+  align-items: center;
+}
+
+.month-icon {
+  font-size: 20px;
+}
+
+/* États d'erreur */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  text-align: center;
+  color: var(--danger-color);
+}
+
+.error-state .material-icons {
+  font-size: 48px;
+  margin-bottom: 1rem;
+}
+
+.error-state p {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .profile-content {
+    padding: 1rem;
+  }
+  
+  .section-header {
+    padding: 1rem 1.5rem;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+    padding: 1.5rem;
+  }
+  
+  .edit-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .months-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+  
+  .missions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .mission-card {
+    padding: 1rem;
+  }
+  
+  .month-card {
+    padding: 1rem;
+  }
+  
+  .months-container,
+  .missions-display {
+    padding: 1.5rem;
+  }
+}
+
+/* ================================
+   MISSION-SPECIFIC STYLES
+   ================================ */
+
+/* AI helper styles */
+.ai-generating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--primary-color);
+  font-style: italic;
+  font-size: 0.9rem;
+
+  .material-icons {
+    font-size: 1rem;
+    animation: spin 1s linear infinite;
+  }
+}
+
+.ai-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  color: var(--text-secondary);
+  font-weight: 500;
+  cursor: pointer;
+
+  .ai-checkbox {
+    width: 1.25rem;
+    height: 1.25rem;
+    accent-color: var(--primary-color);
+  }
+
+  .material-icons {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+  }
+}
+
+.ai-proposal {
+  background: linear-gradient(
+    135deg,
+    rgba(68, 68, 172, 0.1),
+    rgba(118, 75, 162, 0.1)
+  );
+  border: 1px solid rgba(68, 68, 172, 0.2);
+  border-radius: var(--border-radius-sm);
+  padding: 1.5rem;
+  margin-top: 1rem;
+
+  .proposal-content {
+    .proposal-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+
+      .material-icons {
+        font-size: 1.5rem;
+        color: var(--primary-color);
+      }
+
+      strong {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+    }
+
+    .proposal-text {
+      margin: 0 0 1rem 0;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+  }
+}
+
+/* Mission input styles */
+.mission-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(68, 68, 172, 0.1);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+}
+
+.mission-input-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.ai-helper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: var(--background-light);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+/* Mission preview styles for modals */
+.mission-preview {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.1),
+    rgba(147, 51, 234, 0.05)
+  );
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: var(--border-radius-sm);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  line-height: 1.4;
+
+  strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+}
+
+/* Spinning animation for loading states */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+/* ================================
+   END MISSION-SPECIFIC STYLES
+   ================================ */

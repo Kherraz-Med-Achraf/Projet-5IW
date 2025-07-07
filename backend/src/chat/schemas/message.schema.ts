@@ -3,7 +3,6 @@ import { Document, Types } from 'mongoose';
 
 @Schema({ timestamps: { createdAt: 'sentAt' } })
 export class Message extends Document {
-
   @Prop({ type: Types.ObjectId, ref: 'Chat', required: true })
   chat: Types.ObjectId;
 

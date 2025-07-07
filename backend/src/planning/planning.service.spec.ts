@@ -9,7 +9,11 @@ jest.mock('xlsx', () => ({
 import { Test, TestingModule } from '@nestjs/testing';
 import { PlanningService } from './planning.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Role } from '@prisma/client';
 import * as XLSX from 'xlsx';
 
@@ -76,7 +80,7 @@ describe('PlanningService – getChildSchedule()', () => {
       parent: { userId: 'parent-owner' },
     });
     await expect(
-      svc.getChildSchedule('sem-1', '42', 'intrus')
+      svc.getChildSchedule('sem-1', '42', 'intrus'),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });
@@ -201,8 +205,6 @@ describe('PlanningService', () => {
       });
       expect(result).toEqual(createdSemester);
     });
-
-
   });
 
   describe('getSemesterById', () => {
@@ -294,13 +296,7 @@ describe('PlanningService', () => {
     });
   });
 
-  describe('getChildSchedule', () => {
-
-
-
-
-
-  });
+  describe('getChildSchedule', () => {});
 
   // TODO: Fix XLSX mocking issues
   // describe('previewExcel', () => { ... });
@@ -340,14 +336,14 @@ describe('PlanningService', () => {
     it('should sanitize activity names', async () => {
       // Test that activity names are properly sanitized
       const dirtyActivity = '<script>alert("xss")</script>Mathématiques';
-      
+
       // This would be tested through the preview/import methods
       expect(dirtyActivity).toContain('Mathématiques');
     });
 
     it('should handle special characters in names', async () => {
       const specialChars = 'Activité spéciale & développement';
-      
+
       // Verify special characters are preserved properly
       expect(specialChars).toContain('&');
     });
@@ -364,11 +360,9 @@ describe('PlanningService', () => {
       });
 
       await expect(
-        service.previewExcel(corruptedFile, 'sem-1')
+        service.previewExcel(corruptedFile, 'sem-1'),
       ).rejects.toThrow();
     });
-
-
 
     it('should handle memory issues with large files', async () => {
       const largeFile = {
@@ -379,4 +373,4 @@ describe('PlanningService', () => {
       expect(largeFile.buffer.length).toBeGreaterThan(10 * 1024 * 1024);
     });
   });
-}); 
+});

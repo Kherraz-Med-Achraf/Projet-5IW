@@ -53,4 +53,4 @@ export function decrypt(payload: string): string {
   decipher.setAuthTag(tag);
   const dec = Buffer.concat([decipher.update(encrypted), decipher.final()]);
   return dec.toString('utf8');
-} 
+}

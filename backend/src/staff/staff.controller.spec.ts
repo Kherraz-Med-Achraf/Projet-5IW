@@ -21,9 +21,7 @@ describe('StaffController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [StaffController],
-      providers: [
-        { provide: StaffService, useValue: mockStaffService },
-      ],
+      providers: [{ provide: StaffService, useValue: mockStaffService }],
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: jest.fn(() => true) })
@@ -121,7 +119,7 @@ describe('StaffController', () => {
       mockStaffService.findOne.mockResolvedValue(mockProfile);
 
       await expect(controller.findOne(user, 1)).rejects.toThrow(
-        new NotFoundException('Profil staff introuvable')
+        new NotFoundException('Profil staff introuvable'),
       );
     });
   });
@@ -174,7 +172,7 @@ describe('StaffController', () => {
       mockStaffService.findOne.mockResolvedValue(mockProfile);
 
       await expect(controller.update(user, 1, updateDto)).rejects.toThrow(
-        new NotFoundException('Profil staff introuvable')
+        new NotFoundException('Profil staff introuvable'),
       );
 
       expect(service.update).not.toHaveBeenCalled();
@@ -193,6 +191,4 @@ describe('StaffController', () => {
       expect(result).toEqual(expectedResult);
     });
   });
-
-
-}); 
+});

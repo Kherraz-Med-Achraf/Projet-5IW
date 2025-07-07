@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,10 +16,10 @@ export class InvitationService {
   ) {}
 
   /**
-   * @param email         
-   * @param roleToAssign  
-   * @param inviterId    
-   * @param expiresAt     
+   * @param email
+   * @param roleToAssign
+   * @param inviterId
+   * @param expiresAt
    */
   async createInvitation(
     email: string,
@@ -38,7 +42,9 @@ export class InvitationService {
       },
     });
     if (existingInvite) {
-      throw new BadRequestException('Une invitation valide existe déjà pour cet e-mail.');
+      throw new BadRequestException(
+        'Une invitation valide existe déjà pour cet e-mail.',
+      );
     }
     const token = uuidv4();
     const invitation = await this.prisma.invitation.create({
@@ -68,7 +74,7 @@ export class InvitationService {
   }
 
   /**
-   * @param token  
+   * @param token
    */
   async validateToken(token: string) {
     const invitation = await this.prisma.invitation.findUnique({
@@ -98,7 +104,9 @@ export class InvitationService {
 
   async findAllInvitations(requestingUserId: string, requestingUserRole: Role) {
     if (requestingUserRole === Role.ADMIN) {
-      return this.prisma.invitation.findMany({ orderBy: { createdAt: 'desc' } });
+      return this.prisma.invitation.findMany({
+        orderBy: { createdAt: 'desc' },
+      });
     }
     return this.prisma.invitation.findMany({
       where: { invitedBy: requestingUserId },
@@ -107,7 +115,7 @@ export class InvitationService {
   }
 
   /**
-   * @param token 
+   * @param token
    */
   async deleteInvitation(token: string) {
     return this.prisma.invitation.delete({ where: { token } });

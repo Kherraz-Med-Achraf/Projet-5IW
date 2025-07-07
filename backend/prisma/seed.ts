@@ -150,12 +150,12 @@ async function main() {
     }
   }
 
-  const staffTypes = [
-    { discipline: 'EDUCATEUR_SPECIALISE', qty: 5 },
-    { discipline: 'PSYCHOLOGUE', qty: 2 },
-    { discipline: 'ORTHOPHONISTE', qty: 2 },
-    { discipline: 'PSYCHOMOTRICIEN', qty: 1 },
-    { discipline: 'ASSISTANT_SOCIAL', qty: 1 },
+  const staffTypes: Array<{ discipline: Discipline; qty: number }> = [
+    { discipline: 'EDUCATOR', qty: 5 },
+    { discipline: 'PSYCHOLOGIST', qty: 2 },
+    { discipline: 'ORTHOPEDIST', qty: 2 },
+    { discipline: 'TECH_EDUCATOR', qty: 1 },
+    { discipline: 'PSYCHIATRIST', qty: 1 },
   ];
 
   let staffIndex = 1;
@@ -180,7 +180,7 @@ async function main() {
             lastName: `User${staffIndex}`,
             birthDate: new Date('1985-01-01'),
             phone: '0123456789',
-            discipline: discipline as any,
+            discipline: discipline,
             specialty: null,
           },
         });

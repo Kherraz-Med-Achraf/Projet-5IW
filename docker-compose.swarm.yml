@@ -19,6 +19,14 @@ secrets:
     external: true
   stripe_secret:
     external: true
+  access_token_secret:
+    external: true
+  refresh_token_secret:
+    external: true
+  otp_enc_key:
+    external: true
+  file_encryption_key:
+    external: true
 
 networks:
   frontend-net:
@@ -138,6 +146,10 @@ services:
       - openai_api_key
       - yousign_api_key
       - stripe_secret
+      - access_token_secret
+      - refresh_token_secret
+      - otp_enc_key
+      - file_encryption_key
     networks:
       - backend-net
     deploy:

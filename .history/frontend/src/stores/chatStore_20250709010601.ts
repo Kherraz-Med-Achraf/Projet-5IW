@@ -174,9 +174,6 @@ export const useChatStore = defineStore("chat", () => {
     const trimmed = content.trim();
     const tempId = `tmp_${Date.now()}`;
     const nowIso = new Date().toISOString();
-    
-    console.log("[ChatStore] Envoi de message:", { chatId, content: trimmed });
-    
     if (!messages[chatId]) messages[chatId] = [];
     messages[chatId].push({
       id: tempId,
@@ -196,27 +193,10 @@ export const useChatStore = defineStore("chat", () => {
       if (idx > 0) {
         const [mv] = chats.value.splice(idx, 1);
         chats.value.unshift(mv);
-      } else if (idx === 0) {
-        // Forcer la réactivité Vue
-        chats.value = [...chats.value];
       }
     }
 
     socket.emit("sendMessage", { chatId, content: trimmed });
-    
-    // Fallback si le message temporaire n'est pas confirmé
-    setTimeout(() => {
-      const msgList = messages[chatId];
-      if (msgList) {
-        const idx = msgList.findIndex((m) => m.id === tempId);
-        if (idx !== -1) {
-          console.warn(`[ChatStore] Message temporaire ${tempId} non confirmé, fallback API`);
-          // En cas d'échec WebSocket, rafraîchir les messages depuis l'API
-          fetchMessages(chatId);
-          fetchChats(); // Rafraîchir aussi la liste des conversations
-        }
-      }
-    }, 5000); // 5 secondes
   }
 
   function editMessage(chatId: string, msgId: string, content: string) {
@@ -484,7 +464,5 @@ export const useChatStore = defineStore("chat", () => {
     init,
     reset,
     forceReconnect,
-    refreshConversations,
-    getSocketStatus,
   };
 });

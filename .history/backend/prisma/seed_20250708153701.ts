@@ -74,10 +74,8 @@ async function main() {
       },
     });
     
-    await prisma.directorProfile.upsert({
-      where: { userId: usr.id },
-      update: {},
-      create: {
+    await prisma.directorProfile.create({
+      data: {
         userId: usr.id,
         firstName: 'Jean',
         lastName: 'Direction',
@@ -106,10 +104,8 @@ async function main() {
         },
       });
       
-      await prisma.serviceManagerProfile.upsert({
-        where: { userId: usr.id },
-        update: {},
-        create: {
+      await prisma.serviceManagerProfile.create({
+        data: {
           userId: usr.id,
           firstName: faker.person.firstName(),
           lastName: faker.person.lastName(),
@@ -138,10 +134,8 @@ async function main() {
       },
     });
     
-    await prisma.secretaryProfile.upsert({
-      where: { userId: usr.id },
-      update: {},
-      create: {
+    await prisma.secretaryProfile.create({
+      data: {
         userId: usr.id,
         firstName: faker.person.firstName(),
         lastName: faker.person.lastName(),

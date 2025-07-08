@@ -456,7 +456,7 @@ async function main() {
   console.log('✅ Missions créées pour toutes les années scolaires');
 
   // Génération des journaux mensuels de septembre 2023 à juin 2025
-  const journalPeriods: { month: number; year: number; academicYear: string }[] = [];
+  const journalPeriods = [];
   
   // 2023-2024: septembre 2023 à juin 2024
   for (let month = 9; month <= 12; month++) {

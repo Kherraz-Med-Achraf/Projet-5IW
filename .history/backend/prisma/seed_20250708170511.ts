@@ -1,4 +1,4 @@
-import { PrismaClient, Role, Discipline, Child } from '@prisma/client';
+import { PrismaClient, Role, Discipline } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { faker } from '@faker-js/faker';
 
@@ -213,7 +213,7 @@ async function main() {
     },
   ];
 
-  const allEducators: string[] = [];
+  const allEducators = [];
 
   for (const { qty, discipline, names } of staffSpecs) {
     for (let i = 0; i < qty; i++) {
@@ -273,7 +273,7 @@ async function main() {
     }))
   ];
 
-  const allChildren: Child[] = [];
+  const allChildren = [];
 
   for (let f = 0; f < familyData.length; f++) {
     const family = familyData[f];
@@ -456,7 +456,7 @@ async function main() {
   console.log('✅ Missions créées pour toutes les années scolaires');
 
   // Génération des journaux mensuels de septembre 2023 à juin 2025
-  const journalPeriods: { month: number; year: number; academicYear: string }[] = [];
+  const journalPeriods = [];
   
   // 2023-2024: septembre 2023 à juin 2024
   for (let month = 9; month <= 12; month++) {

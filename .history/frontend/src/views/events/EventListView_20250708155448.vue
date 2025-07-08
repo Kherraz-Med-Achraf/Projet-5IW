@@ -316,7 +316,6 @@ import { useFocusManagement } from "@/composables/useFocusManagement";
 import PageHeader from "@/components/PageHeader.vue";
 
 const eventStore = useEventStore();
-const auth = useAuthStore();
 const toast = useToast();
 const router = useRouter();
 const { trapFocus, setInitialFocus, savePreviousFocus, restorePreviousFocus } = useFocusManagement();

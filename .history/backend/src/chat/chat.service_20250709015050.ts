@@ -509,7 +509,13 @@ export class ChatService {
     const msg = await this.msgModel.findById(msgId).exec();
     if (!msg) throw new NotFoundException('Message introuvable');
     
+    // Debug: comparer les IDs d'auteur
+    console.log('[DEBUG] deleteMessage - msg.author:', JSON.stringify(msg.author), 'typeof:', typeof msg.author);
+    console.log('[DEBUG] deleteMessage - userId:', JSON.stringify(userId), 'typeof:', typeof userId);
+    console.log('[DEBUG] deleteMessage - comparison result:', msg.author !== userId);
+    
     if (msg.author.toString() !== userId.toString()) {
+      console.log('[DEBUG] deleteMessage - FORBIDDEN: Author mismatch');
       throw new ForbiddenException('Vous ne pouvez supprimer que vos messages');
     }
     if (msg.chat.toString() !== chatId) {

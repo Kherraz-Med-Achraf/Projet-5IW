@@ -210,26 +210,17 @@ export class StripeWebhookController {
   /**
    * Gère les contestations de paiement (chargeback)
    */
-  private async handleChargeDispute(dispute: Stripe.Dispute) {
-    console.log(`⚖️  Charge dispute created: ${dispute.id} for charge: ${dispute.charge}`);
+  private async handleChargeDispute(charge: Stripe.Charge) {
+    console.log(`⚖️  Charge dispute created: ${charge.id}`);
     
-    // Récupérer l'ID du charge depuis la dispute
-    const chargeId = dispute.charge as string;
-    if (!chargeId) {
-      console.error('No charge found in dispute');
+    // Récupérer l'ID de registration depuis les métadonnées du payment intent
+    const paymentIntentId = charge.payment_intent as string;
+    if (!paymentIntentId) {
+      console.error('No payment intent found in charge');
       return;
     }
 
     try {
-      // Récupérer les détails du charge pour avoir le payment intent
-      const charge = await stripe.charges.retrieve(chargeId);
-      const paymentIntentId = charge.payment_intent as string;
-      
-      if (!paymentIntentId) {
-        console.error('No payment intent found in charge');
-        return;
-      }
-
       // Récupérer les détails du payment intent pour avoir les métadonnées
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
       const registrationId = paymentIntent.metadata?.registrationId;
@@ -240,10 +231,10 @@ export class StripeWebhookController {
       }
 
       // Gérer la contestation
-      await this.eventService.handleStripeChargeback(registrationId, dispute.id, paymentIntentId);
+      await this.eventService.handleStripeChargeback(registrationId, charge.id, paymentIntentId);
       console.log(`⚖️  Chargeback handled for registration: ${registrationId}`);
     } catch (error) {
-      console.error(`❌ Failed to handle chargeback for dispute ${dispute.id}:`, error);
+      console.error(`❌ Failed to handle chargeback for charge ${charge.id}:`, error);
     }
   }
 

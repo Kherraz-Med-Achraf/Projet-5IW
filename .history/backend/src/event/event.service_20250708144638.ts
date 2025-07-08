@@ -909,7 +909,7 @@ export class EventService {
 
       // Notifier les administrateurs de la contestation
       await this.mail.sendMail(
-        'admin@example.com', // Email admin du seed
+        'admin@educareschool.me', // Email admin
         `🚨 Contestation de paiement : ${reg.event.title}`,
         `<p>Une contestation de paiement (chargeback) a été créée.</p>
          <p><strong>Inscription :</strong> ${registrationId}</p>

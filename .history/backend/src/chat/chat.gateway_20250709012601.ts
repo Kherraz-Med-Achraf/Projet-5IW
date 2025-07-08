@@ -80,7 +80,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       if (!user) {
         console.warn(
-          `[SECURITY] Tentative de connexion avec token invalide (user inexistant: ${userId}) depuis ${clientIp}`,
+          `[SECURITY] Tentative de connexion avec token invalide (user inexistant) depuis ${clientIp}`,
         );
         this.recordSuspiciousActivity(clientIp, 'INVALID_USER');
         return socket.disconnect();
@@ -296,14 +296,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       content.trim().length === 0
     ) {
       console.warn(
-        `[SECURITY] Tentative d'envoi de message vide par user ${s.data.user.id}`,
+        `[SECURITY] Tentative d'envoi de message vide par user ${s.data.user?.id}`,
       );
       return;
     }
 
     if (content.length > 1000) {
       console.warn(
-        `[SECURITY] Tentative d'envoi de message trop long (${content.length} chars) par user ${s.data.user.id}`,
+        `[SECURITY] Tentative d'envoi de message trop long (${content.length} chars) par user ${s.data.user?.id}`,
       );
       return;
     }
@@ -349,7 +349,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
     } catch (error) {
       console.error(
-        `[ERROR] Erreur lors de l'envoi du message par user ${s.data.user.id}:`,
+        `[ERROR] Erreur lors de l'envoi du message par user ${s.data.user?.id}:`,
         error.message,
       );
     }
@@ -366,17 +366,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       content,
     }: { chatId: string; msgId: string; content: string },
   ) {
-    // Vérifier que l'utilisateur est bien authentifié
-    if (!s.data?.user?.id) {
-      console.warn(
-        `[SECURITY] Tentative de editMessage sans authentification valide depuis ${s.handshake.address}`,
-      );
-      return s.disconnect();
-    }
-
     if (!Types.ObjectId.isValid(chatId) || !Types.ObjectId.isValid(msgId)) {
       console.warn(
-        `[SECURITY] Tentative de editMessage avec IDs invalides par user ${s.data.user.id}`,
+        `[SECURITY] Tentative de editMessage avec IDs invalides par user ${s.data.user?.id}`,
       );
       return;
     }
@@ -397,7 +389,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
     } catch (error) {
       console.error(
-        `[ERROR] Erreur lors de l'édition du message par user ${s.data.user.id}:`,
+        `[ERROR] Erreur lors de l'édition du message par user ${s.data.user?.id}:`,
         error.message,
       );
     }
@@ -409,17 +401,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() s: Socket,
     @MessageBody() { chatId, msgId }: { chatId: string; msgId: string },
   ) {
-    // Vérifier que l'utilisateur est bien authentifié
-    if (!s.data?.user?.id) {
-      console.warn(
-        `[SECURITY] Tentative de deleteMessage sans authentification valide depuis ${s.handshake.address}`,
-      );
-      return s.disconnect();
-    }
-
     if (!Types.ObjectId.isValid(chatId) || !Types.ObjectId.isValid(msgId)) {
       console.warn(
-        `[SECURITY] Tentative de deleteMessage avec IDs invalides par user ${s.data.user.id}`,
+        `[SECURITY] Tentative de deleteMessage avec IDs invalides par user ${s.data.user?.id}`,
       );
       return;
     }
@@ -429,7 +413,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.server.to(chatId).emit('messageDeleted', { chatId, msgId });
     } catch (error) {
       console.error(
-        `[ERROR] Erreur lors de la suppression du message par user ${s.data.user.id}:`,
+        `[ERROR] Erreur lors de la suppression du message par user ${s.data.user?.id}:`,
         error.message,
       );
     }

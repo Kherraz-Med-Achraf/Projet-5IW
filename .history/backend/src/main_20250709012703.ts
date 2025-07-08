@@ -93,10 +93,6 @@ async function bootstrap() {
       max: 10,
       message:
         'Trop de tentatives sur /auth, merci de réessayer dans 1 minute.',
-      standardHeaders: true,
-      legacyHeaders: false,
-      skipSuccessfulRequests: false,
-      skipFailedRequests: false,
     }),
   );
 

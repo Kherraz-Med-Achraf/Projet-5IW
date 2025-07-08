@@ -80,7 +80,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       if (!user) {
         console.warn(
-          `[SECURITY] Tentative de connexion avec token invalide (user inexistant: ${userId}) depuis ${clientIp}`,
+          `[SECURITY] Tentative de connexion avec token invalide (user inexistant) depuis ${clientIp}`,
         );
         this.recordSuspiciousActivity(clientIp, 'INVALID_USER');
         return socket.disconnect();
@@ -429,7 +429,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.server.to(chatId).emit('messageDeleted', { chatId, msgId });
     } catch (error) {
       console.error(
-        `[ERROR] Erreur lors de la suppression du message par user ${s.data.user.id}:`,
+        `[ERROR] Erreur lors de la suppression du message par user ${s.data.user?.id}:`,
         error.message,
       );
     }

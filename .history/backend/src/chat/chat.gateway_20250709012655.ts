@@ -80,7 +80,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       if (!user) {
         console.warn(
-          `[SECURITY] Tentative de connexion avec token invalide (user inexistant: ${userId}) depuis ${clientIp}`,
+          `[SECURITY] Tentative de connexion avec token invalide (user inexistant) depuis ${clientIp}`,
         );
         this.recordSuspiciousActivity(clientIp, 'INVALID_USER');
         return socket.disconnect();

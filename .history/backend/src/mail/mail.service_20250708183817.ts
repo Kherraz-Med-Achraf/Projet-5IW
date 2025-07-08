@@ -19,7 +19,7 @@ export class MailService {
       this.logger.error('❌ Email configuration incomplete - emails will fail');
     }
 
-    this.transporter = nodemailer.createTransport({
+    this.transporter = nodemailer.createTransporter({
       service: 'gmail',
       auth: {
         user: emailUser,
@@ -38,7 +38,7 @@ export class MailService {
       });
       this.logger.log(`Email envoyé: ${info.messageId}`);
     } catch (error) {
-      this.logger.error('Erreur lors de envoi de email', error);
+      this.logger.error('Erreur lors de l'envoi de l'email', error);
       throw error;
     }
   }

@@ -7,11 +7,23 @@ export class MailService {
   private readonly logger = new Logger(MailService.name);
 
   constructor() {
+    // Diagnostic email configuration
+    const emailUser = process.env.EMAIL_USER;
+    const emailPass = process.env.EMAIL_PASS;
+    
+    this.logger.log(`📧 Email configuration check:`);
+    this.logger.log(`   EMAIL_USER: ${emailUser ? '✅ Configured' : '❌ Missing'}`);
+    this.logger.log(`   EMAIL_PASS: ${emailPass ? '✅ Configured' : '❌ Missing'}`);
+    
+    if (!emailUser || !emailPass) {
+      this.logger.error('❌ Email configuration incomplete - emails will fail');
+    }
+
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: emailUser,
+        pass: emailPass,
       },
     });
   }
@@ -26,7 +38,7 @@ export class MailService {
       });
       this.logger.log(`Email envoyé: ${info.messageId}`);
     } catch (error) {
-      this.logger.error('Erreur lors de l’envoi de l’email', error);
+      this.logger.error('Erreur lors de envoi de email', error);
       throw error;
     }
   }

@@ -620,7 +620,7 @@ export class EventService {
     
     const reg = await this.prisma.eventRegistration.findFirst({
       where: { stripeSessionId: sessionId },
-      include: { parentProfile: { include: { user: true } }, event: true },
+      include: { parentProfile: true, event: true },
     });
 
     console.log(`🔍 Registration found: ${reg ? `YES (id: ${reg.id})` : 'NO'}`);

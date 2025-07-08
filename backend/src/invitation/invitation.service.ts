@@ -69,7 +69,21 @@ export class InvitationService {
       <p>Ce lien est valable jusqu'au <strong>${invitation.expiresAt.toLocaleString()}</strong>.</p>
       <p>Si vous n'avez pas demandé cette invitation, ignorez simplement ce message.</p>
     `;
-    await this.mailService.sendMail(email, subject, html);
+    
+    console.log(`🔗 [INVITATION] Sending invitation email:`);
+    console.log(`   To: ${email}`);
+    console.log(`   Role: ${roleToAssign}`);
+    console.log(`   Token: ${token}`);
+    console.log(`   Registration link: ${registrationLink}`);
+    console.log(`   Expires at: ${invitation.expiresAt.toLocaleString()}`);
+    
+    try {
+      await this.mailService.sendMail(email, subject, html);
+      console.log(`✅ [INVITATION] Email sent successfully to ${email}`);
+    } catch (error) {
+      console.error(`❌ [INVITATION] Failed to send email to ${email}:`, error);
+      throw error;
+    }
 
     return invitation;
   }

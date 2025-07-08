@@ -255,25 +255,24 @@ async function main() {
   }
 
   /* ---------------------------------------------------------------------- */
-  /* 6. PARENTS + CHILDREN (30 parents : 27 avec 1 enfant + 3 avec 3 enfants) */
+  /* 6. PARENTS + CHILDREN (40 parents avec 1 enfant + 5 avec 2 enfants)   */
   /* ---------------------------------------------------------------------- */
   
   // Données prédéfinies pour les familles
   const familyData = [
-    // 27 familles avec 1 enfant
-    ...Array.from({ length: 27 }, (_, i) => ({
+    // 40 familles avec 1 enfant
+    ...Array.from({ length: 40 }, (_, i) => ({
       parentFirstName: `Parent${i + 1}`,
       parentLastName: `Famille${i + 1}`,
       children: [{ firstName: `Enfant${i + 1}`, lastName: `Famille${i + 1}` }]
     })),
-    // 3 familles avec 3 enfants
-    ...Array.from({ length: 3 }, (_, i) => ({
-      parentFirstName: `Parent${i + 28}`,
-      parentLastName: `Famille${i + 28}`,
+    // 5 familles avec 2 enfants
+    ...Array.from({ length: 5 }, (_, i) => ({
+      parentFirstName: `Parent${i + 41}`,
+      parentLastName: `Famille${i + 41}`,
       children: [
-        { firstName: `Enfant${i * 3 + 28}`, lastName: `Famille${i + 28}` },
-        { firstName: `Enfant${i * 3 + 29}`, lastName: `Famille${i + 28}` },
-        { firstName: `Enfant${i * 3 + 30}`, lastName: `Famille${i + 28}` }
+        { firstName: `Enfant${i * 2 + 46}`, lastName: `Famille${i + 41}` },
+        { firstName: `Enfant${i * 2 + 47}`, lastName: `Famille${i + 41}` }
       ]
     }))
   ];
@@ -331,7 +330,7 @@ async function main() {
       },
     });
   }
-  console.log('✅ 30 Parents + 33 enfants + contacts d\'urgence créés');
+  console.log('✅ 45 Parents + 50 enfants + contacts d\'urgence créés');
 
   // Années scolaires et semestres
   const academicYears = [
@@ -368,7 +367,7 @@ async function main() {
     }
   }
 
-  // Assignation des référents (2-3 enfants par éducateur)
+  // Assignation des référents (3-4 enfants par éducateur)
   if (allChildren.length > 0 && allEducators.length > 0) {
     const childrenPerEducator = Math.ceil(allChildren.length / allEducators.length);
     
@@ -385,7 +384,7 @@ async function main() {
         },
       });
     }
-    console.log('✅ Référents assignés (2-3 enfants par éducateur)');
+    console.log('✅ Référents assignés (3-4 enfants par éducateur)');
   }
 
   // Génération des feuilles de présence jusqu'à aujourd'hui (optimisée)
@@ -424,7 +423,7 @@ async function main() {
     console.log(`✅ ${sheetsCreated} feuilles de présence générées`);
   }
 
-  // Génération des missions pour 2024-2025 seulement
+  // Génération des missions pour toutes les années scolaires
   const missions = [
     { description: 'Développer l\'autonomie - Favoriser l\'acquisition d\'autonomie dans les gestes du quotidien' },
     { description: 'Socialisation - Développer les compétences sociales et relationnelles' },
@@ -433,44 +432,41 @@ async function main() {
     { description: 'Motricité - Développer les compétences motrices fines et globales' },
   ];
 
-  // Missions seulement pour 2024-2025
-  const currentAcademicYear = await prisma.academicYear.findUnique({
-    where: { label: '2024-2025' },
-  });
-  
-  if (currentAcademicYear) {
-    console.log('📋 Génération des missions pour 2024-2025...');
-    let missionsCreated = 0;
+  for (const academicYear of academicYears) {
+    const yearRecord = await prisma.academicYear.findUnique({
+      where: { label: academicYear.label },
+    });
     
-    for (const child of allChildren) {
-      for (const mission of missions) {
-        const existing = await prisma.mission.findFirst({
-          where: { 
-            childId: child.id,
-            description: mission.description,
-            academicYearId: currentAcademicYear.id,
-          },
-        });
-        
-        if (!existing) {
-          await prisma.mission.create({
-            data: {
-              description: mission.description,
+    if (yearRecord) {
+      for (const child of allChildren) {
+        for (const mission of missions) {
+          const existing = await prisma.mission.findFirst({
+            where: { 
               childId: child.id,
-              academicYearId: currentAcademicYear.id,
+              description: mission.description,
+              academicYearId: yearRecord.id,
             },
           });
-          missionsCreated++;
+          
+          if (!existing) {
+            await prisma.mission.create({
+              data: {
+                description: mission.description,
+                childId: child.id,
+                academicYearId: yearRecord.id,
+              },
+            });
+          }
         }
       }
     }
-    console.log(`✅ ${missionsCreated} missions créées pour 2024-2025`);
   }
+  console.log('✅ Missions créées pour toutes les années scolaires');
 
-  // Génération des journaux mensuels seulement pour 2024-2025
+  // Génération des journaux mensuels de septembre 2024 à juin 2025 (réduit)
   const journalPeriods: { month: number; year: number; academicYear: string }[] = [];
   
-  // Seulement 2024-2025
+  // Seulement 2024-2025 pour réduire la charge
   for (let month = 9; month <= 12; month++) {
     journalPeriods.push({ month, year: 2024, academicYear: '2024-2025' });
   }
@@ -541,7 +537,7 @@ async function main() {
   }
 
   console.log('🌱 Seed terminé avec succès !');
-  console.log(`📊 Résumé: 15 éducateurs, 30 parents, 33 enfants, ${journalsCreated} journaux`);
+  console.log(`📊 Résumé: 15 éducateurs, 45 parents, 50 enfants, ${journalsCreated} journaux`);
 }
 
 main()

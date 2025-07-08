@@ -601,10 +601,7 @@ export class ChatService {
 
   private async getStaffContacts(staffId: string): Promise<Contact[]> {
     const admins = await this.prisma.user.findMany({
-      where: { 
-        role: { in: ['DIRECTOR', 'SERVICE_MANAGER', 'SECRETARY'] },
-        id: { not: staffId }, // Exclure l'utilisateur actuel
-      },
+      where: { role: { in: ['DIRECTOR', 'SERVICE_MANAGER', 'SECRETARY'] } },
       include: {
         directorProfile: { select: { firstName: true, lastName: true } },
         serviceManagerProfile: { select: { firstName: true, lastName: true } },
@@ -632,19 +629,18 @@ export class ChatService {
       new Map(parents.map((p) => [p.id, p])).values(),
     );
 
-    const adminContacts = admins.map((a) => ({
-      id: a.id,
-      name: this.fullName(a),
-      role: a.role,
-    }));
-
-    const parentContacts = uniqueParents.map((p) => ({
-      id: p.id,
-      name: this.fullName(p),
-      role: p.role,
-    }));
-
-    return [...adminContacts, ...parentContacts];
+    return [
+      ...admins.map((a) => ({
+        id: a.id,
+        name: this.fullName(a),
+        role: a.role,
+      })),
+      ...uniqueParents.map((p) => ({
+        id: p.id,
+        name: this.fullName(p),
+        role: p.role,
+      })),
+    ];
   }
 
   private async getParentContacts(parentUserId: string): Promise<Contact[]> {
@@ -652,7 +648,6 @@ export class ChatService {
       where: { parent: { userId: parentUserId } },
       include: {
         referents: {
-          where: { id: { not: parentUserId } }, // Exclure l'utilisateur actuel
           include: {
             staffProfile: { select: { firstName: true, lastName: true } },
           },

@@ -69,7 +69,7 @@ export const useChatStore = defineStore("chat", () => {
 
   async function fetchContacts() {
     try {
-      const rawContacts = await secureJsonCall(`${API}/chats/contacts`) as Contact[];
+      const rawContacts = await secureJsonCall(`${API}/chats/contacts`);
       
       // Déduplication côté client en plus du backend par sécurité
       const uniqueContacts = Array.from(

@@ -652,7 +652,6 @@ export class ChatService {
       where: { parent: { userId: parentUserId } },
       include: {
         referents: {
-          where: { id: { not: parentUserId } }, // Exclure l'utilisateur actuel
           include: {
             staffProfile: { select: { firstName: true, lastName: true } },
           },

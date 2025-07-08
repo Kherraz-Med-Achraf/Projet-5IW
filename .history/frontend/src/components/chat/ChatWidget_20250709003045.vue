@@ -320,22 +320,11 @@ const handleGlobalKeyDown = (e: KeyboardEvent) => {
   }
 };
 
-// Watcher pour surveiller l'état d'authentification
-watch(
-  () => auth.isAuthenticated,
-  (isAuthenticated) => {
-    if (isAuthenticated) {
-      chatStore.init();
-    } else {
-      // Fermer le modal si l'utilisateur se déconnecte
-      isModalOpen.value = false;
-    }
-  },
-  { immediate: true }
-);
-
 // Lifecycle
 onMounted(() => {
+  if (auth.isAuthenticated) {
+    chatStore.init();
+  }
   window.addEventListener('resize', handleResize);
   document.addEventListener('keydown', handleGlobalKeyDown);
 });

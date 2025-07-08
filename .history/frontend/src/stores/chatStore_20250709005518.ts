@@ -225,26 +225,15 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   async function init() {
-    if (initialized.value) {
-      console.log("[ChatStore] Déjà initialisé, ignoré");
-      return;
-    }
+    if (initialized.value) return; // déjà fait
     
     // Vérifier si l'utilisateur est connecté avant de faire les appels API
     if (!auth.token || !auth.user?.id) {
-      console.log("[ChatStore] User not authenticated, skipping API calls");
+      console.log("ChatStore init: User not authenticated, skipping API calls");
       return;
     }
     
-    console.log("[ChatStore] Initialisation...");
     initialized.value = true;
-    
-    // Réinitialiser l'état
-    chats.value = [];
-    contacts.value = [];
-    Object.keys(messages).forEach(key => delete messages[key]);
-    
-    console.log("[ChatStore] Initialisation du socket WebSocket");
     initSocket(auth.token ?? "");
 
     // Demander permission pour les notifications
@@ -253,7 +242,6 @@ export const useChatStore = defineStore("chat", () => {
     }
 
     socket.on("newMessage", (msg: any) => {
-      console.log("[ChatStore] Nouveau message reçu:", msg);
       if (!messages[msg.chatId]) messages[msg.chatId] = [];
 
       // Chercher un message temporaire à remplacer
@@ -413,23 +401,6 @@ export const useChatStore = defineStore("chat", () => {
     }
   }
 
-  function reset() {
-    console.log("[ChatStore] Reset du store");
-    initialized.value = false;
-    fetchingContacts.value = false;
-    chats.value = [];
-    contacts.value = [];
-    Object.keys(messages).forEach(key => delete messages[key]);
-  }
-
-  function forceReconnect() {
-    console.log("[ChatStore] Forcer la reconnexion WebSocket");
-    if (socket) {
-      socket.disconnect();
-      socket.connect();
-    }
-  }
-
   return {
     chats,
     contacts,
@@ -444,7 +415,5 @@ export const useChatStore = defineStore("chat", () => {
     deleteMessage,
     markAsRead,
     init,
-    reset,
-    forceReconnect,
   };
 });

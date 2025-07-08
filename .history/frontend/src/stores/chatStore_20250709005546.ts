@@ -253,7 +253,6 @@ export const useChatStore = defineStore("chat", () => {
     }
 
     socket.on("newMessage", (msg: any) => {
-      console.log("[ChatStore] Nouveau message reçu:", msg);
       if (!messages[msg.chatId]) messages[msg.chatId] = [];
 
       // Chercher un message temporaire à remplacer
@@ -422,14 +421,6 @@ export const useChatStore = defineStore("chat", () => {
     Object.keys(messages).forEach(key => delete messages[key]);
   }
 
-  function forceReconnect() {
-    console.log("[ChatStore] Forcer la reconnexion WebSocket");
-    if (socket) {
-      socket.disconnect();
-      socket.connect();
-    }
-  }
-
   return {
     chats,
     contacts,
@@ -445,6 +436,5 @@ export const useChatStore = defineStore("chat", () => {
     markAsRead,
     init,
     reset,
-    forceReconnect,
   };
 });

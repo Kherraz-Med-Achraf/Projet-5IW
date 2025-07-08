@@ -445,6 +445,5 @@ export const useChatStore = defineStore("chat", () => {
     markAsRead,
     init,
     reset,
-    forceReconnect,
   };
 });

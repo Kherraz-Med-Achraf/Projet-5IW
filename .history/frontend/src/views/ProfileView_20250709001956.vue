@@ -1355,13 +1355,9 @@ async function saveContact() {
         `Erreur lors de la correction des informations (${response.status})`
       );
     }
-  } catch (error: any) {
-    console.error("Error updating contact:", error);
-    if (error.message?.includes("Token CSRF")) {
-      toast.error("Problème d'authentification. Veuillez vous reconnecter.");
-    } else {
-      toast.error("Erreur lors de la correction des informations");
-    }
+  } catch (error) {
+    console.error("Error updating contact");
+    toast.error("Erreur lors de la correction des informations");
   } finally {
     contactLoading.value = false;
   }

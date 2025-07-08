@@ -1300,18 +1300,26 @@ async function saveContact() {
       phone: contactForm.value.phone,
     };
 
-    // Obtenir le token CSRF de manière robuste
-    const csrfToken = await getCSRFToken();
-    
-    if (!csrfToken) {
-      throw new Error("Token CSRF introuvable. Veuillez vous reconnecter.");
-    }
+    // Obtenir le token CSRF des cookies
+    const getCsrfTokenFromCookies = () => {
+      const cookies = document.cookie.split(";");
+      for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split("=");
+        if (name === "csrf_token") {
+          return value;
+        }
+      }
+      return null;
+    };
 
+    const csrfToken = getCsrfTokenFromCookies();
     const headers: Record<string, string> = {
       Authorization: `Bearer ${auth.token}`,
       "Content-Type": "application/json",
-      "X-CSRF-Token": csrfToken,
     };
+    if (csrfToken) {
+      headers["X-CSRF-Token"] = csrfToken;
+    }
 
     // Convertir les IDs en nombres pour s'assurer qu'ils sont corrects
     const parentId = parseInt(parentProfileId.toString());
@@ -1355,13 +1363,9 @@ async function saveContact() {
         `Erreur lors de la correction des informations (${response.status})`
       );
     }
-  } catch (error: any) {
-    console.error("Error updating contact:", error);
-    if (error.message?.includes("Token CSRF")) {
-      toast.error("Problème d'authentification. Veuillez vous reconnecter.");
-    } else {
-      toast.error("Erreur lors de la correction des informations");
-    }
+  } catch (error) {
+    console.error("Error updating contact");
+    toast.error("Erreur lors de la correction des informations");
   } finally {
     contactLoading.value = false;
   }

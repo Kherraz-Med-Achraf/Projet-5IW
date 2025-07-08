@@ -32,7 +32,7 @@ export class MailService {
       service: 'gmail',
       auth: {
         user: emailUser,
-        pass: emailPass || undefined,
+        pass: emailPass,
       },
     });
   }

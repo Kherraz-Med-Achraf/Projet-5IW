@@ -10,7 +10,7 @@ export class MailService {
   constructor() {
     // Diagnostic email configuration
     const emailUser = process.env.EMAIL_USER;
-    let emailPass: string | null = null;
+    let emailPass: string;
     
     // Lire le mot de passe depuis le secret Docker comme les autres services
     try {
@@ -32,7 +32,7 @@ export class MailService {
       service: 'gmail',
       auth: {
         user: emailUser,
-        pass: emailPass || undefined,
+        pass: emailPass,
       },
     });
   }

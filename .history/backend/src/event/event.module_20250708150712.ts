@@ -4,7 +4,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { MailModule } from '../mail/mail.module';
 import { EventService } from './event.service';
 import { EventController } from './event.controller';
-import { StripeWebhookController } from '../stripe/stripe-webhook.controller';
+import { StripeWebhookController } from './stripe-webhook.controller';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 

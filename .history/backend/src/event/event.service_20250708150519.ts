@@ -742,9 +742,10 @@ export class EventService {
       // Marquer comme échoué et libérer la place
       await this.prisma.$transaction(async (tx) => {
         await tx.eventRegistration.update({
-          where: { id: reg.id },
+          where: { id: registrationId },
           data: { 
             paymentStatus: PaymentStatus.FAILED,
+            stripePaymentIntentId: paymentIntentId,
           },
         });
 
@@ -758,19 +759,167 @@ export class EventService {
         `Paiement échoué : ${reg.event.title}`,
         `<p>Bonjour,</p>
          <p>Votre paiement pour l'événement <strong>${reg.event.title}</strong> a échoué.</p>
+         <p><strong>Raison :</strong> ${errorMessage}</p>
          <p>Votre inscription a été annulée. Les places ont été libérées.</p>
          <p>Vous pouvez tenter une nouvelle inscription si des places sont disponibles.</p>
          <p><a href="https://educareschool.me/events">Voir les événements disponibles</a></p>`,
       );
 
-      console.log(`❌ Failed payment handled for registration ${reg.id}`);
+      console.log(`❌ Failed payment handled for registration ${registrationId}: ${errorMessage}`);
     } catch (error) {
-      console.error(`Failed to handle failed payment for registration ${reg.id}:`, error);
+      console.error(`Failed to handle failed payment for registration ${registrationId}:`, error);
       throw error;
     }
   }
 
+  /** Gestion des paiements Stripe annulés */
+  async handleCanceledStripePayment(registrationId: string, paymentIntentId: string) {
+    const reg = await this.prisma.eventRegistration.findUnique({
+      where: { id: registrationId },
+      include: { event: true, parentProfile: { include: { user: true } } },
+    });
 
+    if (!reg) {
+      console.warn(`Registration ${registrationId} not found for canceled payment`);
+      return;
+    }
+
+    try {
+      // Supprimer la registration annulée
+      await this.prisma.$transaction(async (tx) => {
+        await tx.eventRegistrationChild.deleteMany({
+          where: { registrationId },
+        });
+        await tx.eventRegistration.delete({
+          where: { id: registrationId },
+        });
+
+        // Vérifier s'il faut déverrouiller l'événement
+        const remainingValidatedChildren = await tx.eventRegistrationChild.count({
+          where: {
+            registration: {
+              eventId: reg.eventId,
+              OR: [
+                { paymentStatus: { in: [PaymentStatus.PAID, PaymentStatus.FREE] } },
+                {
+                  paymentMethod: PaymentMethod.CHEQUE,
+                  paymentStatus: PaymentStatus.PENDING,
+                },
+                {
+                  paymentMethod: PaymentMethod.STRIPE,
+                  paymentStatus: PaymentStatus.PENDING,
+                },
+              ],
+            },
+          },
+        });
+
+        if (remainingValidatedChildren === 0) {
+          await tx.event.update({
+            where: { id: reg.eventId },
+            data: { isLocked: false },
+          });
+        }
+      });
+
+      // Notifier le parent de l'annulation
+      await this.mail.sendMail(
+        reg.parentProfile.user.email,
+        `Paiement annulé : ${reg.event.title}`,
+        `<p>Bonjour,</p>
+         <p>Votre paiement pour l'événement <strong>${reg.event.title}</strong> a été annulé.</p>
+         <p>Votre inscription a été supprimée et les places ont été libérées.</p>
+         <p>Vous pouvez vous réinscrire si des places sont encore disponibles.</p>`,
+      );
+
+      console.log(`🚫 Canceled payment handled for registration ${registrationId}`);
+    } catch (error) {
+      console.error(`Failed to handle canceled payment for registration ${registrationId}:`, error);
+      throw error;
+    }
+  }
+
+  /** Gestion des paiements nécessitant une action */
+  async handleStripePaymentRequiresAction(registrationId: string, paymentIntentId: string) {
+    const reg = await this.prisma.eventRegistration.findUnique({
+      where: { id: registrationId },
+      include: { event: true, parentProfile: { include: { user: true } } },
+    });
+
+    if (!reg) {
+      console.warn(`Registration ${registrationId} not found for payment requiring action`);
+      return;
+    }
+
+    try {
+      // Mettre à jour avec l'ID du payment intent
+      await this.prisma.eventRegistration.update({
+        where: { id: registrationId },
+        data: { 
+          stripePaymentIntentId: paymentIntentId,
+          // Le statut reste PENDING en attendant l'action
+        },
+      });
+
+      // Notifier le parent qu'une action est requise
+      await this.mail.sendMail(
+        reg.parentProfile.user.email,
+        `Action requise pour votre paiement : ${reg.event.title}`,
+        `<p>Bonjour,</p>
+         <p>Votre paiement pour l'événement <strong>${reg.event.title}</strong> nécessite une action de votre part.</p>
+         <p>Cela peut être une authentification 3D Secure ou une vérification supplémentaire.</p>
+         <p>Veuillez vous connecter à votre compte pour finaliser le paiement.</p>
+         <p><a href="https://educareschool.me/events">Accéder à mes inscriptions</a></p>`,
+      );
+
+      console.log(`⚠️  Payment requiring action handled for registration ${registrationId}`);
+    } catch (error) {
+      console.error(`Failed to handle payment requiring action for registration ${registrationId}:`, error);
+      throw error;
+    }
+  }
+
+  /** Gestion des contestations de paiement (chargeback) */
+  async handleStripeChargeback(registrationId: string, disputeId: string, paymentIntentId: string) {
+    const reg = await this.prisma.eventRegistration.findUnique({
+      where: { id: registrationId },
+      include: { event: true, parentProfile: { include: { user: true } } },
+    });
+
+    if (!reg) {
+      console.warn(`Registration ${registrationId} not found for chargeback`);
+      return;
+    }
+
+    try {
+      // Marquer comme contesté
+      await this.prisma.eventRegistration.update({
+        where: { id: registrationId },
+        data: { 
+          paymentStatus: PaymentStatus.FAILED, // Ou créer un statut DISPUTED
+          stripePaymentIntentId: paymentIntentId,
+        },
+      });
+
+      // Notifier les administrateurs de la contestation
+      await this.mail.sendMail(
+        'admin@example.com', // Email admin du seed
+        `🚨 Contestation de paiement : ${reg.event.title}`,
+        `<p>Une contestation de paiement (chargeback) a été créée.</p>
+         <p><strong>Inscription :</strong> ${registrationId}</p>
+         <p><strong>Événement :</strong> ${reg.event.title}</p>
+         <p><strong>Utilisateur :</strong> ${reg.parentProfile.user.email}</p>
+         <p><strong>Dispute ID :</strong> ${disputeId}</p>
+         <p><strong>Payment Intent ID :</strong> ${paymentIntentId}</p>
+         <p>Veuillez vérifier dans le dashboard Stripe pour plus de détails.</p>`,
+      );
+
+      console.log(`⚖️  Chargeback handled for registration ${registrationId}: ${disputeId}`);
+    } catch (error) {
+      console.error(`Failed to handle chargeback for registration ${registrationId}:`, error);
+      throw error;
+    }
+  }
 
   private async _sendRegistrationMail(regId: string) {
     const reg = await this.prisma.eventRegistration.findUnique({

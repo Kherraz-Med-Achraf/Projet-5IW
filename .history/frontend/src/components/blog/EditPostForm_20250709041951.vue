@@ -551,8 +551,6 @@ onMounted(() => {
 
 .edit-post-form {
   .post-form {
-    color: #000000; /* Texte noir pour tous les éléments */
-    
     .form-group {
       margin-bottom: 2rem;
     }
@@ -561,7 +559,7 @@ onMounted(() => {
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      color: #000000 !important; /* Texte noir pour les labels */
+      color: var(--text-primary);
       font-weight: 600;
       font-size: 1.1rem;
       margin-bottom: 0.75rem;

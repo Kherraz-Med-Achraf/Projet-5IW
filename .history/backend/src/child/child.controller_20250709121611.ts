@@ -67,7 +67,11 @@ export class ChildController {
       if (!parentProfile) {
         throw new NotFoundException('Profil parent introuvable');
       }
-              children = await this.childService.findAllForParent(parentProfile.id);
+      console.log('🔍 [CONTROLLER] Parent userId:', user.id, 'parentProfileId:', parentProfile.id);
+      console.log('🔍 [CONTROLLER] Parent profile complet:', parentProfile);
+      children = await this.childService.findAllForParent(parentProfile.id);
+      console.log('🔍 [CONTROLLER] Enfants retournés pour parent:', children);
+      console.log('🔍 [CONTROLLER] Nombre d\'enfants retournés:', children.length);
     } else {
       children = await this.childService.findAll();
     }

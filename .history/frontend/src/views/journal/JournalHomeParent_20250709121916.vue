@@ -56,7 +56,7 @@
               >
                 <option disabled value="">-- Choisir un enfant --</option>
                 <option v-for="child in children" :key="`child-${child.id}`" :value="child.id">
-                  {{ child.firstName }} {{ child.lastName }}
+                  {{ child.firstName }} {{ child.lastName }} (ID: {{ child.id }})
                 </option>
               </select>
               <div v-if="children.length === 0" class="help-text">

@@ -44,79 +44,56 @@ async function main() {
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   /* ---------------------------------------------------------------------- */
-  /* 🧹 NETTOYAGE COMPLET DE LA BASE DE DONNÉES */
-  /* ---------------------------------------------------------------------- */
-  console.log('🧹 Nettoyage complet de la base de données...');
-  
-  // Ordre de suppression respectant les contraintes de clés étrangères
-  await prisma.blogReaction.deleteMany({});
-  await prisma.blogPost.deleteMany({});
-  await prisma.eventRegistrationChild.deleteMany({});
-  await prisma.eventRegistration.deleteMany({});
-  await prisma.event.deleteMany({});
-  await prisma.entryChild.deleteMany({});
-  await prisma.scheduleEntry.deleteMany({});
-  await prisma.semester.deleteMany({});
-  await prisma.absenceJustification.deleteMany({});
-  await prisma.presenceRecord.deleteMany({});
-  await prisma.presenceSheet.deleteMany({});
-  await prisma.journalAttachment.deleteMany({});
-  await prisma.journalMensuel.deleteMany({});
-  await prisma.mission.deleteMany({});
-  await prisma.academicYear.deleteMany({});
-  await prisma.child.deleteMany({});
-  await prisma.emergencyContact.deleteMany({});
-  await prisma.parentProfile.deleteMany({});
-  await prisma.staffProfile.deleteMany({});
-  await prisma.secretaryProfile.deleteMany({});
-  await prisma.directorProfile.deleteMany({});
-  await prisma.serviceManagerProfile.deleteMany({});
-  await prisma.invitation.deleteMany({});
-  await prisma.emailVerification.deleteMany({});
-  await prisma.passwordReset.deleteMany({});
-  await prisma.user.deleteMany({});
-  
-  console.log('✅ Base de données nettoyée complètement');
-
-  /* ---------------------------------------------------------------------- */
   /* 1. ADMIN                                                               */
   /* ---------------------------------------------------------------------- */
-  const admin = await prisma.user.create({
-    data: {
-      email: 'admin@example.com',
-      password: await hash(DEFAULT_PWD),
-      role: 'ADMIN',
-      emailVerified: true,
-    },
+  let admin = await prisma.user.findUnique({
+    where: { email: 'admin@example.com' },
   });
-  console.log('✅ Admin créé → admin@example.com / Test1234!!!!');
+  
+  if (!admin) {
+    admin = await prisma.user.create({
+      data: {
+        email: 'admin@example.com',
+        password: await hash(DEFAULT_PWD),
+        role: 'ADMIN',
+        emailVerified: true,
+      },
+    });
+    console.log('✅ Admin créé → admin@example.com / Test1234!!!!');
+  } else {
+    console.log('ℹ️  Admin déjà présent, pas recréé');
+  }
 
   /* ---------------------------------------------------------------------- */
   /* 2. DIRECTOR                                                            */
   /* ---------------------------------------------------------------------- */
   const directorMail = 'apajh94.direction@gmail.com';
-  const directorUser = await prisma.user.create({
-    data: {
-      email: directorMail,
-      password: await hash(DEFAULT_PWD),
-      role: 'DIRECTOR',
-      emailVerified: true,
-    },
-  });
-  
-  await prisma.directorProfile.create({
-    data: {
-      userId: directorUser.id,
-      firstName: 'Jean',
-      lastName: 'Direction',
-      phone: '0612345678',
-      birthDate: new Date('1975-05-15'),
-      jobTitle: 'Directeur',
-      startDate: new Date('2019-09-01'),
-      profileImage: null,
-    },
-  });
-  console.log('✅ Director créé →', directorUser.email);
+  if (!(await prisma.user.findUnique({ where: { email: directorMail } }))) {
+    const usr = await prisma.user.create({
+      data: {
+        email: directorMail,
+        password: await hash(DEFAULT_PWD),
+        role: 'DIRECTOR',
+        emailVerified: true,
+      },
+    });
+    
+    await prisma.directorProfile.upsert({
+      where: { userId: usr.id },
+      update: {},
+      create: {
+        userId: usr.id,
+        firstName: 'Jean',
+        lastName: 'Direction',
+        phone: '0612345678',
+        birthDate: new Date('1975-05-15'),
+        jobTitle: 'Directeur',
+        startDate: new Date('2019-09-01'),
+        profileImage: null,
+      },
+    });
+    console.log('✅ Director créé →', usr.email);
+  }
 
   /* ---------------------------------------------------------------------- */
   /* 3. SERVICE_MANAGER x2                                                  */
@@ -129,56 +106,64 @@ async function main() {
   
   for (let i = 0; i < smMails.length; i++) {
     const mail = smMails[i];
-    const usr = await prisma.user.create({
-      data: {
-        email: mail,
-        password: await hash(DEFAULT_PWD),
-        role: 'SERVICE_MANAGER',
-        emailVerified: true,
-      },
-    });
-    
-    await prisma.serviceManagerProfile.create({
-      data: {
-        userId: usr.id,
-        firstName: smData[i].firstName,
-        lastName: smData[i].lastName,
-        phone: smData[i].phone,
-        jobTitle: 'Chef·fe de service',
-        startDate: new Date('2021-09-01'),
-        birthDate: smData[i].birthDate,
-        profileImage: null,
-      },
-    });
-    console.log('✅ Service-manager créé →', usr.email);
+    if (!(await prisma.user.findUnique({ where: { email: mail } }))) {
+      const usr = await prisma.user.create({
+        data: {
+          email: mail,
+          password: await hash(DEFAULT_PWD),
+          role: 'SERVICE_MANAGER',
+          emailVerified: true,
+        },
+      });
+      
+      await prisma.serviceManagerProfile.upsert({
+        where: { userId: usr.id },
+        update: {},
+        create: {
+          userId: usr.id,
+          firstName: smData[i].firstName,
+          lastName: smData[i].lastName,
+          phone: smData[i].phone,
+          jobTitle: 'Chef·fe de service',
+          startDate: new Date('2021-09-01'),
+          birthDate: smData[i].birthDate,
+          profileImage: null,
+        },
+      });
+      console.log('✅ Service-manager créé →', usr.email);
+    }
   }
 
   /* ---------------------------------------------------------------------- */
   /* 4. SECRETARY x1                                                        */
   /* ---------------------------------------------------------------------- */
   const secMail = 'apajh94.secretary@gmail.com';
-  const secretaryUser = await prisma.user.create({
-    data: {
-      email: secMail,
-      password: await hash(DEFAULT_PWD),
-      role: 'SECRETARY',
-      emailVerified: true,
-    },
-  });
-  
-  await prisma.secretaryProfile.create({
-    data: {
-      userId: secretaryUser.id,
-      firstName: 'Sophie',
-      lastName: 'Moreau',
-      phone: '0645678901',
-      birthDate: new Date('1985-11-30'),
-      specialty: 'Secrétariat général',
-      startDate: new Date('2022-01-15'),
-      profileImage: null,
-    },
-  });
-  console.log('✅ Secretary créé →', secretaryUser.email);
+  if (!(await prisma.user.findUnique({ where: { email: secMail } }))) {
+    const usr = await prisma.user.create({
+      data: {
+        email: secMail,
+        password: await hash(DEFAULT_PWD),
+        role: 'SECRETARY',
+        emailVerified: true,
+      },
+    });
+    
+    await prisma.secretaryProfile.upsert({
+      where: { userId: usr.id },
+      update: {},
+      create: {
+        userId: usr.id,
+        firstName: 'Sophie',
+        lastName: 'Moreau',
+        phone: '0645678901',
+        birthDate: new Date('1985-11-30'),
+        specialty: 'Secrétariat général',
+        startDate: new Date('2022-01-15'),
+        profileImage: null,
+      },
+    });
+    console.log('✅ Secretary créé →', usr.email);
+  }
 
   /* ---------------------------------------------------------------------- */
   /* 5. STAFF (15 au total)                                                 */
@@ -239,8 +224,10 @@ async function main() {
       const { firstName, lastName, phone, birthDate } = names[i];
       const email = await uniqueStaffEmail(firstName, lastName);
 
-      const usr = await prisma.user.create({
-        data: {
+      const usr = await prisma.user.upsert({
+        where: { email },
+        update: {},
+        create: {
           email,
           password: await hash(DEFAULT_PWD),
           role: 'STAFF',
@@ -248,8 +235,10 @@ async function main() {
         },
       });
       
-      await prisma.staffProfile.create({
-        data: {
+      await prisma.staffProfile.upsert({
+        where: { userId: usr.id },
+        update: {},
+        create: {
           userId: usr.id,
           firstName,
           lastName,
@@ -269,7 +258,10 @@ async function main() {
   /* 6. PARENTS + CHILDREN (25 parents : 20 avec 1 enfant + 5 avec 2 enfants) */
   /* ---------------------------------------------------------------------- */
   
-
+  // NETTOYER D'ABORD LES ENFANTS EXISTANTS POUR ÉVITER LES DOUBLONS
+  console.log('🧹 Nettoyage des enfants existants...');
+  await prisma.child.deleteMany({});
+  console.log('✅ Enfants supprimés');
   
   // Données prédéfinies pour les familles
   const familyData = [
@@ -296,8 +288,10 @@ async function main() {
     const family = familyData[f];
     const email = `parent${f + 1}@example.com`;
 
-    const usr = await prisma.user.create({
-      data: {
+    const usr = await prisma.user.upsert({
+      where: { email },
+      update: {},
+      create: {
         email,
         password: await hash(DEFAULT_PWD),
         role: 'PARENT',
@@ -305,8 +299,10 @@ async function main() {
       },
     });
     
-    const parentProfile = await prisma.parentProfile.create({
-      data: {
+    const parentProfile = await prisma.parentProfile.upsert({
+      where: { userId: usr.id },
+      update: {},
+      create: {
         userId: usr.id,
         firstName: family.parentFirstName,
         lastName: family.parentLastName,
@@ -316,17 +312,28 @@ async function main() {
       },
     });
 
-    // Créer les enfants
-    for (const childData of family.children) {
-      const child = await prisma.child.create({
-        data: {
-          firstName: childData.firstName,
-          lastName: childData.lastName,
-          birthDate: new Date(2010 + (f % 5), (f % 12), 1 + (f % 28)),
-          parentProfileId: parentProfile.id,
-        },
-      });
-      allChildren.push(child);
+    // Vérifier si les enfants existent déjà pour ce parent
+    const existingChildren = await prisma.child.findMany({
+      where: { parentProfileId: parentProfile.id }
+    });
+
+    if (existingChildren.length === 0) {
+      // Créer les enfants seulement s'ils n'existent pas déjà
+      for (const childData of family.children) {
+        const child = await prisma.child.create({
+          data: {
+            firstName: childData.firstName,
+            lastName: childData.lastName,
+            birthDate: new Date(2010 + (f % 5), (f % 12), 1 + (f % 28)),
+            parentProfileId: parentProfile.id,
+          },
+        });
+        allChildren.push(child);
+      }
+    } else {
+      // Ajouter les enfants existants à la liste
+      allChildren.push(...existingChildren);
+      console.log(`⏭️  Enfants déjà existants pour ${family.parentFirstName}: ${existingChildren.length}`);
     }
 
     // Créer le contact d'urgence
@@ -349,28 +356,31 @@ async function main() {
   ];
 
   for (const year of academicYears) {
-    const yr = await prisma.academicYear.create({
-      data: year,
-    });
+    const existing = await prisma.academicYear.findUnique({ where: { label: year.label } });
+    if (!existing) {
+      const yr = await prisma.academicYear.create({
+        data: year,
+      });
 
-    const sem1Name = `Semestre 1 ${year.label}`;
-    const sem2Name = `Semestre 2 ${year.label}`;
-    
-    await prisma.semester.create({
-      data: {
-        name: sem1Name,
-        startDate: yr.startDate,
-        endDate: new Date(yr.startDate.getFullYear() + 1, 1, 31),
-      },
-    });
+      const sem1Name = `Semestre 1 ${year.label}`;
+      const sem2Name = `Semestre 2 ${year.label}`;
+      
+      await prisma.semester.create({
+        data: {
+          name: sem1Name,
+          startDate: yr.startDate,
+          endDate: new Date(yr.startDate.getFullYear() + 1, 1, 31),
+        },
+      });
 
-    await prisma.semester.create({
-      data: {
-        name: sem2Name,
-        startDate: new Date(yr.startDate.getFullYear() + 1, 1, 1),
-        endDate: yr.endDate,
-      },
-    });
+      await prisma.semester.create({
+        data: {
+          name: sem2Name,
+          startDate: new Date(yr.startDate.getFullYear() + 1, 1, 1),
+          endDate: yr.endDate,
+        },
+      });
+    }
   }
 
   // Assignation des référents (2-5 enfants par éducateur)
@@ -428,19 +438,25 @@ async function main() {
     
     while (current <= end) {
       const dayOfWeek = current.getDay();
-      if (dayOfWeek !== 0 && dayOfWeek !== 6 && allChildren.length > 0) { // Exclure weekends
-        await prisma.presenceSheet.create({
-          data: {
-            date: new Date(current),
-            records: {
-              create: allChildren.map((child, index) => ({
-                childId: child.id,
-                present: (current.getDate() + index) % 5 !== 0, // 80% de présence
-              })),
-            },
-          },
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Exclure weekends
+        const existing = await prisma.presenceSheet.findUnique({
+          where: { date: new Date(current) },
         });
-        sheetsCreated++;
+        
+        if (!existing && allChildren.length > 0) {
+          await prisma.presenceSheet.create({
+            data: {
+              date: new Date(current),
+              records: {
+                create: allChildren.map((child, index) => ({
+                  childId: child.id,
+                  present: (current.getDate() + index) % 5 !== 0, // 80% de présence
+                })),
+              },
+            },
+          });
+          sheetsCreated++;
+        }
       }
       current.setDate(current.getDate() + 1);
     }

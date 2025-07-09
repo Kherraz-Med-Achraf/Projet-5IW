@@ -428,19 +428,25 @@ async function main() {
     
     while (current <= end) {
       const dayOfWeek = current.getDay();
-      if (dayOfWeek !== 0 && dayOfWeek !== 6 && allChildren.length > 0) { // Exclure weekends
-        await prisma.presenceSheet.create({
-          data: {
-            date: new Date(current),
-            records: {
-              create: allChildren.map((child, index) => ({
-                childId: child.id,
-                present: (current.getDate() + index) % 5 !== 0, // 80% de présence
-              })),
-            },
-          },
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Exclure weekends
+        const existing = await prisma.presenceSheet.findUnique({
+          where: { date: new Date(current) },
         });
-        sheetsCreated++;
+        
+        if (!existing && allChildren.length > 0) {
+          await prisma.presenceSheet.create({
+            data: {
+              date: new Date(current),
+              records: {
+                create: allChildren.map((child, index) => ({
+                  childId: child.id,
+                  present: (current.getDate() + index) % 5 !== 0, // 80% de présence
+                })),
+              },
+            },
+          });
+          sheetsCreated++;
+        }
       }
       current.setDate(current.getDate() + 1);
     }

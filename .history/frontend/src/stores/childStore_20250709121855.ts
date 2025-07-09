@@ -43,6 +43,7 @@ export const useChildStore = defineStore("child", {
       this.error = "";
       // Vider les données existantes pour éviter les doublons
       this.referentChildren = [];
+      console.log('🔍 [CHILDSTORE] Token utilisé:', localStorage.getItem('token')?.substring(0, 20) + '...');
       try {
         const authStore = useAuthStore()
         const userRole = authStore.user?.role

@@ -43,6 +43,7 @@ export const useChildStore = defineStore("child", {
       this.error = "";
       // Vider les données existantes pour éviter les doublons
       this.referentChildren = [];
+      console.log('🔍 [CHILDSTORE] Token utilisé:', localStorage.getItem('token')?.substring(0, 20) + '...');
       try {
         const authStore = useAuthStore()
         const userRole = authStore.user?.role
@@ -65,15 +66,20 @@ export const useChildStore = defineStore("child", {
         }
 
         const data = await secureJsonCall(url)
+        console.log('🔍 [CHILDSTORE] Données reçues du backend:', data)
         
         // Pour les enfants, la route /children/me retourne un objet, pas un tableau
         if (userRole === 'CHILD') {
           this.referentChildren = [data] // Transformer en tableau avec un seul élément
+          console.log('🔍 [CHILDSTORE] Enfant unique défini:', this.referentChildren)
         } else {
+          console.log('🔍 [CHILDSTORE] Avant filtrage doublons, nombre d\'enfants:', data.length)
           // S'assurer qu'il n'y a pas de doublons côté client
           const uniqueData = data.filter((child: any, index: number, self: any[]) => 
             index === self.findIndex(c => c.id === child.id)
           );
+          console.log('🔍 [CHILDSTORE] Après filtrage doublons, nombre d\'enfants:', uniqueData.length)
+          console.log('🔍 [CHILDSTORE] Enfants uniques:', uniqueData)
           this.referentChildren = uniqueData
         }
         

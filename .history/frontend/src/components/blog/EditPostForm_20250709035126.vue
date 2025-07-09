@@ -515,283 +515,60 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-/* Variables CSS cohérentes */
-:root {
-  --primary-color: #4444ac;
-  --primary-hover: #3333a0;
-  --success-color: #10b981;
-  --error-color: #ef4444;
-  --text-primary: #1f2937;
-  --text-secondary: #6b7280;
-  --text-muted: #9ca3af;
-  --border-color: #e5e7eb;
-  --background-light: #f9fafb;
-  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-/* Classes utilitaires */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.required {
-  color: var(--error-color);
-  font-weight: 600;
-  margin-left: 0.25rem;
-}
-
 .edit-post-form {
   .post-form {
     .form-group {
-      margin-bottom: 2rem;
-    }
+      margin-bottom: 20px;
 
-    .form-label {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: var(--text-primary);
-      font-weight: 600;
-      font-size: 1.1rem;
-      margin-bottom: 0.75rem;
-
-      i {
-        color: var(--primary-color);
-        font-size: 1.25rem;
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #34495e;
       }
     }
 
-    .input-container {
+    .input-with-ai {
       position: relative;
-    }
 
-    .form-input,
-    .form-textarea {
-      width: 100%;
-      padding: 0.875rem 1rem;
-      border: 2px solid var(--border-color);
-      border-radius: 0.75rem;
-      font-size: 1rem;
-      transition: all 0.2s ease;
-      background: white;
-      color: var(--text-primary);
-      font-family: inherit;
-      box-sizing: border-box;
+      input, textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e1e8ed;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s;
 
-      &:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(68, 68, 172, 0.1);
+        &:focus {
+          outline: none;
+          border-color: #3498db;
+        }
       }
 
-      &::placeholder {
-        color: var(--text-primary);
+      textarea {
+        resize: vertical;
+        min-height: 120px;
       }
-    }
 
-    .form-textarea {
-      resize: vertical;
-      min-height: 120px;
-    }
-
-    /* Assistant IA - Même design que CreatePostForm */
-    .ai-helper-modern {
-      background: #f8fafc;
-      border-radius: 8px;
-      padding: 1rem;
-      margin-top: 0.5rem;
-      border: 1px solid #e2e8f0;
-    }
-
-    .ai-toggle {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .ai-switch {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      cursor: pointer;
-      
-      .switch-input {
+      .ai-checkbox {
         position: absolute;
-        opacity: 0;
-        width: 0;
-        height: 0;
-      }
-      
-      .switch-slider {
-        position: relative;
-        width: 44px;
-        height: 24px;
-        background: #cbd5e1;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-        
-        &::before {
-          content: '';
-          position: absolute;
-          top: 2px;
-          left: 2px;
-          width: 20px;
-          height: 20px;
-          background: white;
-          border-radius: 50%;
-          transition: all 0.3s ease;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-      }
-      
-      .switch-input:checked + .switch-slider {
-        background: var(--primary-color);
-        
-        &::before {
-          transform: translateX(20px);
-        }
-      }
-      
-      .switch-input:disabled + .switch-slider {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-    }
-
-    .ai-label {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: var(--text-primary);
-      font-weight: 500;
-      font-size: 0.9rem;
-      
-      .material-icons {
-        font-size: 18px;
-        color: var(--primary-color);
-      }
-    }
-
-    .ai-help-text {
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-      line-height: 1.4;
-    }
-
-    .ai-loading {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-      margin-top: 0.5rem;
-    }
-
-    .ai-spinner {
-      width: 16px;
-      height: 16px;
-      border: 2px solid #e2e8f0;
-      border-top: 2px solid var(--primary-color);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .ai-suggestion {
-      background: white;
-      border: 1px solid var(--primary-color);
-      border-left: 4px solid var(--primary-color);
-      border-radius: 6px;
-      padding: 1rem;
-      margin-top: 1rem;
-
-      .suggestion-header {
+        top: -30px;
+        right: 0;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0.75rem;
-        color: var(--primary-color);
-        font-weight: 600;
+        gap: 6px;
+        font-size: 13px;
+        cursor: pointer;
 
-        .material-icons {
-          font-size: 16px;
-        }
-
-        h4 {
+        input[type="checkbox"] {
+          width: auto;
           margin: 0;
-          font-size: 0.9rem;
-          font-weight: 600;
         }
-      }
 
-      .suggestion-text {
-        margin-bottom: 1rem;
-        line-height: 1.6;
-        color: var(--text-primary);
-        font-size: 0.9rem;
-      }
-
-      .suggestion-actions {
-        display: flex;
-        gap: 0.5rem;
-        justify-content: flex-end;
-      }
-    }
-
-    .edit-btn {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      padding: 0.5rem 0.75rem;
-      border: 1px solid transparent;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.8rem;
-      font-weight: 500;
-      transition: all 0.2s ease;
-
-      .material-icons {
-        font-size: 14px;
-      }
-
-      &.edit-btn-success {
-        background: var(--success-color);
-        color: white;
-        border-color: var(--success-color);
-
-        &:hover {
-          background: #059669;
-          border-color: #059669;
+        .ai-label {
+          color: #7f8c8d;
+          font-weight: normal;
         }
-      }
-
-      &.edit-btn-custom {
-        background: #6b7280;
-        color: white;
-        border-color: #6b7280;
-
-        &:hover {
-          background: #4b5563;
-          border-color: #4b5563;
-        }
-      }
-
-      &.edit-btn-sm {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.8rem;
       }
     }
 
@@ -802,12 +579,12 @@ onMounted(() => {
         display: block;
         margin-bottom: 8px;
         font-weight: 600;
-        color: var(--text-primary);
+        color: #34495e;
       }
 
       .btn-remove-media {
         padding: 8px 16px;
-        background: var(--error-color);
+        background: #e74c3c;
         color: white;
         border: none;
         border-radius: 6px;
@@ -817,7 +594,7 @@ onMounted(() => {
         transition: background-color 0.3s;
 
         &:hover {
-          background: #dc2626;
+          background: #c0392b;
         }
       }
     }
@@ -826,13 +603,13 @@ onMounted(() => {
       input[type="file"] {
         width: 100%;
         padding: 12px;
-        border: 2px dashed var(--border-color);
+        border: 2px dashed #bdc3c7;
         border-radius: 8px;
-        background: var(--background-light);
+        background: #f8f9fa;
         cursor: pointer;
 
         &:hover {
-          border-color: var(--primary-color);
+          border-color: #3498db;
         }
       }
 
@@ -895,21 +672,20 @@ onMounted(() => {
 
       .btn-primary {
         padding: 12px 20px;
-        background: var(--primary-color);
+        background: #f39c12;
         color: white;
         border: none;
         border-radius: 8px;
         cursor: pointer;
         font-weight: 600;
-        transition: all 0.3s;
+        transition: background-color 0.3s;
 
         &:hover:not(:disabled) {
-          background: var(--primary-hover);
-          transform: translateY(-1px);
+          background: #e67e22;
         }
 
         &:disabled {
-          background: var(--text-muted);
+          background: #bdc3c7;
           cursor: not-allowed;
         }
       }

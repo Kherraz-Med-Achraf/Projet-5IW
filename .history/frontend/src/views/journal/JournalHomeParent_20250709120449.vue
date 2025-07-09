@@ -55,8 +55,8 @@
                 :disabled="children.length === 0"
               >
                 <option disabled value="">-- Choisir un enfant --</option>
-                <option v-for="child in children" :key="`child-${child.id}`" :value="child.id">
-                  {{ child.firstName }} {{ child.lastName }} (ID: {{ child.id }})
+                <option v-for="child in children" :key="child.id" :value="child.id">
+                  {{ child.firstName }} {{ child.lastName }}
                 </option>
               </select>
               <div v-if="children.length === 0" class="help-text">
@@ -250,13 +250,8 @@ const yearLabel = computed(() => {
 // Lifecycle
 onMounted(async () => {
   try {
-    console.log('🔍 [COMPONENT] Début onMounted - état initial:')
-    console.log('🔍 [COMPONENT] children.value:', children.value)
-    console.log('🔍 [COMPONENT] childStore.referentChildren:', childStore.referentChildren)
-    
     // Vider complètement les enfants avant de commencer
     children.value = [];
-    console.log('🔍 [COMPONENT] children.value après vidage:', children.value)
     
     // Toujours refetch pour avoir les données les plus récentes
     await childStore.fetchReferentChildren();

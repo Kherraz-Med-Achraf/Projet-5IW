@@ -287,19 +287,6 @@ onMounted(async () => {
   }
 });
 
-// Cleanup
-onUnmounted(() => {
-  // Vider les données locales
-  children.value = [];
-  academicYears.value = [];
-  selectedChildId.value = "";
-  selectedYearId.value = "";
-  
-  // Vider les stores pour éviter les problèmes de cache
-  childStore.referentChildren = [];
-  journalStore.journals = [];
-});
-
 // Methods
 function onChildChange() {
   selectedYearId.value = "";

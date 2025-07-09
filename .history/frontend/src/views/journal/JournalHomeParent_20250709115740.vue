@@ -190,7 +190,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useChildStore } from "@/stores/childStore";
 import { useJournalStore } from "@/stores/journalStore";
 import { useAuthStore } from "@/stores/auth";
@@ -267,12 +267,12 @@ onMounted(async () => {
       lastName: c.lastName,
     }));
 
-    // Vider complètement les années scolaires avant de commencer
-    academicYears.value = [];
+    // Récupération des années scolaires
+    if (!journalStore.academicYears.length) {
+      await journalStore.fetchAcademicYears();
+    }
     
-    // Toujours refetch pour avoir les données les plus récentes
-    await journalStore.fetchAcademicYears();
-    
+    // Toujours vider et reconstruire le tableau pour éviter les doublons
     // Filtrer les doublons par ID au cas où le store en contiendrait
     const uniqueYears = journalStore.academicYears.filter((year, index, self) => 
       index === self.findIndex(y => y.id === year.id)
@@ -285,19 +285,6 @@ onMounted(async () => {
   } catch (error: any) {
     toast.error(error.message || "Erreur lors du chargement des données");
   }
-});
-
-// Cleanup
-onUnmounted(() => {
-  // Vider les données locales
-  children.value = [];
-  academicYears.value = [];
-  selectedChildId.value = "";
-  selectedYearId.value = "";
-  
-  // Vider les stores pour éviter les problèmes de cache
-  childStore.referentChildren = [];
-  journalStore.journals = [];
 });
 
 // Methods

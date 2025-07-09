@@ -59,19 +59,6 @@ export class CreateDocumentDto {
     type: [Number],
     example: [1, 2, 3],
   })
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      try {
-        const parsed = JSON.parse(value);
-        return Array.isArray(parsed) ? parsed : [parsed];
-      } catch (e) {
-        // Si ce n'est pas du JSON valide, essayer de le traiter comme un seul ID
-        const num = parseInt(value, 10);
-        return isNaN(num) ? [] : [num];
-      }
-    }
-    return Array.isArray(value) ? value : [value];
-  })
   @IsArray()
   @ArrayNotEmpty()
   @IsInt({ each: true })

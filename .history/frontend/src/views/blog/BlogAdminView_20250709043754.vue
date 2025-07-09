@@ -1091,9 +1091,9 @@ onMounted(async () => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: #4444ac; /* Background bleu */
-  color: white; /* Texte blanc */
-  border: 1px solid #4444ac;
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
   border-radius: 0.75rem;
   cursor: pointer;
   font-size: 0.875rem;
@@ -1101,18 +1101,17 @@ onMounted(async () => {
   transition: all 0.2s ease;
   
   &:hover {
-    background: #3333a0; /* Bleu plus foncé au hover */
-    color: white;
+    background: #e5e7eb;
+    color: #374151;
   }
 
   &:focus {
-    outline: 2px solid #4444ac;
+    outline: 2px solid #6366f1;
     outline-offset: 2px;
   }
 
   i {
     font-size: 1rem;
-    color: white; /* Icône blanche */
   }
 }
 
@@ -1121,31 +1120,29 @@ onMounted(async () => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: #4444ac; /* Background bleu */
-  color: white; /* Texte blanc */
-  border: 1px solid #4444ac;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  border: none;
   border-radius: 0.75rem;
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 600;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(68, 68, 172, 0.3);
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
 
   &:hover {
-    background: #3333a0; /* Bleu plus foncé au hover */
-    color: white;
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(68, 68, 172, 0.4);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
   }
 
   &:focus {
-    outline: 2px solid #4444ac;
+    outline: 2px solid #dc2626;
     outline-offset: 2px;
   }
 
   i {
     font-size: 1rem;
-    color: white; /* Icône blanche */
   }
 }
 

@@ -256,12 +256,7 @@ onMounted(async () => {
     }
     
     // Toujours vider et reconstruire le tableau pour éviter les doublons
-    // Filtrer les doublons par ID au cas où le store en contiendrait
-    const uniqueChildren = childStore.referentChildren.filter((child, index, self) => 
-      index === self.findIndex(c => c.id === child.id)
-    );
-    
-    children.value = uniqueChildren.map((c) => ({
+    children.value = childStore.referentChildren.map((c) => ({
       id: c.id,
       firstName: c.firstName,
       lastName: c.lastName,
@@ -273,12 +268,7 @@ onMounted(async () => {
     }
     
     // Toujours vider et reconstruire le tableau pour éviter les doublons
-    // Filtrer les doublons par ID au cas où le store en contiendrait
-    const uniqueYears = journalStore.academicYears.filter((year, index, self) => 
-      index === self.findIndex(y => y.id === year.id)
-    );
-    
-    academicYears.value = uniqueYears.map((y) => ({
+    academicYears.value = journalStore.academicYears.map((y) => ({
       id: y.id,
       label: y.label,
     }));

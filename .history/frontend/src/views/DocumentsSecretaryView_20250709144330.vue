@@ -459,25 +459,6 @@ const publishDocument = async (document: Document) => {
   }
 }
 
-const deleteDocument = async (document: Document) => {
-  if (deleting.value) return
-  
-  // Confirmation de suppression
-  if (!confirm(`Êtes-vous sûr de vouloir supprimer le document "${document.title}" ?\n\nCette action est irréversible et retirera l'accès à tous les parents concernés.`)) {
-    return
-  }
-  
-  deleting.value = document.id
-  try {
-    await documentStore.deleteDocument(document.id)
-    notify.showNotification(`Document "${document.title}" supprimé avec succès`, 'success')
-  } catch (error) {
-    console.error('Erreur suppression:', error)
-  } finally {
-    deleting.value = null
-  }
-}
-
 const viewDocumentDetails = (document: Document) => {
   selectedDocument.value = document
 }
@@ -824,32 +805,6 @@ onUnmounted(() => {
   background: white;
   color: #4444ac;
   border-color: #4444ac;
-}
-
-.doc-action-delete {
-  background: #ef4444;
-  color: white;
-  border-color: #ef4444;
-}
-
-.doc-action-delete:hover:not(:disabled) {
-  background: #dc2626;
-  border-color: #dc2626;
-}
-
-.doc-action-delete:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.doc-action-btn:hover:not(:disabled) {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-.doc-action-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 /* États vides et de chargement */

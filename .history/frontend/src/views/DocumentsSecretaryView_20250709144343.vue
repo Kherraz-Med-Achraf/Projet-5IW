@@ -826,32 +826,6 @@ onUnmounted(() => {
   border-color: #4444ac;
 }
 
-.doc-action-delete {
-  background: #ef4444;
-  color: white;
-  border-color: #ef4444;
-}
-
-.doc-action-delete:hover:not(:disabled) {
-  background: #dc2626;
-  border-color: #dc2626;
-}
-
-.doc-action-delete:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.doc-action-btn:hover:not(:disabled) {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-.doc-action-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 /* États vides et de chargement */
 .loading-section, .empty-section {
   text-align: center;

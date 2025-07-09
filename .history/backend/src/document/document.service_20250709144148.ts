@@ -424,58 +424,6 @@ export class DocumentService {
   }
 
   /**
-   * Supprimer un document et ses fichiers associés
-   */
-  async deleteDocument(documentId: string, userId: string) {
-    const document = await this.prisma.document.findUnique({
-      where: { id: documentId },
-      include: {
-        accesses: true,
-        signatures: true,
-      },
-    });
-
-    if (!document) {
-      throw new NotFoundException('Document introuvable');
-    }
-
-    if (document.uploadedById !== userId) {
-      throw new ForbiddenException('Vous ne pouvez supprimer que vos propres documents');
-    }
-
-    // Supprimer les fichiers du disque
-    const filepath = path.join(this.uploadDir, document.filepath);
-    const metaFilepath = `${filepath}.meta`;
-
-    try {
-      await Promise.all([
-        fs.unlink(filepath).catch(() => {}), // Ignorer si le fichier n'existe pas
-        fs.unlink(metaFilepath).catch(() => {}), // Ignorer si le métafichier n'existe pas
-      ]);
-    } catch (error) {
-      console.error('Erreur lors de la suppression des fichiers:', error);
-      // Continuer même si la suppression des fichiers échoue
-    }
-
-    // Supprimer le document de la base de données
-    // Les accès et signatures sont supprimés automatiquement grâce aux relations CASCADE
-    await this.prisma.document.delete({
-      where: { id: documentId },
-    });
-
-    console.log(`🗑️ Document supprimé: ${document.title} (${documentId})`);
-    
-    return {
-      message: 'Document supprimé avec succès',
-      deletedDocument: {
-        id: documentId,
-        title: document.title,
-        filename: document.filename,
-      },
-    };
-  }
-
-  /**
    * Télécharger un document
    */
   async downloadDocument(documentId: string, userId: string, userRole: Role) {

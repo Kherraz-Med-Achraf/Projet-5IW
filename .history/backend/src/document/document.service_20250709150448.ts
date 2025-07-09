@@ -259,8 +259,15 @@ export class DocumentService {
       },
     });
 
-    // Envoyer les notifications par email
-    await this.sendDocumentNotifications(updatedDocument);
+    // Envoyer les notifications par email (temporairement désactivé)
+    console.log(`📧 Notifications désactivées temporairement pour: ${document.title}`);
+    // try {
+    //   await this.sendDocumentNotifications(updatedDocument);
+    //   console.log(`📧 Notifications envoyées pour: ${document.title}`);
+    // } catch (error) {
+    //   console.error('⚠️ Erreur envoi notifications (non-bloquant):', error.message);
+    //   // Continuer la publication même si l'email échoue
+    // }
 
     // Si signature requise, initier les procédures Yousign
     if (document.requiresSignature) {

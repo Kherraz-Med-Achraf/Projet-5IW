@@ -332,11 +332,7 @@ export class ChatService {
     if (duplicateCheck.length > 0) {
       this.logger.warn(`Conversations dupliquées détectées pour participants ${uniquePart.join(', ')}: ${duplicateCheck.map(c => c._id).join(', ')}`);
       // Retourner la plus récente
-      return duplicateCheck.sort((a, b) => {
-        const dateA = a.updatedAt ? a.updatedAt.getTime() : 0;
-        const dateB = b.updatedAt ? b.updatedAt.getTime() : 0;
-        return dateB - dateA;
-      })[0];
+      return duplicateCheck.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())[0];
     }
 
     this.logger.debug(`Création d'un nouveau chat pour participants ${uniquePart.join(', ')}`);

@@ -313,33 +313,10 @@ export class ChatService {
 
     // Empêche les doublons : recherche d'un chat existant avec exactement ces participants
     const existing = await this.chatModel
-      .findOne({ participants: { $all: uniquePart, $size: uniquePart.length } })
+      .findOne({ participants: uniquePart })
       .exec();
-    
-    if (existing) {
-      this.logger.debug(`Chat existant trouvé pour participants ${uniquePart.join(', ')}: ${existing._id}`);
-      return existing;
-    }
+    if (existing) return existing;
 
-    // Vérifier s'il y a des doublons avec des ordres différents
-    const duplicateCheck = await this.chatModel
-      .find({
-        participants: { $all: uniquePart },
-        $expr: { $eq: [{ $size: "$participants" }, uniquePart.length] }
-      })
-      .exec();
-
-    if (duplicateCheck.length > 0) {
-      this.logger.warn(`Conversations dupliquées détectées pour participants ${uniquePart.join(', ')}: ${duplicateCheck.map(c => c._id).join(', ')}`);
-      // Retourner la plus récente
-      return duplicateCheck.sort((a, b) => {
-        const dateA = a.updatedAt ? a.updatedAt.getTime() : 0;
-        const dateB = b.updatedAt ? b.updatedAt.getTime() : 0;
-        return dateB - dateA;
-      })[0];
-    }
-
-    this.logger.debug(`Création d'un nouveau chat pour participants ${uniquePart.join(', ')}`);
     return this.chatModel.create({ participants: uniquePart });
   }
 
@@ -382,44 +359,7 @@ export class ChatService {
       }),
     );
 
-    // Déduplication des conversations basée sur les participants
-    const uniqueChats = new Map<string, any>();
-    const duplicates: string[] = [];
-
-    for (const result of results) {
-      // Créer une clé unique basée sur les participants triés
-      const participantsKey = [...result.participants].sort().join(',');
-      
-      if (uniqueChats.has(participantsKey)) {
-        duplicates.push(`Chat ${result.id} avec participants ${participantsKey}`);
-        // Garder le chat le plus récent
-        const existing = uniqueChats.get(participantsKey);
-        const resultDate = result.updatedAt ? new Date(result.updatedAt) : new Date(0);
-        const existingDate = existing.updatedAt ? new Date(existing.updatedAt) : new Date(0);
-        
-        if (resultDate > existingDate) {
-          uniqueChats.set(participantsKey, result);
-        }
-      } else {
-        uniqueChats.set(participantsKey, result);
-      }
-    }
-
-    // Log des doublons détectés
-    if (duplicates.length > 0) {
-      this.logger.warn(`Conversations dupliquées détectées pour user ${userId}: ${duplicates.join(', ')}`);
-    }
-
-    const finalResults = Array.from(uniqueChats.values())
-      .sort((a, b) => {
-        const dateA = a.updatedAt ? new Date(a.updatedAt) : new Date(0);
-        const dateB = b.updatedAt ? new Date(b.updatedAt) : new Date(0);
-        return dateB.getTime() - dateA.getTime();
-      });
-
-    this.logger.debug(`Conversations pour user ${userId}: ${finalResults.length} conversations après déduplication (${results.length} initiales)`);
-
-    return finalResults;
+    return results;
   }
 
   async canAccessChat(userId: string, chatId: string) {

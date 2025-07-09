@@ -313,33 +313,10 @@ export class ChatService {
 
     // Empêche les doublons : recherche d'un chat existant avec exactement ces participants
     const existing = await this.chatModel
-      .findOne({ participants: { $all: uniquePart, $size: uniquePart.length } })
+      .findOne({ participants: uniquePart })
       .exec();
-    
-    if (existing) {
-      this.logger.debug(`Chat existant trouvé pour participants ${uniquePart.join(', ')}: ${existing._id}`);
-      return existing;
-    }
+    if (existing) return existing;
 
-    // Vérifier s'il y a des doublons avec des ordres différents
-    const duplicateCheck = await this.chatModel
-      .find({
-        participants: { $all: uniquePart },
-        $expr: { $eq: [{ $size: "$participants" }, uniquePart.length] }
-      })
-      .exec();
-
-    if (duplicateCheck.length > 0) {
-      this.logger.warn(`Conversations dupliquées détectées pour participants ${uniquePart.join(', ')}: ${duplicateCheck.map(c => c._id).join(', ')}`);
-      // Retourner la plus récente
-      return duplicateCheck.sort((a, b) => {
-        const dateA = a.updatedAt ? a.updatedAt.getTime() : 0;
-        const dateB = b.updatedAt ? b.updatedAt.getTime() : 0;
-        return dateB - dateA;
-      })[0];
-    }
-
-    this.logger.debug(`Création d'un nouveau chat pour participants ${uniquePart.join(', ')}`);
     return this.chatModel.create({ participants: uniquePart });
   }
 

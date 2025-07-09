@@ -431,13 +431,7 @@ export const useChatStore = defineStore("chat", () => {
     await Promise.all([fetchChats(), fetchContacts()]);
 
     function joinAllChats() {
-      console.log(`[ChatStore] Jointure automatique de ${chats.value.length} conversations`);
-      chats.value.forEach((c) => {
-        if (c.id) {
-          console.log(`[ChatStore] Jointure de la conversation ${c.id}`);
-          socket.emit("joinChat", c.id);
-        }
-      });
+      chats.value.forEach((c) => c.id && socket.emit("joinChat", c.id));
     }
 
     // si socket déjà connecté

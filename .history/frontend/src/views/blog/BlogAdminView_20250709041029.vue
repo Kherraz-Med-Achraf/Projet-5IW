@@ -1042,19 +1042,19 @@ onMounted(async () => {
   
   p {
     margin: 0 0 1rem 0;
-    color: #000000; /* Texte en noir */
+    color: var(--text-primary);
     line-height: 1.6;
   }
 
   .delete-warning {
     font-size: 0.875rem;
-    color: #dc2626; /* Garder la couleur rouge pour l'avertissement */
+    color: #dc2626;
     font-weight: 600;
     margin: 0;
   }
 
   strong {
-    color: #000000; /* Texte en gras en noir */
+    color: var(--text-primary);
     font-weight: 700;
   }
 }

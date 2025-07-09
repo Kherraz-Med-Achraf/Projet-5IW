@@ -963,31 +963,6 @@ onMounted(async () => {
 
 .modal-body {
   padding: 1.5rem;
-  color: #000000; /* Texte en noir dans la modal d'édition */
-  
-  /* S'assurer que tous les éléments héritent de la couleur noire */
-  p, span, div, label, input, textarea {
-    color: #000000 !important;
-  }
-  
-  /* Exception pour les titres et éléments spéciaux qui gardent leur couleur */
-  h1, h2, h3, h4, h5, h6 {
-    color: inherit; /* Garder la couleur d'origine des titres */
-  }
-  
-  /* Exception pour les icônes qui gardent leur couleur d'origine */
-  .material-icons {
-    color: inherit;
-  }
-  
-  /* Exception pour les éléments de l'assistant IA qui gardent leurs couleurs */
-  .ai-helper-modern, .ai-suggestion {
-    color: inherit;
-    
-    * {
-      color: inherit !important;
-    }
-  }
 }
 
 /* Modal de suppression */
@@ -1042,19 +1017,19 @@ onMounted(async () => {
   
   p {
     margin: 0 0 1rem 0;
-    color: #000000; /* Texte en noir */
+    color: var(--text-primary);
     line-height: 1.6;
   }
 
   .delete-warning {
     font-size: 0.875rem;
-    color: #dc2626; /* Garder la couleur rouge pour l'avertissement */
+    color: #dc2626;
     font-weight: 600;
     margin: 0;
   }
 
   strong {
-    color: #000000; /* Texte en gras en noir */
+    color: var(--text-primary);
     font-weight: 700;
   }
 }

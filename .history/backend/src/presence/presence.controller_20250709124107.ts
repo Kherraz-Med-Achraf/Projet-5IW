@@ -175,12 +175,16 @@ export class PresenceController {
   @ApiOperation({ summary: 'Déclencher manuellement le cron de création des feuilles (test uniquement)' })
   async testCron(@Req() req: Request & { user: { role: Role } }) {
     try {
-      const result = await this.service.runPresenceCronManually();
+      // Importer dynamiquement le service cron
+      const { PresenceCron } = await import('./presence.cron');
+      const presenceCron = new PresenceCron(this.prismaService);
+      
+      // Exécuter le cron manuellement
+      await presenceCron.handleCron();
       
       return {
         success: true,
         message: 'Cron de création des feuilles de présence exécuté avec succès',
-        result,
         timestamp: new Date().toISOString(),
       };
     } catch (error: any) {

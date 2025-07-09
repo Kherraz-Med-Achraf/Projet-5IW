@@ -98,7 +98,7 @@ export const usePresenceStore = defineStore('presence', {
 
       } catch (err: any) {
         this.error = err.message;
-        notify.showNotification(this.error || 'Erreur inconnue', 'error');
+        notify.showNotification(this.error, 'error');
         this.sheet = null;
       } finally {
         this.loading = false;
@@ -162,7 +162,7 @@ export const usePresenceStore = defineStore('presence', {
       file?: File,
     ) {
       this.loading = true;
-      this.error = null;
+      this.error = '';
       
       try {
         const formData = new FormData();

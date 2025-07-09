@@ -1,7 +1,7 @@
 // src/stores/chatStore.ts
 import { defineStore } from "pinia";
 import { ref, reactive } from "vue";
-import { socket, initSocket, setAutoRejoinCallback } from "@/plugins/socket";
+import { socket, initSocket } from "@/plugins/socket";
 import router from "@/router";
 import { useAuthStore } from "./auth";
 import { secureJsonCall, API_BASE_URL } from "@/utils/api";
@@ -261,18 +261,6 @@ export const useChatStore = defineStore("chat", () => {
       return;
     }
     
-    // Vérifier la validité du token en faisant un appel test
-    try {
-      await secureJsonCall(`${API}/auth/profile`);
-      console.log("[ChatStore] Token valide, initialisation du chat");
-    } catch (error) {
-      console.error("[ChatStore] Token invalide, nettoyage et arrêt:", error);
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('user');
-      auth.logout();
-      return;
-    }
-    
     console.log("[ChatStore] Initialisation...");
     initialized.value = true;
     
@@ -283,19 +271,6 @@ export const useChatStore = defineStore("chat", () => {
     
     console.log("[ChatStore] Initialisation du socket WebSocket");
     initSocket(auth.token ?? "");
-    
-    // Configurer la rejointure automatique après reconnexion
-    setAutoRejoinCallback(() => {
-      if (chats.value.length > 0) {
-        console.log('[ChatStore] Rejointure automatique des conversations après reconnexion');
-        chats.value.forEach((c) => {
-          if (c.id) {
-            console.log(`[ChatStore] Rejointure conversation ${c.id}`);
-            socket.emit("joinChat", c.id);
-          }
-        });
-      }
-    });
 
     // Demander permission pour les notifications
     if (Notification.permission === "default") {
@@ -303,7 +278,7 @@ export const useChatStore = defineStore("chat", () => {
     }
 
     socket.on("newMessage", (msg: any) => {
-      console.log("[ChatStore] Nouveau message reçu via WebSocket:", msg);
+      console.log("[ChatStore] Nouveau message reçu:", msg);
       if (!messages[msg.chatId]) messages[msg.chatId] = [];
 
       // Chercher un message temporaire à remplacer
@@ -435,13 +410,15 @@ export const useChatStore = defineStore("chat", () => {
 
     // Mise à jour d'un chat existant (nouveau message dans une room non rejointe)
     socket.on("chatUpdated", (u: any) => {
-      console.log("[ChatStore] Notification chatUpdated reçue pour chat:", u.chatId);
+      console.log("[ChatStore] Notification chatUpdated reçue:", u);
       const chat = chats.value.find((ch) => ch.id === u.chatId);
       if (chat) {
+        console.log("[ChatStore] Chat trouvé, mise à jour:", chat.id);
         chat.lastMessage = u.lastMessage;
         chat.updatedAt = u.sentAt;
         if (u.authorId !== auth.user?.id) {
           chat.unreadCount = (chat.unreadCount || 0) + 1;
+          console.log("[ChatStore] Compteur non lus mis à jour:", chat.unreadCount);
         }
 
         // Remonter en haut
@@ -449,6 +426,7 @@ export const useChatStore = defineStore("chat", () => {
         if (idx > 0) {
           const [mv] = chats.value.splice(idx, 1);
           chats.value.unshift(mv);
+          console.log("[ChatStore] Chat remonté en première position");
         }
       } else {
         console.log("[ChatStore] Chat non trouvé pour chatUpdated:", u.chatId);
@@ -461,6 +439,7 @@ export const useChatStore = defineStore("chat", () => {
       console.log(`[ChatStore] Jointure automatique de ${chats.value.length} conversations`);
       chats.value.forEach((c) => {
         if (c.id) {
+          console.log(`[ChatStore] Jointure de la conversation ${c.id}`);
           socket.emit("joinChat", c.id);
         }
       });

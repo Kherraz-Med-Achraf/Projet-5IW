@@ -133,6 +133,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // Room personnelle (pour recevoir newChat, etc.)
       socket.join(user.id);
+      console.log(`[INFO] User ${userId} a rejoint sa room personnelle`);
 
       console.log(
         `[INFO] Connexion WebSocket établie pour user ${userId} (${userSockets.size}/${this.MAX_CONNECTIONS_PER_USER} connexions)`,
@@ -324,7 +325,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         content,
       );
 
-      console.log(`[INFO] Émission newMessage vers room ${chatId} - msgId: ${msg.id}`);
       this.server.to(chatId).emit('newMessage', {
         chatId,
         msgId: msg.id,
@@ -346,10 +346,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             .filter(Boolean) as string[],
         );
 
-        chat.participants.forEach((uid: string) => {
-          if (uid === s.data.user.id || userIdsInRoom.has(uid)) return;
+        console.log(`[INFO] Participants du chat ${chatId}:`, chat.participants);
+        console.log(`[INFO] Users dans la room ${chatId}:`, Array.from(userIdsInRoom));
 
-          console.log(`[INFO] Envoi notification chatUpdated vers user ${uid}`);
+        chat.participants.forEach((uid: string) => {
+          if (uid === s.data.user.id) {
+            console.log(`[INFO] User ${uid} est l'auteur du message, pas de notification`);
+            return;
+          }
+          
+          if (userIdsInRoom.has(uid)) {
+            console.log(`[INFO] User ${uid} est dans la room, pas de notification chatUpdated`);
+            return;
+          }
+
+          console.log(`[INFO] Envoi notification chatUpdated vers user ${uid} pour message de ${s.data.user.id}`);
           this.server.to(uid).emit('chatUpdated', {
             chatId,
             lastMessage: msg.content,

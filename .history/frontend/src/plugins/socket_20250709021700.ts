@@ -4,14 +4,6 @@ import type { Socket } from 'socket.io-client';
 import { API_BASE_URL } from '@/utils/api';
 
 export let socket: Socket;
-
-// Fonction pour rejoindre automatiquement les conversations après reconnexion
-let autoRejoinChats: () => void = () => {};
-
-export function setAutoRejoinCallback(callback: () => void) {
-  autoRejoinChats = callback;
-}
-
 export function initSocket(token: string) {
   // Utiliser la même configuration d'URL que pour les appels API REST
   const socketUrl = API_BASE_URL + '/chat';
@@ -31,9 +23,6 @@ export function initSocket(token: string) {
   // Gestion des événements de connexion pour debug
   socket.on('connect', () => {
     console.log('[WebSocket] Connexion établie avec le serveur');
-    
-    // Rejoindre automatiquement toutes les conversations après reconnexion
-    autoRejoinChats();
   });
 
   socket.on('connect_error', (error) => {

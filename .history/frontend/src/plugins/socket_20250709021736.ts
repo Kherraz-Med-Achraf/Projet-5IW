@@ -31,9 +31,6 @@ export function initSocket(token: string) {
   // Gestion des événements de connexion pour debug
   socket.on('connect', () => {
     console.log('[WebSocket] Connexion établie avec le serveur');
-    
-    // Rejoindre automatiquement toutes les conversations après reconnexion
-    autoRejoinChats();
   });
 
   socket.on('connect_error', (error) => {

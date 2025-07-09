@@ -435,13 +435,15 @@ export const useChatStore = defineStore("chat", () => {
 
     // Mise à jour d'un chat existant (nouveau message dans une room non rejointe)
     socket.on("chatUpdated", (u: any) => {
-      console.log("[ChatStore] Notification chatUpdated reçue pour chat:", u.chatId);
+      console.log("[ChatStore] Notification chatUpdated reçue:", u);
       const chat = chats.value.find((ch) => ch.id === u.chatId);
       if (chat) {
+        console.log("[ChatStore] Chat trouvé, mise à jour:", chat.id);
         chat.lastMessage = u.lastMessage;
         chat.updatedAt = u.sentAt;
         if (u.authorId !== auth.user?.id) {
           chat.unreadCount = (chat.unreadCount || 0) + 1;
+          console.log("[ChatStore] Compteur non lus mis à jour:", chat.unreadCount);
         }
 
         // Remonter en haut
@@ -449,6 +451,7 @@ export const useChatStore = defineStore("chat", () => {
         if (idx > 0) {
           const [mv] = chats.value.splice(idx, 1);
           chats.value.unshift(mv);
+          console.log("[ChatStore] Chat remonté en première position");
         }
       } else {
         console.log("[ChatStore] Chat non trouvé pour chatUpdated:", u.chatId);

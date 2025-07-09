@@ -306,10 +306,6 @@ const initializeGrid = async () => {
         width: '15%',
         formatter: (cell) => {
           const post = posts.value[cell];
-          if (!post || !post.author) {
-            return html('<div>Erreur de données</div>');
-          }
-          
           const canEdit = post.author.id === authStore.user?.id;
           const canDelete =
             authStore.user?.role === "DIRECTOR" ||

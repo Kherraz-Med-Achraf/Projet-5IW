@@ -95,7 +95,6 @@ function readSecret(path: string, envVar: string): string {
     EventModule,
     BlogModule,
     EmergencyContactModule,
-    DocumentModule,
 
     // **Module Chat pour la messagerie instantanée**
     ChatModule,

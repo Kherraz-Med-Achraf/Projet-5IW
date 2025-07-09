@@ -131,10 +131,6 @@ model ParentProfile {
   updatedAt           DateTime          @updatedAt()
 
   eventRegistrations EventRegistration[] @relation("ParentProfileRegistrations")
-
-  /// Documents - accès et signatures
-  documentAccesses DocumentAccess[]
-  documentSignatures DocumentSignature[]
 }
 
 model Child {

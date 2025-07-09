@@ -57,9 +57,6 @@ model User {
   /// Blog - Posts créés et réactions
   blogPosts       BlogPost[]     @relation("BlogPostAuthor")
   blogReactions   BlogReaction[] @relation("BlogReactionUser")
-
-  /// Documents uploadés
-  documentsUploaded Document[]   @relation("DocumentUploadedBy")
 }
 
 model PasswordReset {
@@ -131,10 +128,6 @@ model ParentProfile {
   updatedAt           DateTime          @updatedAt()
 
   eventRegistrations EventRegistration[] @relation("ParentProfileRegistrations")
-
-  /// Documents - accès et signatures
-  documentAccesses DocumentAccess[]
-  documentSignatures DocumentSignature[]
 }
 
 model Child {

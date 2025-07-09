@@ -245,12 +245,8 @@ const initializeGrid = async () => {
   }
   
   if (posts.value.length === 0) {
-    console.log('GridJS - Aucun post disponible');
     return;
   }
-  
-  console.log('GridJS - Posts disponibles:', posts.value);
-  console.log('GridJS - Premier post:', posts.value[0]);
   
   // Créer une nouvelle grille avec les données mises à jour
   grid = new Grid({

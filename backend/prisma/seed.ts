@@ -255,25 +255,24 @@ async function main() {
   }
 
   /* ---------------------------------------------------------------------- */
-  /* 6. PARENTS + CHILDREN (30 parents : 27 avec 1 enfant + 3 avec 3 enfants) */
+  /* 6. PARENTS + CHILDREN (25 parents : 20 avec 1 enfant + 5 avec 2 enfants) */
   /* ---------------------------------------------------------------------- */
   
   // Données prédéfinies pour les familles
   const familyData = [
-    // 27 familles avec 1 enfant
-    ...Array.from({ length: 27 }, (_, i) => ({
+    // 20 familles avec 1 enfant
+    ...Array.from({ length: 20 }, (_, i) => ({
       parentFirstName: `Parent${i + 1}`,
       parentLastName: `Famille${i + 1}`,
       children: [{ firstName: `Enfant${i + 1}`, lastName: `Famille${i + 1}` }]
     })),
-    // 3 familles avec 3 enfants
-    ...Array.from({ length: 3 }, (_, i) => ({
-      parentFirstName: `Parent${i + 28}`,
-      parentLastName: `Famille${i + 28}`,
+    // 5 familles avec 2 enfants
+    ...Array.from({ length: 5 }, (_, i) => ({
+      parentFirstName: `Parent${i + 21}`,
+      parentLastName: `Famille${i + 21}`,
       children: [
-        { firstName: `Enfant${i * 3 + 28}`, lastName: `Famille${i + 28}` },
-        { firstName: `Enfant${i * 3 + 29}`, lastName: `Famille${i + 28}` },
-        { firstName: `Enfant${i * 3 + 30}`, lastName: `Famille${i + 28}` }
+        { firstName: `Enfant${i * 2 + 21}`, lastName: `Famille${i + 21}` },
+        { firstName: `Enfant${i * 2 + 22}`, lastName: `Famille${i + 21}` }
       ]
     }))
   ];
@@ -331,7 +330,7 @@ async function main() {
       },
     });
   }
-  console.log('✅ 30 Parents + 33 enfants + contacts d\'urgence créés');
+  console.log('✅ 25 Parents + 30 enfants + contacts d\'urgence créés');
 
   // Années scolaires et semestres
   const academicYears = [
@@ -368,24 +367,48 @@ async function main() {
     }
   }
 
-  // Assignation des référents (2-3 enfants par éducateur)
+  // Assignation des référents (2-5 enfants par éducateur)
   if (allChildren.length > 0 && allEducators.length > 0) {
-    const childrenPerEducator = Math.ceil(allChildren.length / allEducators.length);
+    // Mélanger les enfants pour une répartition aléatoire
+    const shuffledChildren = [...allChildren].sort(() => Math.random() - 0.5);
+    const childrenPerEducator: number[] = [];
     
-    for (let i = 0; i < allChildren.length; i++) {
-      const educatorIndex = Math.floor(i / childrenPerEducator) % allEducators.length;
-      const educatorId = allEducators[educatorIndex];
+    // Distribuer les enfants en s'assurant que chaque staff a entre 2 et 5 enfants
+    let remainingChildren = shuffledChildren.length;
+    let remainingEducators = allEducators.length;
+    
+    for (let i = 0; i < allEducators.length; i++) {
+      const min = 2;
+      const max = Math.min(5, remainingChildren - (remainingEducators - 1) * 2);
+      const count = Math.max(min, Math.min(max, Math.floor(remainingChildren / remainingEducators)));
       
-      await prisma.child.update({
-        where: { id: allChildren[i].id },
-        data: { 
-          referents: {
-            connect: { id: educatorId }
-          }
-        },
-      });
+      childrenPerEducator.push(count);
+      remainingChildren -= count;
+      remainingEducators--;
     }
-    console.log('✅ Référents assignés (2-3 enfants par éducateur)');
+    
+    // Assigner les enfants aux éducateurs
+    let childIndex = 0;
+    for (let educatorIndex = 0; educatorIndex < allEducators.length; educatorIndex++) {
+      const educatorId = allEducators[educatorIndex];
+      const count = childrenPerEducator[educatorIndex];
+      
+      for (let i = 0; i < count && childIndex < shuffledChildren.length; i++) {
+        const child = shuffledChildren[childIndex];
+        await prisma.child.update({
+          where: { id: child.id },
+          data: { 
+            referents: {
+              connect: { id: educatorId }
+            }
+          },
+        });
+        childIndex++;
+      }
+    }
+    
+    console.log('✅ Référents assignés (2-5 enfants par éducateur)');
+    console.log('📊 Répartition:', childrenPerEducator.map((count, index) => `Éducateur ${index + 1}: ${count} enfants`).join(', '));
   }
 
   // Génération des feuilles de présence jusqu'à aujourd'hui (optimisée)
@@ -541,7 +564,7 @@ async function main() {
   }
 
   console.log('🌱 Seed terminé avec succès !');
-  console.log(`📊 Résumé: 15 éducateurs, 30 parents, 33 enfants, ${journalsCreated} journaux`);
+  console.log(`📊 Résumé: 15 éducateurs, 25 parents, 30 enfants, ${journalsCreated} journaux`);
 }
 
 main()

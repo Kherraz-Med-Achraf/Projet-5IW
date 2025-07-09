@@ -230,10 +230,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useDocumentStore } from '@/stores/documentStore'
 import { useParentStore } from '@/stores/parent'
-import { useAuthStore } from '@/stores/auth'
 import { useNotificationStore } from '@/stores/notificationStore'
 import type { CreateDocumentPayload } from '@/stores/documentStore'
-import { API_BASE_URL } from '@/config/api'
 
 const emit = defineEmits<{
   close: []

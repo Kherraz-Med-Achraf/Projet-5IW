@@ -51,39 +51,20 @@ export const useParentStore = defineStore("parent", () => {
     error.value = "";
     try {
       const auth = useAuthStore();
-      
-      console.log('🔍 Debug fetchParents:');
-      console.log('- User:', auth.user);
-      console.log('- Token exists:', !!auth.token);
-      console.log('- User role:', auth.user?.role);
-      console.log('- Is authenticated:', auth.isAuthenticated);
-      
-      if (!auth.token) {
-        throw new Error('Token d\'authentification manquant');
-      }
-      
       const response = await fetch(`${API_BASE}/parents`, {
         headers: {
           Authorization: `Bearer ${auth.token}`,
-          'Content-Type': 'application/json',
         },
       });
 
-      console.log('- Response status:', response.status);
-      console.log('- Response ok:', response.ok);
-
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.log('- Error data:', errorData);
-        throw new Error(`HTTP ${response.status}: ${errorData.message || 'Erreur serveur'}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
       parents.value = data;
-      console.log('- Parents loaded:', data.length);
       return data;
     } catch (err: any) {
-      console.error('❌ Error in fetchParents:', err);
       error.value = err.message || "Erreur lors du chargement des parents";
       throw err;
     } finally {

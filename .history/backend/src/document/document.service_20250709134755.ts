@@ -560,7 +560,7 @@ export class DocumentService {
       completedSignatures,
       signatureRate: Math.round(signatureRate * 100) / 100,
       averageSignatureTime: Math.round(averageSignatureTime * 100) / 100,
-      documentsByCategory: categoryCounts as Record<DocumentCategory, number>,
+      documentsByCategory: categoryCounts,
       recentActivity: {
         documentsUploadedThisWeek: recentDocuments,
         signaturesCompletedThisWeek: recentSignatures,

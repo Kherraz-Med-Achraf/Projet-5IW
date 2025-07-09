@@ -435,7 +435,7 @@ export class DocumentService {
     } else if (userRole === Role.PARENT) {
       const access = document.accesses.find(a => a.parent.user?.id === userId);
       canDownload = access?.canDownload || false;
-    } else if (userRole === Role.DIRECTOR || userRole === Role.SERVICE_MANAGER) {
+    } else if ([Role.DIRECTOR, Role.SERVICE_MANAGER].includes(userRole)) {
       canDownload = document.status === DocumentStatus.PUBLISHED;
     }
 
@@ -560,7 +560,7 @@ export class DocumentService {
       completedSignatures,
       signatureRate: Math.round(signatureRate * 100) / 100,
       averageSignatureTime: Math.round(averageSignatureTime * 100) / 100,
-      documentsByCategory: categoryCounts as Record<DocumentCategory, number>,
+      documentsByCategory: categoryCounts,
       recentActivity: {
         documentsUploadedThisWeek: recentDocuments,
         signaturesCompletedThisWeek: recentSignatures,

@@ -332,23 +332,8 @@ const initializeGrid = async () => {
         width: '15%',
         formatter: (cell) => {
           const post = posts.value[cell];
-          console.log('GridJS - Actions formatter - post:', post);
-          console.log('GridJS - Actions formatter - author:', post?.author);
-          
-          if (!post) {
-            return html('<div>Post non trouvé</div>');
-          }
-          
-          // Si pas d'auteur, afficher seulement le bouton voir
-          if (!post.author) {
-            return html(`
-              <div class="action-buttons">
-                <button class="btn-view" onclick="window.viewPost('${post.id}')">
-                  <i class="material-icons">visibility</i>
-                </button>
-                <span style="color: red; font-size: 0.8em;">Auteur manquant</span>
-              </div>
-            `);
+          if (!post || !post.author) {
+            return html('<div>Erreur de données</div>');
           }
           
           const canEdit = post.author.id === authStore.user?.id;

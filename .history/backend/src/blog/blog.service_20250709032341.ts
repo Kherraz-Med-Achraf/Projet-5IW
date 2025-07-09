@@ -336,8 +336,6 @@ export class BlogService {
     post: any,
     userReaction?: ReactionType,
   ): BlogPostResponseDto {
-    console.log('[BlogService] formatPostResponse - post.author raw:', JSON.stringify(post.author, null, 2));
-    
     // Compter les réactions par type
     const reactionCounts = {
       LIKE: 0,
@@ -352,9 +350,8 @@ export class BlogService {
     });
 
     const authorName = this.getAuthorName(post.author);
-    console.log('[BlogService] formatPostResponse - authorName:', authorName);
 
-    const formattedPost = {
+    return {
       id: post.id,
       title: post.title,
       description: post.description,
@@ -370,8 +367,5 @@ export class BlogService {
       reactions: reactionCounts,
       userReaction,
     };
-
-    console.log('[BlogService] formatPostResponse - post formaté:', JSON.stringify(formattedPost, null, 2));
-    return formattedPost;
   }
 }

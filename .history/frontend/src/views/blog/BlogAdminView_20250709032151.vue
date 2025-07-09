@@ -199,7 +199,6 @@ import { useBlogStore } from "@/stores/blogStore";
 import CreatePostForm from "@/components/blog/CreatePostForm.vue";
 import EditPostForm from "@/components/blog/EditPostForm.vue";
 import PageHeader from "@/components/PageHeader.vue";
-import { API_BASE_URL } from "@/utils/api";
 
 // Stores
 const authStore = useAuthStore();
@@ -301,22 +300,10 @@ const initializeGrid = async () => {
         width: '20%',
         formatter: (cell) => {
           const post = posts.value[cell];
-          console.log('GridJS - Auteur formatter - post:', post);
-          console.log('GridJS - Auteur formatter - author:', post?.author);
-          
-          if (!post) {
-            return 'Post non trouvé';
+          if (!post || !post.author) {
+            return 'Inconnu';
           }
-          
-          if (!post.author) {
-            return 'Auteur manquant (vérifiez le backend)';
-          }
-          
-          const firstName = post.author.firstName || '';
-          const lastName = post.author.lastName || '';
-          const fullName = `${firstName} ${lastName}`.trim();
-          
-          return fullName || `ID: ${post.author.id || 'inconnu'}`;
+          return `${post.author.firstName || ''} ${post.author.lastName || ''}`.trim() || 'Inconnu';
         }
       },
       {
@@ -332,23 +319,8 @@ const initializeGrid = async () => {
         width: '15%',
         formatter: (cell) => {
           const post = posts.value[cell];
-          console.log('GridJS - Actions formatter - post:', post);
-          console.log('GridJS - Actions formatter - author:', post?.author);
-          
-          if (!post) {
-            return html('<div>Post non trouvé</div>');
-          }
-          
-          // Si pas d'auteur, afficher seulement le bouton voir
-          if (!post.author) {
-            return html(`
-              <div class="action-buttons">
-                <button class="btn-view" onclick="window.viewPost('${post.id}')">
-                  <i class="material-icons">visibility</i>
-                </button>
-                <span style="color: red; font-size: 0.8em;">Auteur manquant</span>
-              </div>
-            `);
+          if (!post || !post.author) {
+            return html('<div>Erreur de données</div>');
           }
           
           const canEdit = post.author.id === authStore.user?.id;

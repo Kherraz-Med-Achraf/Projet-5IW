@@ -37,10 +37,14 @@ export function initSocket(token: string) {
   });
 
   socket.on('disconnect', (reason) => {
+    console.log('[WebSocket] Déconnexion:', reason);
+    
     // Tentative de reconnexion automatique sauf si c'est volontaire
     if (reason === 'io server disconnect') {
+      console.log('[WebSocket] Déconnexion côté serveur, tentative de reconnexion...');
       setTimeout(() => {
         if (!socket.connected) {
+          console.log('[WebSocket] Reconnexion automatique...');
           socket.connect();
         }
       }, 2000);
@@ -55,6 +59,7 @@ export function initSocket(token: string) {
     sessionStorage.clear();
     
     if (window.location.pathname !== '/login') {
+      console.log('[WebSocket] Session expirée, redirection vers /login');
       window.location.href = '/login';
     }
   });

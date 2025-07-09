@@ -436,6 +436,7 @@ export const useChatStore = defineStore("chat", () => {
     await Promise.all([fetchChats(), fetchContacts()]);
 
     function joinAllChats() {
+      console.log(`[ChatStore] Jointure automatique de ${chats.value.length} conversations`);
       chats.value.forEach((c) => {
         if (c.id) {
           socket.emit("joinChat", c.id);
@@ -452,6 +453,7 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   function reset() {
+    console.log("[ChatStore] Reset du store");
     initialized.value = false;
     fetchingContacts.value = false;
     chats.value = [];
@@ -460,6 +462,7 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   function forceReconnect() {
+    console.log("[ChatStore] Forcer la reconnexion WebSocket");
     if (socket) {
       socket.disconnect();
       socket.connect();
@@ -468,6 +471,7 @@ export const useChatStore = defineStore("chat", () => {
 
   // Fallback pour s'assurer que les conversations sont à jour
   function refreshConversations() {
+    console.log("[ChatStore] Rafraîchissement manuel des conversations");
     return fetchChats();
   }
 

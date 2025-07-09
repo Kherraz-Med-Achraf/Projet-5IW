@@ -255,11 +255,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // Vérifier si l'utilisateur n'a pas déjà rejoint ce chat
       const alreadyInRoom = s.rooms.has(chatId);
       if (alreadyInRoom) {
+        console.log(
+          `[INFO] User ${userId} déjà dans chat ${chatId}, ignoré`,
+        );
         return;
       }
       
       s.join(chatId);
       this.userRoomCount.set(userId, current + 1);
+      console.log(
+        `[INFO] User ${userId} a rejoint chat ${chatId} (${current + 1}/${this.MAX_ROOMS_PER_USER} rooms)`,
+      );
     } else {
       console.warn(
         `[SECURITY] User ${userId} tentative d'accès non autorisé au chat ${chatId}`,
@@ -314,6 +320,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         content,
       );
 
+      console.log(`[INFO] Émission newMessage vers room ${chatId} - msgId: ${msg.id}`);
       this.server.to(chatId).emit('newMessage', {
         chatId,
         msgId: msg.id,
@@ -338,6 +345,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         chat.participants.forEach((uid: string) => {
           if (uid === s.data.user.id || userIdsInRoom.has(uid)) return;
 
+          console.log(`[INFO] Envoi notification chatUpdated vers user ${uid}`);
           this.server.to(uid).emit('chatUpdated', {
             chatId,
             lastMessage: msg.content,

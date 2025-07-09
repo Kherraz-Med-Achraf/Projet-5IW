@@ -338,6 +338,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         chat.participants.forEach((uid: string) => {
           if (uid === s.data.user.id || userIdsInRoom.has(uid)) return;
 
+          console.log(`[INFO] Envoi notification chatUpdated vers user ${uid}`);
           this.server.to(uid).emit('chatUpdated', {
             chatId,
             lastMessage: msg.content,

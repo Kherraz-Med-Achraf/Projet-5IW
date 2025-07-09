@@ -55,6 +55,7 @@ export function initSocket(token: string) {
     sessionStorage.clear();
     
     if (window.location.pathname !== '/login') {
+      console.log('[WebSocket] Session expirée, redirection vers /login');
       window.location.href = '/login';
     }
   });

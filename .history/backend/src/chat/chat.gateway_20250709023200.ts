@@ -314,6 +314,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         content,
       );
 
+      console.log(`[INFO] Émission newMessage vers room ${chatId} - msgId: ${msg.id}`);
       this.server.to(chatId).emit('newMessage', {
         chatId,
         msgId: msg.id,
@@ -338,6 +339,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         chat.participants.forEach((uid: string) => {
           if (uid === s.data.user.id || userIdsInRoom.has(uid)) return;
 
+          console.log(`[INFO] Envoi notification chatUpdated vers user ${uid}`);
           this.server.to(uid).emit('chatUpdated', {
             chatId,
             lastMessage: msg.content,

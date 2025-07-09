@@ -948,16 +948,6 @@ onMounted(async () => {
   border-left: 4px solid #3b82f6;
 }
 
-.chat-item.unread .chat-item-button {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border-left: 4px solid #f59e0b;
-}
-
-.chat-item.unread .chat-item-name {
-  font-weight: 600;
-  color: #92400e;
-}
-
 .chat-avatar {
   width: 48px;
   height: 48px;

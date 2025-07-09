@@ -268,13 +268,16 @@ export const useChatStore = defineStore("chat", () => {
     contacts.value = [];
     Object.keys(messages).forEach(key => delete messages[key]);
     
+    console.log("[ChatStore] Initialisation du socket WebSocket");
     initSocket(auth.token ?? "");
     
     // Configurer la rejointure automatique après reconnexion
     setAutoRejoinCallback(() => {
       if (chats.value.length > 0) {
+        console.log('[ChatStore] Rejointure automatique des conversations après reconnexion');
         chats.value.forEach((c) => {
           if (c.id) {
+            console.log(`[ChatStore] Rejointure conversation ${c.id}`);
             socket.emit("joinChat", c.id);
           }
         });
@@ -287,6 +290,7 @@ export const useChatStore = defineStore("chat", () => {
     }
 
     socket.on("newMessage", (msg: any) => {
+      console.log("[ChatStore] Nouveau message reçu via WebSocket:", msg);
       if (!messages[msg.chatId]) messages[msg.chatId] = [];
 
       // Chercher un message temporaire à remplacer
@@ -337,6 +341,7 @@ export const useChatStore = defineStore("chat", () => {
       // Mettre à jour la conversation dans la liste
       const chat = chats.value.find((c) => c.id === msg.chatId);
       if (chat) {
+        console.log("[ChatStore] Mise à jour conversation existante:", chat.id);
         chat.updatedAt = msg.sentAt;
         chat.lastMessage = msg.content;
 
@@ -355,6 +360,7 @@ export const useChatStore = defineStore("chat", () => {
           chats.value = [...chats.value];
         }
       } else {
+        console.log("[ChatStore] Conversation non trouvée dans la liste, rafraîchissement...");
         // Chat pas encore dans la liste locale, rafraîchir
         fetchChats();
       }
@@ -416,6 +422,7 @@ export const useChatStore = defineStore("chat", () => {
 
     // Mise à jour d'un chat existant (nouveau message dans une room non rejointe)
     socket.on("chatUpdated", (u: any) => {
+      console.log("[ChatStore] Notification chatUpdated reçue pour chat:", u.chatId);
       const chat = chats.value.find((ch) => ch.id === u.chatId);
       if (chat) {
         chat.lastMessage = u.lastMessage;
@@ -430,12 +437,15 @@ export const useChatStore = defineStore("chat", () => {
           const [mv] = chats.value.splice(idx, 1);
           chats.value.unshift(mv);
         }
+      } else {
+        console.log("[ChatStore] Chat non trouvé pour chatUpdated:", u.chatId);
       }
     });
 
     await Promise.all([fetchChats(), fetchContacts()]);
 
     function joinAllChats() {
+      console.log(`[ChatStore] Jointure automatique de ${chats.value.length} conversations`);
       chats.value.forEach((c) => {
         if (c.id) {
           socket.emit("joinChat", c.id);
@@ -452,6 +462,7 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   function reset() {
+    console.log("[ChatStore] Reset du store");
     initialized.value = false;
     fetchingContacts.value = false;
     chats.value = [];
@@ -460,6 +471,7 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   function forceReconnect() {
+    console.log("[ChatStore] Forcer la reconnexion WebSocket");
     if (socket) {
       socket.disconnect();
       socket.connect();
@@ -468,6 +480,7 @@ export const useChatStore = defineStore("chat", () => {
 
   // Fallback pour s'assurer que les conversations sont à jour
   function refreshConversations() {
+    console.log("[ChatStore] Rafraîchissement manuel des conversations");
     return fetchChats();
   }
 

@@ -144,7 +144,6 @@ services:
       - otp_enc_key
       - file_encryption_key
       - sendgrid_api_key
-      - yousign_webhook_secret
     networks:
       - backend-net
     deploy:

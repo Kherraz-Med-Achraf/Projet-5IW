@@ -129,7 +129,7 @@ services:
       # Variables pour SendGrid API
       - SENDGRID_API_KEY_FILE=/run/secrets/sendgrid_api_key
       # Variables pour YouSign
-      - YOUSIGN_API_BASE_URL=https://api.yousign.com/v3
+      - YOUSIGN_API_URL=https://api-sandbox.yousign.app/v3
     secrets:
       - pg_password
       - sentry_dsn
@@ -144,7 +144,6 @@ services:
       - otp_enc_key
       - file_encryption_key
       - sendgrid_api_key
-      - yousign_webhook_secret
     networks:
       - backend-net
     deploy:

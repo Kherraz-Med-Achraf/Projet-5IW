@@ -428,32 +428,6 @@ function getImageUrl(imageUrl: string): string {
   return `${API_BASE_URL}${imageUrl}`;
 }
 
-// ✅ NOUVEAU : Gestion des erreurs d'images
-function handleImageError(event: Event): void {
-  const img = event.target as HTMLImageElement;
-  console.warn('🖼️ Image cassée détectée, affichage du placeholder');
-  
-  // Masquer l'image cassée
-  img.style.display = 'none';
-  
-  // Afficher le placeholder
-  const placeholder = img.parentElement?.querySelector('.image-placeholder');
-  if (placeholder) {
-    (placeholder as HTMLElement).style.display = 'flex';
-  }
-}
-
-function handleImageLoad(event: Event): void {
-  const img = event.target as HTMLImageElement;
-  console.log('✅ Image chargée avec succès');
-  
-  // S'assurer que le placeholder est masqué
-  const placeholder = img.parentElement?.querySelector('.image-placeholder');
-  if (placeholder) {
-    (placeholder as HTMLElement).style.display = 'none';
-  }
-}
-
 function isRegistrationDisabled(event: any): boolean {
   // Vérifier si l'événement est passé
   const eventDate = new Date(event.date);
@@ -653,7 +627,7 @@ watch(() => eventStore.events, async () => {
         width: 100%;
         height: 100%;
         background: linear-gradient(45deg, #f8fafc, #e2e8f0);
-        display: none; /* ✅ Masqué par défaut */
+        display: flex;
         align-items: center;
         justify-content: center;
         color: #9ca3af;

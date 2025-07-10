@@ -653,7 +653,7 @@ watch(() => eventStore.events, async () => {
         width: 100%;
         height: 100%;
         background: linear-gradient(45deg, #f8fafc, #e2e8f0);
-        display: none; /* ✅ Masqué par défaut */
+        display: flex;
         align-items: center;
         justify-content: center;
         color: #9ca3af;

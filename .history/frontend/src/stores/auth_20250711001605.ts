@@ -338,7 +338,6 @@ export const useAuthStore = defineStore("auth", {
 
     /* ─────────────────────────── LOGOUT ─────────────────────────── */
     async logout() {
-      this.isManualLogout = true; // ✅ NOUVEAU : Marquer comme déconnexion volontaire
       const notification = useNotificationStore();
       try {
         // Obtenir le token CSRF des cookies
@@ -376,11 +375,7 @@ export const useAuthStore = defineStore("auth", {
       journalStore.resetStore();
 
       this.clearAuth();
-      // ✅ NOUVEAU : Seulement afficher le toast si c'est volontaire
-      if (this.isManualLogout) {
-        notification.showNotification("Déconnexion réussie", "success");
-      }
-      this.isManualLogout = false; // Réinitialiser le flag
+      notification.showNotification("Déconnexion réussie", "success");
     },
 
     /* ─────────────────────────── PASSWORD FLOWS ─────────────────────────── */
@@ -478,15 +473,11 @@ export const useAuthStore = defineStore("auth", {
         return true;
       } catch (error: any) {
         console.error("Erreur refresh token:", error.message);
-        this.isManualLogout = false; // ✅ NOUVEAU : Marquer comme déconnexion automatique
         await this.logout();
-        // ✅ NOUVEAU : Seulement afficher le toast si ce n'est pas une déconnexion volontaire
-        if (!this.isManualLogout) {
-          notification.showNotification(
-            "Session expirée, veuillez vous reconnecter.",
-            "error"
-          );
-        }
+        notification.showNotification(
+          "Session expirée, veuillez vous reconnecter.",
+          "error"
+        );
         return false;
       }
     },

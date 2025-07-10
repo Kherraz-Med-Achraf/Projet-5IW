@@ -505,16 +505,7 @@ function initializeImageLoading(): void {
   if (totalImages.value === 0) {
     imagesLoaded.value = true;
     console.log('🎯 Aucune image à charger, affichage immédiat');
-    return;
   }
-  
-  // ✅ AJOUT: Timeout de sécurité (10 secondes maximum)
-  setTimeout(() => {
-    if (!imagesLoaded.value) {
-      console.warn(`⏰ Timeout atteint: affichage forcé après 10s (${imageLoadCount.value}/${totalImages.value} images chargées)`);
-      imagesLoaded.value = true;
-    }
-  }, 10000);
 }
 
 function isRegistrationDisabled(event: any): boolean {
@@ -634,35 +625,6 @@ watch(() => eventStore.events, async () => {
   gap: 1rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
-}
-
-// ✅ AJOUT: Styles pour l'indicateur de chargement des images
-.loading-indicator {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 2rem;
-  color: #6b7280;
-  background: #f8fafc;
-  border-radius: 12px;
-  margin: 2rem 0;
-
-  .material-icons {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-    color: #4444ac;
-
-    &.spinning {
-      animation: spin 1s linear infinite;
-    }
-  }
-
-  span {
-    font-size: 1.1rem;
-    font-weight: 500;
-    text-align: center;
-  }
 }
 
 .events-grid {

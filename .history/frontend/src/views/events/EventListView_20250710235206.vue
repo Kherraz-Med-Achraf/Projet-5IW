@@ -40,16 +40,10 @@
               <span>Cliquez sur un événement pour vous inscrire avec vos enfants</span>
             </div>
 
-            <!-- État de chargement général -->
+            <!-- État de chargement -->
             <div v-if="eventStore.loading" class="loading-indicator">
               <i class="material-icons spinning">hourglass_empty</i>
               <span>Chargement des événements...</span>
-            </div>
-
-            <!-- ✅ AJOUT: Chargement des images -->
-            <div v-else-if="!imagesLoaded && upcomingEvents.length > 0" class="loading-indicator">
-              <i class="material-icons spinning">image</i>
-              <span>Chargement des images... ({{ imageLoadCount }}/{{ totalImages }})</span>
             </div>
 
             <!-- Message d'erreur -->
@@ -58,9 +52,9 @@
               {{ eventStore.error }}
             </div>
 
-            <!-- Grille d'événements - Affichée seulement quand les images sont prêtes -->
+            <!-- Grille d'événements -->
             <div 
-              v-if="!eventStore.loading && !eventStore.error && imagesLoaded" 
+              v-if="!eventStore.loading && !eventStore.error" 
               class="events-grid"
               role="grid"
               aria-label="Liste des événements disponibles"
@@ -450,71 +444,23 @@ function handleImageError(event: Event, eventData: any): void {
   const img = event.target as HTMLImageElement;
   console.warn(`🖼️ Erreur de chargement d'image pour l'événement "${eventData.title}":`, eventData.imageUrl);
   
-  // ✅ AJOUT: Marquer cette image comme en erreur
-  imageErrors.value.add(eventData.id);
-  imageLoadCount.value++;
-  
   // Masquer l'image et afficher le placeholder
   img.style.display = 'none';
   const placeholder = img.parentElement?.querySelector('.image-placeholder');
   if (placeholder) {
     (placeholder as HTMLElement).style.display = 'flex';
   }
-  
-  // ✅ AJOUT: Vérifier si toutes les images sont traitées
-  checkAllImagesLoaded();
 }
 
 function handleImageLoad(event: Event, eventData: any): void {
   const img = event.target as HTMLImageElement;
   console.log(`✅ Image chargée avec succès pour l'événement "${eventData.title}"`);
   
-  // ✅ AJOUT: Compter cette image comme chargée
-  imageLoadCount.value++;
-  
   // S'assurer que le placeholder est masqué
   const placeholder = img.parentElement?.querySelector('.image-placeholder');
   if (placeholder) {
     (placeholder as HTMLElement).style.display = 'none';
   }
-  
-  // ✅ AJOUT: Vérifier si toutes les images sont traitées
-  checkAllImagesLoaded();
-}
-
-// ✅ NOUVELLE FONCTION: Vérifier si toutes les images sont chargées
-function checkAllImagesLoaded(): void {
-  if (imageLoadCount.value >= totalImages.value) {
-    imagesLoaded.value = true;
-    console.log(`🎯 Toutes les images sont traitées: ${imageLoadCount.value}/${totalImages.value} (${imageErrors.value.size} erreurs)`);
-  }
-}
-
-// ✅ NOUVELLE FONCTION: Initialiser le chargement des images
-function initializeImageLoading(): void {
-  imagesLoaded.value = false;
-  imageLoadCount.value = 0;
-  imageErrors.value.clear();
-  
-  // Compter le nombre total d'images à charger
-  totalImages.value = upcomingEvents.value.filter(event => event.imageUrl).length;
-  
-  console.log(`🖼️ Initialisation du chargement: ${totalImages.value} images à charger`);
-  
-  // Si aucune image à charger, marquer comme terminé immédiatement
-  if (totalImages.value === 0) {
-    imagesLoaded.value = true;
-    console.log('🎯 Aucune image à charger, affichage immédiat');
-    return;
-  }
-  
-  // ✅ AJOUT: Timeout de sécurité (10 secondes maximum)
-  setTimeout(() => {
-    if (!imagesLoaded.value) {
-      console.warn(`⏰ Timeout atteint: affichage forcé après 10s (${imageLoadCount.value}/${totalImages.value} images chargées)`);
-      imagesLoaded.value = true;
-    }
-  }, 10000);
 }
 
 function isRegistrationDisabled(event: any): boolean {
@@ -611,18 +557,7 @@ onMounted(async () => {
     eventStore.fetchMyEvents(),
     loadChildren(),
   ]);
-  // ✅ MODIFICATION: Initialiser après le chargement des données
-  await nextTick(); // Attendre le rendu
-  initializeImageLoading();
 });
-
-// ✅ AJOUT: Watcher pour réinitialiser le chargement des images quand les événements changent
-watch(() => eventStore.events, async () => {
-  if (eventStore.events.length > 0) {
-    await nextTick(); // Attendre le rendu des nouveaux événements
-    initializeImageLoading();
-  }
-}, { deep: true });
 </script>
 
 <style scoped lang="scss">
@@ -634,35 +569,6 @@ watch(() => eventStore.events, async () => {
   gap: 1rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
-}
-
-// ✅ AJOUT: Styles pour l'indicateur de chargement des images
-.loading-indicator {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 2rem;
-  color: #6b7280;
-  background: #f8fafc;
-  border-radius: 12px;
-  margin: 2rem 0;
-
-  .material-icons {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-    color: #4444ac;
-
-    &.spinning {
-      animation: spin 1s linear infinite;
-    }
-  }
-
-  span {
-    font-size: 1.1rem;
-    font-weight: 500;
-    text-align: center;
-  }
 }
 
 .events-grid {

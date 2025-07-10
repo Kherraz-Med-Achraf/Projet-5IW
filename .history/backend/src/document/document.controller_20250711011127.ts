@@ -90,7 +90,7 @@ export class DocumentController {
    */
   @Post(':id/publish')
   @Roles(Role.SECRETARY)
-  // @UseGuards(CsrfGuard) // 🔧 TEMPORAIRE : Retiré pour debug 401
+  @UseGuards(CsrfGuard)
   @ApiOperation({ 
     summary: 'Publier un document',
     description: 'Publier un document en brouillon et envoyer les notifications'
@@ -103,10 +103,6 @@ export class DocumentController {
     @Param('id') documentId: string,
     @Req() req: Request & { user: { id: string; role: Role } },
   ) {
-    console.log('🔍 [DEBUG] publishDocument called with:', {
-      user: req.user,
-      documentId
-    });
     return this.documentService.publishDocument(documentId, req.user.id);
   }
 
@@ -230,7 +226,7 @@ export class DocumentController {
    */
   @Patch(':id')
   @Roles(Role.SECRETARY)
-  // @UseGuards(CsrfGuard) // 🔧 TEMPORAIRE : Retiré pour debug 401
+  @UseGuards(CsrfGuard)
   @ApiOperation({ 
     summary: 'Mettre à jour un document',
     description: 'Modifier les informations d\'un document en brouillon'
@@ -253,7 +249,7 @@ export class DocumentController {
    */
   @Delete(':id')
   @Roles(Role.SECRETARY)
-  // @UseGuards(CsrfGuard) // 🔧 TEMPORAIRE : Retiré pour debug 401
+  @UseGuards(CsrfGuard)
   @ApiOperation({ 
     summary: 'Supprimer un document',
     description: 'Supprimer définitivement un document et ses fichiers'
@@ -273,21 +269,22 @@ export class DocumentController {
    */
   @Post(':id/signature')
   @Roles(Role.SECRETARY)
-  // @UseGuards(CsrfGuard) // 🔧 TEMPORAIRE : Retiré pour debug 401
+  @UseGuards(CsrfGuard)
   @ApiOperation({ 
     summary: 'Initier une signature électronique',
-    description: 'Créer une demande de signature YouSign pour un document'
+    description: 'Lancer le processus de signature Yousign pour un document'
   })
   @ApiParam({ name: 'id', description: 'ID du document' })
-  @ApiResponse({ status: 200, description: 'Signature initiée avec succès' })
-  @ApiResponse({ status: 404, description: 'Document introuvable' })
-  @ApiResponse({ status: 403, description: 'Vous ne pouvez initier une signature que pour vos propres documents' })
+  @ApiResponse({ status: 200, description: 'Signature initiée' })
+  @ApiResponse({ status: 400, description: 'Document ne nécessite pas de signature' })
   async initiateSignature(
     @Param('id') documentId: string,
     @Body() dto: InitiateSignatureDto,
     @Req() req: Request & { user: { id: string; role: Role } },
   ) {
-    return this.documentService.initiateSignature(documentId, dto, req.user.id);
+    // Cette méthode sera implémentée dans le service avec Yousign
+    // return this.documentService.initiateSignature(documentId, dto, req.user.id);
+    return { message: 'Initiation signature - à implémenter' };
   }
 
   /**

@@ -287,7 +287,7 @@ export class DocumentController {
     @Body() dto: InitiateSignatureDto,
     @Req() req: Request & { user: { id: string; role: Role } },
   ) {
-    return this.documentService.initiateSignature(documentId, dto, req.user.id);
+    return this.documentService.initiateYouSignSignature(documentId, dto, req.user.id);
   }
 
   /**

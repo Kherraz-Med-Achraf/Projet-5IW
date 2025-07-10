@@ -28,7 +28,7 @@ export class MailService {
     }
     
     // Prioriser SendGrid si configuré
-    if (this.sendgridApiKey) {
+    if (sendgridApiKey) {
       this.logger.log(`📧 Using SENDGRID configuration:`);
       this.logger.log(`   API Key: ✅ Configured`);
       
@@ -38,7 +38,7 @@ export class MailService {
         secure: false,
         auth: {
           user: 'apikey', // Toujours "apikey" pour SendGrid
-          pass: this.sendgridApiKey,
+          pass: sendgridApiKey,
         },
         connectionTimeout: 30000,
         greetingTimeout: 15000,
@@ -72,7 +72,7 @@ export class MailService {
   }
 
   async sendMail(to: string, subject: string, html: string) {
-    const fromEmail = this.sendgridApiKey 
+    const fromEmail = sendgridApiKey 
       ? `École <noreply@educareschool.me>`
       : process.env.EMAIL_USER;
       

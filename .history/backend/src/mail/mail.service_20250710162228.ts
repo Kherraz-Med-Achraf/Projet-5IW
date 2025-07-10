@@ -6,13 +6,14 @@ import { readSecret } from '../utils/secret';
 export class MailService {
   private transporter;
   private readonly logger = new Logger(MailService.name);
-  private sendgridApiKey: string | null = null;
 
   constructor() {
     // Configuration SendGrid (100% gratuit, sans carte bancaire)
+    let sendgridApiKey: string | null = null;
+    
     // Lire la clé depuis le secret Docker comme les autres services
     try {
-      this.sendgridApiKey = readSecret('/run/secrets/sendgrid_api_key', 'SENDGRID_API_KEY');
+      sendgridApiKey = readSecret('/run/secrets/sendgrid_api_key', 'SENDGRID_API_KEY');
     } catch (error) {
       this.logger.warn('⚠️ SendGrid API key not found in secrets or env var');
     }
@@ -28,7 +29,7 @@ export class MailService {
     }
     
     // Prioriser SendGrid si configuré
-    if (this.sendgridApiKey) {
+    if (sendgridApiKey) {
       this.logger.log(`📧 Using SENDGRID configuration:`);
       this.logger.log(`   API Key: ✅ Configured`);
       
@@ -38,7 +39,7 @@ export class MailService {
         secure: false,
         auth: {
           user: 'apikey', // Toujours "apikey" pour SendGrid
-          pass: this.sendgridApiKey,
+          pass: sendgridApiKey,
         },
         connectionTimeout: 30000,
         greetingTimeout: 15000,
@@ -72,7 +73,7 @@ export class MailService {
   }
 
   async sendMail(to: string, subject: string, html: string) {
-    const fromEmail = this.sendgridApiKey 
+    const fromEmail = sendgridApiKey 
       ? `École <noreply@educareschool.me>`
       : process.env.EMAIL_USER;
       

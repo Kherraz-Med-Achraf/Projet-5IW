@@ -72,7 +72,7 @@ export class MailService {
   }
 
   async sendMail(to: string, subject: string, html: string) {
-    const fromEmail = this.sendgridApiKey 
+    const fromEmail = sendgridApiKey 
       ? `École <noreply@educareschool.me>`
       : process.env.EMAIL_USER;
       

@@ -141,8 +141,8 @@ services:
       # Variables pour Stripe
       - STRIPE_SECRET_FILE=/run/secrets/stripe_secret
       - STRIPE_WEBHOOK_SECRET_FILE=/run/secrets/stripe_webhook_secret
-      # Variables pour SendGrid (fallback si secret indisponible)
-      - SENDGRID_API_KEY=${SENDGRID_API_KEY:-}
+      # Variables pour SendGrid
+      - SENDGRID_API_KEY_FILE=/run/secrets/sendgrid_api_key
     secrets:
       - pg_password
       - sentry_dsn
@@ -157,7 +157,6 @@ services:
       - refresh_token_secret
       - otp_enc_key
       - file_encryption_key
-      - sendgrid_api_key
     networks:
       - backend-net
     deploy:

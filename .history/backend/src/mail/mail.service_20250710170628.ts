@@ -42,21 +42,17 @@ export class MailService {
   }
 
   async sendMail(to: string, subject: string, html: string) {
-    if (!this.transporter) {
-      const errorMsg = 'Email service not configured - SendGrid API key missing';
-      this.logger.error(`❌ ${errorMsg}`);
-      throw new Error(errorMsg);
-    }
-    
-    const fromEmail = `École <noreply@educareschool.me>`;
+    const fromEmail = this.sendgridApiKey 
+      ? `École <noreply@educareschool.me>`
+      : process.env.EMAIL_USER;
       
-    this.logger.log(`📧 SENDGRID: Starting email send process:`);
+    this.logger.log(`📧 Starting email send process:`);
     this.logger.log(`   To: ${to}`);
     this.logger.log(`   Subject: ${subject}`);
     this.logger.log(`   From: ${fromEmail}`);
     
     try {
-      this.logger.log(`📧 SENDGRID: Attempting to send email...`);
+      this.logger.log(`📧 Attempting to send email via transporter...`);
       
       const info = await this.transporter.sendMail({
         from: fromEmail,
@@ -65,12 +61,12 @@ export class MailService {
         html,
       });
       
-      this.logger.log(`✅ SENDGRID: Email sent successfully!`);
+      this.logger.log(`✅ Email sent successfully!`);
       this.logger.log(`   Message ID: ${info.messageId}`);
       this.logger.log(`   Response: ${info.response}`);
       
     } catch (error) {
-      this.logger.error(`❌ SENDGRID: Email send failed:`, error);
+      this.logger.error(`❌ Email send failed:`, error);
       this.logger.error(`   Error code: ${error.code}`);
       this.logger.error(`   Error message: ${error.message}`);
       this.logger.error(`   Error command: ${error.command}`);

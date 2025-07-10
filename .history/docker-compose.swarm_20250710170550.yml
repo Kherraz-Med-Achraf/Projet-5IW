@@ -11,6 +11,8 @@ secrets:
     external: true
   jwt_secret:
     external: true
+  email_pass:
+    external: true
   openai_api_key:
     external: true
   yousign_api_key:

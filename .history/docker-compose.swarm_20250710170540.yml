@@ -11,6 +11,8 @@ secrets:
     external: true
   jwt_secret:
     external: true
+  email_pass:
+    external: true
   openai_api_key:
     external: true
   yousign_api_key:
@@ -145,6 +147,7 @@ services:
       - sentry_dsn
       - mongo_root_password
       - jwt_secret
+      - email_pass
       - openai_api_key
       - yousign_api_key
       - stripe_secret

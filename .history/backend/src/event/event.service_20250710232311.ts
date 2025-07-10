@@ -55,7 +55,7 @@ export class EventService {
     };
   }
 
-  /** Liste des événements futurs */
+  /** Liste des événements à venir */
   async listUpcoming() {
     const events = await this.prisma.event.findMany({
       where: { date: { gte: new Date() } },
@@ -78,19 +78,6 @@ export class EventService {
       }),
     );
     return withCap;
-  }
-
-  /** Détails d'un événement spécifique */
-  async findOne(id: string) {
-    const event = await this.prisma.event.findUnique({
-      where: { id },
-    });
-
-    if (!event) {
-      throw new NotFoundException('Événement introuvable');
-    }
-
-    return event;
   }
 
   /** Liste inscrits pour un event */

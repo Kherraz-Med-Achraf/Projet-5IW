@@ -60,9 +60,19 @@
 
                 <!-- ✅ CORRECTION 2: Boutons de désinscription pour tous les types de paiement -->
                 <div class="action-buttons">
-                  <!-- ✅ SIMPLIFIÉ: Tous les chèques (en attente ou payés) -->
+                  <!-- Chèque en attente -->
                   <button 
-                    v-if="r.paymentMethod === 'CHEQUE' && (r.paymentStatus === 'PENDING' || r.paymentStatus === 'PAID')" 
+                    v-if="r.paymentMethod === 'CHEQUE' && r.paymentStatus === 'PENDING'" 
+                    @click="cancelReg(r)" 
+                    class="btn-danger"
+                    :disabled="eventStore.loading"
+                  >
+                    Désinscrire
+                  </button>
+
+                  <!-- ✅ AJOUT: Chèque payé -->
+                  <button 
+                    v-if="r.paymentMethod === 'CHEQUE' && r.paymentStatus === 'PAID'" 
                     @click="cancelReg(r)" 
                     class="btn-danger"
                     :disabled="eventStore.loading"

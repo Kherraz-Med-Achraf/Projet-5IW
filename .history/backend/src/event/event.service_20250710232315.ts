@@ -57,33 +57,58 @@ export class EventService {
 
   /** Liste des événements futurs */
   async listUpcoming() {
-    const events = await this.prisma.event.findMany({
+    return await this.prisma.event.findMany({
       where: { date: { gte: new Date() } },
       orderBy: { date: 'asc' },
+      include: {
+        _count: {
+          select: {
+            registrations: {
+              where: {
+                OR: [
+                  { paymentStatus: { in: [PaymentStatus.PAID, PaymentStatus.FREE] } },
+                  {
+                    paymentMethod: PaymentMethod.CHEQUE,
+                    paymentStatus: PaymentStatus.PENDING,
+                  },
+                  {
+                    paymentMethod: PaymentMethod.STRIPE,
+                    paymentStatus: PaymentStatus.PENDING,
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
     });
-
-    // calc capacity left - compte seulement les inscriptions payées/validées
-    const withCap = await Promise.all(
-      events.map(async (ev) => {
-        if (ev.capacity) {
-          const count = await this.prisma.eventRegistrationChild.count(
-            this.getValidatedRegistrationsQuery(ev.id),
-          );
-          return {
-            ...ev,
-            capacityLeft: Math.max(ev.capacity - count, 0),
-          } as any;
-        }
-        return { ...ev, capacityLeft: null } as any;
-      }),
-    );
-    return withCap;
   }
 
   /** Détails d'un événement spécifique */
   async findOne(id: string) {
     const event = await this.prisma.event.findUnique({
       where: { id },
+      include: {
+        _count: {
+          select: {
+            registrations: {
+              where: {
+                OR: [
+                  { paymentStatus: { in: [PaymentStatus.PAID, PaymentStatus.FREE] } },
+                  {
+                    paymentMethod: PaymentMethod.CHEQUE,
+                    paymentStatus: PaymentStatus.PENDING,
+                  },
+                  {
+                    paymentMethod: PaymentMethod.STRIPE,
+                    paymentStatus: PaymentStatus.PENDING,
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!event) {

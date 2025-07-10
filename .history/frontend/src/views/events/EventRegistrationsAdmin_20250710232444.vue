@@ -60,9 +60,9 @@
 
                 <!-- ✅ CORRECTION 2: Boutons de désinscription pour tous les types de paiement -->
                 <div class="action-buttons">
-                  <!-- ✅ SIMPLIFIÉ: Tous les chèques (en attente ou payés) -->
+                  <!-- Chèque en attente -->
                   <button 
-                    v-if="r.paymentMethod === 'CHEQUE' && (r.paymentStatus === 'PENDING' || r.paymentStatus === 'PAID')" 
+                    v-if="r.paymentMethod === 'CHEQUE' && r.paymentStatus === 'PENDING'" 
                     @click="cancelReg(r)" 
                     class="btn-danger"
                     :disabled="eventStore.loading"
@@ -173,8 +173,6 @@ async function cancelReg(r: any) {
     confirmMessage = `Désinscrire ${r.parent} (paiement Stripe en attente) ? Un email sera envoyé pour notifier l'annulation.`;
   } else if (r.paymentMethod === 'CHEQUE' && r.paymentStatus === 'PENDING') {
     confirmMessage = `Désinscrire ${r.parent} (paiement par chèque en attente) ? Un email sera envoyé pour notifier l'annulation.`;
-  } else if (r.paymentMethod === 'CHEQUE' && r.paymentStatus === 'PAID') {
-    confirmMessage = `Désinscrire ${r.parent} (chèque déjà encaissé) ? Un email sera envoyé pour notifier l'annulation.`;
   } else if (r.paymentMethod === 'FREE' || r.paymentStatus === 'FREE') {
     confirmMessage = `Désinscrire ${r.parent} de cet événement gratuit ? Un email sera envoyé pour notifier l'annulation.`;
   } else if (r.paymentStatus === 'FAILED') {

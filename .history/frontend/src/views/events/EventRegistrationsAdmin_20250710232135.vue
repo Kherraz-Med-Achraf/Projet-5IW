@@ -45,7 +45,6 @@
               <td>{{ getPaymentMethodLabel(r.paymentMethod) }}</td>
               <td>{{ getPaymentStatusLabel(r.paymentStatus) }}</td>
               <td>
-                <!-- Bouton "Paiement reçu" pour les chèques en attente -->
                 <button
                   v-if="
                     r.paymentMethod === 'CHEQUE' &&
@@ -57,60 +56,8 @@
                 >
                   Paiement reçu
                 </button>
-
-                <!-- ✅ CORRECTION 2: Boutons de désinscription pour tous les types de paiement -->
-                <div class="action-buttons">
-                  <!-- ✅ SIMPLIFIÉ: Tous les chèques (en attente ou payés) -->
-                  <button 
-                    v-if="r.paymentMethod === 'CHEQUE' && (r.paymentStatus === 'PENDING' || r.paymentStatus === 'PAID')" 
-                    @click="cancelReg(r)" 
-                    class="btn-danger"
-                    :disabled="eventStore.loading"
-                  >
-                    Désinscrire
-                  </button>
-
-                  <!-- Paiement Stripe payé (avec remboursement) -->
-                  <button 
-                    v-if="r.paymentMethod === 'STRIPE' && r.paymentStatus === 'PAID'" 
-                    @click="cancelReg(r)" 
-                    class="btn-danger"
-                    :disabled="eventStore.loading"
-                  >
-                    Désinscrire & Rembourser
-                  </button>
-
-                  <!-- Paiement Stripe en attente -->
-                  <button 
-                    v-if="r.paymentMethod === 'STRIPE' && r.paymentStatus === 'PENDING'" 
-                    @click="cancelReg(r)" 
-                    class="btn-danger"
-                    :disabled="eventStore.loading"
-                  >
-                    Désinscrire
-                  </button>
-
-                  <!-- Événement gratuit -->
-                  <button 
-                    v-if="r.paymentMethod === 'FREE' || r.paymentStatus === 'FREE'" 
-                    @click="cancelReg(r)" 
-                    class="btn-danger"
-                    :disabled="eventStore.loading"
-                  >
-                    Désinscrire
-                  </button>
-
-                  <!-- Paiement en échec -->
-                  <button 
-                    v-if="r.paymentStatus === 'FAILED'" 
-                    @click="cancelReg(r)" 
-                    class="btn-danger"
-                    :disabled="eventStore.loading"
-                  >
-                    Supprimer
-                  </button>
-                </div>
-              </td>
+                <button v-if="r.paymentMethod==='CHEQUE' && r.paymentStatus==='PENDING'" @click="cancelReg(r)" class="danger">Désinscrire</button>
+          </td>
             </tr>
           </tbody>
         </table>
@@ -163,38 +110,11 @@ async function markPaid(r: any) {
   await load();
 }
 
-async function cancelReg(r: any) {
-  // ✅ CORRECTION 3: Messages personnalisés selon le type de paiement
-  let confirmMessage = '';
-  
-  if (r.paymentMethod === 'STRIPE' && r.paymentStatus === 'PAID') {
-    confirmMessage = `Désinscrire ${r.parent} et rembourser automatiquement le paiement Stripe ? Un email sera envoyé pour notifier l'annulation.`;
-  } else if (r.paymentMethod === 'STRIPE' && r.paymentStatus === 'PENDING') {
-    confirmMessage = `Désinscrire ${r.parent} (paiement Stripe en attente) ? Un email sera envoyé pour notifier l'annulation.`;
-  } else if (r.paymentMethod === 'CHEQUE' && r.paymentStatus === 'PENDING') {
-    confirmMessage = `Désinscrire ${r.parent} (paiement par chèque en attente) ? Un email sera envoyé pour notifier l'annulation.`;
-  } else if (r.paymentMethod === 'CHEQUE' && r.paymentStatus === 'PAID') {
-    confirmMessage = `Désinscrire ${r.parent} (chèque déjà encaissé) ? Un email sera envoyé pour notifier l'annulation.`;
-  } else if (r.paymentMethod === 'FREE' || r.paymentStatus === 'FREE') {
-    confirmMessage = `Désinscrire ${r.parent} de cet événement gratuit ? Un email sera envoyé pour notifier l'annulation.`;
-  } else if (r.paymentStatus === 'FAILED') {
-    confirmMessage = `Supprimer l'inscription échouée de ${r.parent} ? Un email sera envoyé pour notifier l'annulation.`;
-  } else {
-    confirmMessage = `Désinscrire ${r.parent} ? Un email sera envoyé pour notifier l'annulation.`;
-  }
-
-  if (!confirm(confirmMessage)) return;
-
-  await eventStore.adminCancelRegistration(r.id);
-  
-  // Message de succès personnalisé
-  if (r.paymentMethod === 'STRIPE' && r.paymentStatus === 'PAID') {
-    toast.success('Inscription annulée et remboursement effectué (email envoyé)');
-  } else {
-    toast.success('Inscription annulée (email envoyé)');
-  }
-  
-  await load();
+async function cancelReg(r:any){
+  if(!confirm(`Désinscrire ${r.parent} ? Un email sera envoyé pour notifier l'annulation.`)) return
+  await eventStore.adminCancelRegistration(r.id)
+  toast.info('Inscription annulée (email envoyé)')
+  await load()
 }
 
 // ✅ NOUVEAU : Fonctions de traduction des statuts
@@ -359,63 +279,6 @@ $shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
     text-align: center;
     color: $text-secondary;
     margin-top: 2rem;
-  }
-}
-
-/* ===== STYLES SPÉCIFIQUES AUX ÉVÉNEMENTS ===== */
-.events-table-card {
-  background: white;
-  border-radius: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-  border: 1px solid #f1f5f9;
-
-  .grid-container {
-    padding: 1.5rem;
-  }
-}
-
-// ✅ CORRECTION 4: Styles pour les boutons d'action
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.btn-danger {
-  background: #dc2626;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-
-  &:hover:not(:disabled) {
-    background: #b91c1c;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
-  }
-
-  &:disabled {
-    background: #9ca3af;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-  }
-}
-
-// Répartition équilibrée des boutons dans les cellules
-.table td {
-  vertical-align: middle;
-  
-  .action-buttons {
-    justify-content: center;
-    min-width: 200px; // Assurer un espace minimum pour les boutons
   }
 }
 

@@ -60,9 +60,9 @@
 
                 <!-- ✅ CORRECTION 2: Boutons de désinscription pour tous les types de paiement -->
                 <div class="action-buttons">
-                  <!-- ✅ SIMPLIFIÉ: Tous les chèques (en attente ou payés) -->
+                  <!-- Chèque en attente -->
                   <button 
-                    v-if="r.paymentMethod === 'CHEQUE' && (r.paymentStatus === 'PENDING' || r.paymentStatus === 'PAID')" 
+                    v-if="r.paymentMethod === 'CHEQUE' && r.paymentStatus === 'PENDING'" 
                     @click="cancelReg(r)" 
                     class="btn-danger"
                     :disabled="eventStore.loading"
@@ -173,8 +173,6 @@ async function cancelReg(r: any) {
     confirmMessage = `Désinscrire ${r.parent} (paiement Stripe en attente) ? Un email sera envoyé pour notifier l'annulation.`;
   } else if (r.paymentMethod === 'CHEQUE' && r.paymentStatus === 'PENDING') {
     confirmMessage = `Désinscrire ${r.parent} (paiement par chèque en attente) ? Un email sera envoyé pour notifier l'annulation.`;
-  } else if (r.paymentMethod === 'CHEQUE' && r.paymentStatus === 'PAID') {
-    confirmMessage = `Désinscrire ${r.parent} (chèque déjà encaissé) ? Un email sera envoyé pour notifier l'annulation.`;
   } else if (r.paymentMethod === 'FREE' || r.paymentStatus === 'FREE') {
     confirmMessage = `Désinscrire ${r.parent} de cet événement gratuit ? Un email sera envoyé pour notifier l'annulation.`;
   } else if (r.paymentStatus === 'FAILED') {
@@ -359,63 +357,6 @@ $shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
     text-align: center;
     color: $text-secondary;
     margin-top: 2rem;
-  }
-}
-
-/* ===== STYLES SPÉCIFIQUES AUX ÉVÉNEMENTS ===== */
-.events-table-card {
-  background: white;
-  border-radius: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-  border: 1px solid #f1f5f9;
-
-  .grid-container {
-    padding: 1.5rem;
-  }
-}
-
-// ✅ CORRECTION 4: Styles pour les boutons d'action
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.btn-danger {
-  background: #dc2626;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-
-  &:hover:not(:disabled) {
-    background: #b91c1c;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
-  }
-
-  &:disabled {
-    background: #9ca3af;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-  }
-}
-
-// Répartition équilibrée des boutons dans les cellules
-.table td {
-  vertical-align: middle;
-  
-  .action-buttons {
-    justify-content: center;
-    min-width: 200px; // Assurer un espace minimum pour les boutons
   }
 }
 

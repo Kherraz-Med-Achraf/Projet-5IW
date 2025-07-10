@@ -12,16 +12,11 @@ export class MailService {
     // Configuration SendGrid UNIQUEMENT (100% gratuit, sans carte bancaire)
     // Lire la clé depuis le secret Docker comme les autres services
     try {
-      this.logger.log(`🔍 SENDGRID DEBUG: Attempting to read secret...`);
-      this.logger.log(`   Secret path: /run/secrets/sendgrid_api_key`);
-      this.logger.log(`   Env var: SENDGRID_API_KEY`);
-      this.logger.log(`   Env var value: ${process.env.SENDGRID_API_KEY ? '✅ Found' : '❌ Not found'}`);
-      
       // Lire directement depuis le fichier secret Docker
       this.sendgridApiKey = readSecret('/run/secrets/sendgrid_api_key', 'SENDGRID_API_KEY');
       
       this.logger.log(`📧 SENDGRID CONFIGURATION FOUND:`);
-      this.logger.log(`   API Key: ✅ Configured (${this.sendgridApiKey ? this.sendgridApiKey.substring(0, 20) + '...' : 'null'})`);
+      this.logger.log(`   API Key: ✅ Configured`);
       
       this.transporter = nodemailer.createTransporter({
         host: 'smtp.sendgrid.net',
@@ -41,7 +36,6 @@ export class MailService {
       this.logger.error('   Secret path: /run/secrets/sendgrid_api_key');
       this.logger.error('   Env var: SENDGRID_API_KEY');
       this.logger.error('   Gmail fallback DISABLED (ports bloqués en production)');
-      this.logger.error('   Detailed error:', error.message);
       
       // Pas de transporter = toutes les tentatives d'email échoueront
       this.transporter = null;

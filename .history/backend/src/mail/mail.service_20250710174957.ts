@@ -41,7 +41,6 @@ export class MailService {
       this.logger.error('   Secret path: /run/secrets/sendgrid_api_key');
       this.logger.error('   Env var: SENDGRID_API_KEY');
       this.logger.error('   Gmail fallback DISABLED (ports bloqués en production)');
-      this.logger.error('   Detailed error:', error.message);
       
       // Pas de transporter = toutes les tentatives d'email échoueront
       this.transporter = null;

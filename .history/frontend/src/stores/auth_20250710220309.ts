@@ -68,6 +68,7 @@ export const useAuthStore = defineStore("auth", {
             "Content-Type": "application/json",
           },
           credentials: "include",
+          timeout: 10000, // 10 secondes de timeout
         });
         
         if (response.ok) {
@@ -96,12 +97,12 @@ export const useAuthStore = defineStore("auth", {
           this.clearAuth();
           return false;
         }
-      } catch (error: any) {
+      } catch (error) {
         // Erreur réseau - ne pas nettoyer automatiquement car ça peut être temporaire
         console.warn('Erreur réseau lors de la vérification du token:', error);
         
         // Si c'est une erreur de timeout ou de réseau, garder le token pour le moment
-        if (error?.name === 'AbortError' || error?.message?.includes('network')) {
+        if (error.name === 'AbortError' || error.message?.includes('network')) {
           return true; // Considérer comme valide temporairement
         }
         

@@ -11,7 +11,7 @@ export class MailService {
     // Configuration SendGrid (100% gratuit, sans carte bancaire)
     const sendgridApiKey = process.env.SENDGRID_API_KEY;
     
-          // Fallback Gmail si SendGrid non configuré
+    // Fallback Gmail si Mailgun non configuré
     const emailUser = process.env.EMAIL_USER;
     let emailPass: string | null = null;
     
@@ -60,14 +60,14 @@ export class MailService {
         }
       });
       
-          } else {
-        this.logger.error('❌ No email configuration found (neither SendGrid nor Gmail)');
-      }
+    } else {
+      this.logger.error('❌ No email configuration found (neither Mailgun nor Gmail)');
+    }
   }
 
   async sendMail(to: string, subject: string, html: string) {
-    const fromEmail = process.env.SENDGRID_API_KEY 
-      ? `École <noreply@educareschool.me>`
+    const fromEmail = process.env.MAILGUN_DOMAIN 
+      ? `École <noreply@${process.env.MAILGUN_DOMAIN}>`
       : process.env.EMAIL_USER;
       
     this.logger.log(`📧 Starting email send process:`);

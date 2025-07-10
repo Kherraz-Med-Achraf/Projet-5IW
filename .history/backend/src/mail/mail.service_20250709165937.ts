@@ -8,10 +8,11 @@ export class MailService {
   private readonly logger = new Logger(MailService.name);
 
   constructor() {
-    // Configuration SendGrid (100% gratuit, sans carte bancaire)
-    const sendgridApiKey = process.env.SENDGRID_API_KEY;
+    // Configuration Mailgun (plus fiable que Gmail en production)
+    const mailgunDomain = process.env.MAILGUN_DOMAIN;
+    const mailgunApiKey = process.env.MAILGUN_API_KEY;
     
-          // Fallback Gmail si SendGrid non configuré
+    // Fallback Gmail si Mailgun non configuré
     const emailUser = process.env.EMAIL_USER;
     let emailPass: string | null = null;
     
@@ -21,18 +22,19 @@ export class MailService {
       this.logger.warn('⚠️ Gmail credentials not found, trying Mailgun...');
     }
     
-    // Prioriser SendGrid si configuré
-    if (sendgridApiKey) {
-      this.logger.log(`📧 Using SENDGRID configuration:`);
+    // Prioriser Mailgun si configuré
+    if (mailgunDomain && mailgunApiKey) {
+      this.logger.log(`📧 Using MAILGUN configuration:`);
+      this.logger.log(`   Domain: ${mailgunDomain}`);
       this.logger.log(`   API Key: ✅ Configured`);
       
       this.transporter = nodemailer.createTransport({
-        host: 'smtp.sendgrid.net',
+        host: 'smtp.mailgun.org',
         port: 587,
         secure: false,
         auth: {
-          user: 'apikey', // Toujours "apikey" pour SendGrid
-          pass: sendgridApiKey,
+          user: `postmaster@${mailgunDomain}`,
+          pass: mailgunApiKey,
         },
         connectionTimeout: 30000,
         greetingTimeout: 15000,
@@ -60,14 +62,14 @@ export class MailService {
         }
       });
       
-          } else {
-        this.logger.error('❌ No email configuration found (neither SendGrid nor Gmail)');
-      }
+    } else {
+      this.logger.error('❌ No email configuration found (neither Mailgun nor Gmail)');
+    }
   }
 
   async sendMail(to: string, subject: string, html: string) {
-    const fromEmail = process.env.SENDGRID_API_KEY 
-      ? `École <noreply@educareschool.me>`
+    const fromEmail = process.env.MAILGUN_DOMAIN 
+      ? `École <noreply@${process.env.MAILGUN_DOMAIN}>`
       : process.env.EMAIL_USER;
       
     this.logger.log(`📧 Starting email send process:`);

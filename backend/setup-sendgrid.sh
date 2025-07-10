@@ -1,0 +1,73 @@
+#!/bin/bash
+
+echo "🆓 SENDGRID GRATUIT - Configuration rapide"
+echo "=========================================="
+echo ""
+echo "✅ 100% gratuit"
+echo "✅ Pas de carte bancaire"
+echo "✅ 100 emails/jour"
+echo "✅ Configuration en 5 minutes"
+echo ""
+
+# 1. Instructions d'inscription
+echo "📝 ÉTAPE 1 - Inscription SendGrid (2 minutes) :"
+echo "------------------------------------------------"
+echo "1. Allez sur → https://signup.sendgrid.com/"
+echo "2. Inscrivez-vous avec votre email"
+echo "3. Confirmez votre email dans votre boîte mail"
+echo "4. Connectez-vous au dashboard"
+echo ""
+
+# 2. Instructions API Key
+echo "🔑 ÉTAPE 2 - Création API Key (1 minute) :"
+echo "--------------------------------------------"
+echo "1. Dans le dashboard SendGrid :"
+echo "   → Settings → API Keys"
+echo "2. Cliquez 'Create API Key'"
+echo "3. Nom : 'Projet5IW'"
+echo "4. Permissions : 'Full Access'"
+echo "5. Cliquez 'Create & Review'"
+echo "6. COPIEZ la clé générée (commence par SG.)"
+echo ""
+
+# 3. Configuration .env
+echo "⚙️  ÉTAPE 3 - Configuration .env :"
+echo "-----------------------------------"
+echo "Éditez le fichier :"
+echo "   /Users/youri/Desktop/Projet-5IW/backend/.env"
+echo ""
+echo "Remplacez cette ligne :"
+echo "   SENDGRID_API_KEY=votre-api-key-sendgrid"
+echo ""
+echo "Par votre vraie clé :"
+echo "   SENDGRID_API_KEY=SG.votre-vraie-cle-ici"
+echo ""
+
+# 4. Test local
+echo "🧪 ÉTAPE 4 - Test local :"
+echo "--------------------------"
+echo "Après avoir modifié .env, lancez :"
+echo "   cd /Users/youri/Desktop/Projet-5IW/backend"
+echo "   node test-sendgrid.js"
+echo ""
+echo "Résultat attendu :"
+echo "   🎉 EMAIL SENDGRID ENVOYÉ AVEC SUCCÈS !"
+echo ""
+
+# 5. Déploiement production
+echo "🚀 ÉTAPE 5 - Déploiement production :"
+echo "--------------------------------------"
+echo "1. npm run build"
+echo "2. Sur le serveur :"
+echo "   ssh root@educareschool.me"
+echo "   cd /home/github/projet5iw/projet5iw-deploy"
+echo "   echo 'SENDGRID_API_KEY=SG.votre-cle' >> .env"
+echo "   docker-compose down nest"
+echo "   docker-compose build nest"
+echo "   docker-compose up -d nest"
+echo ""
+
+echo "✅ C'est tout ! SendGrid est maintenant configuré."
+echo "💡 Avantages : Gratuit, fiable, contourne tous les blocages SMTP"
+echo ""
+echo "❓ Des questions ? Lancez ce script et suivez les étapes !" 

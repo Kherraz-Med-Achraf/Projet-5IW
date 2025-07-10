@@ -60,14 +60,14 @@ export class MailService {
         }
       });
       
-          } else {
-        this.logger.error('❌ No email configuration found (neither SendGrid nor Gmail)');
-      }
+    } else {
+      this.logger.error('❌ No email configuration found (neither Mailgun nor Gmail)');
+    }
   }
 
   async sendMail(to: string, subject: string, html: string) {
-    const fromEmail = process.env.SENDGRID_API_KEY 
-      ? `École <noreply@educareschool.me>`
+    const fromEmail = process.env.MAILGUN_DOMAIN 
+      ? `École <noreply@${process.env.MAILGUN_DOMAIN}>`
       : process.env.EMAIL_USER;
       
     this.logger.log(`📧 Starting email send process:`);

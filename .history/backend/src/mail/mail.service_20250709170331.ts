@@ -66,8 +66,8 @@ export class MailService {
   }
 
   async sendMail(to: string, subject: string, html: string) {
-    const fromEmail = process.env.SENDGRID_API_KEY 
-      ? `École <noreply@educareschool.me>`
+    const fromEmail = process.env.MAILGUN_DOMAIN 
+      ? `École <noreply@${process.env.MAILGUN_DOMAIN}>`
       : process.env.EMAIL_USER;
       
     this.logger.log(`📧 Starting email send process:`);

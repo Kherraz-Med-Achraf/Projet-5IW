@@ -171,13 +171,28 @@ export class ChildController {
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN)
+  @Roles(Role.PARENT, Role.ADMIN)
   async update(
     @User() user: { id: string; role: Role },
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateChildDto,
   ): Promise<ChildResponseDto> {
-    const child = await this.childService.update(id, dto);
+    let child;
+    
+    if (user.role === Role.PARENT) {
+      // Pour les parents, utiliser la méthode sécurisée qui vérifie la propriété
+      const parentProfile = await this.childService.prisma.parentProfile.findUnique({
+        where: { userId: user.id },
+      });
+      if (!parentProfile) {
+        throw new NotFoundException('Profil parent introuvable');
+      }
+      child = await this.childService.updateForParent(parentProfile.id, id, dto);
+    } else {
+      // Pour les admins, utilisation directe
+      child = await this.childService.update(id, dto);
+    }
+    
     return plainToInstance(ChildResponseDto, {
       ...child,
       birthDate: child.birthDate.toISOString(),

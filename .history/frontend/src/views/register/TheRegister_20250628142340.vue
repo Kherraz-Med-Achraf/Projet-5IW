@@ -61,15 +61,7 @@ const updateCurrentStepFromRoute = () => {
 };
 
 // Initialiser la navigation vers la première étape
-onMounted(async () => {
-  // D'abord valider le token d'invitation si présent
-  const token = route.query.token;
-  if (token) {
-    console.log('🔗 Token d\'invitation détecté, validation...');
-    await registerStore.validateToken(token);
-  }
-  
-  // Ensuite gérer la navigation
+onMounted(() => {
   updateCurrentStepFromRoute();
 
   // Si on est sur /register sans étape spécifique, aller à step-one
@@ -107,6 +99,14 @@ const handleStepChange = (step) => {
     router.push({ path: routes[step], query: route.query });
   }
 };
+
+// Vérifier la présence d'un token d'invitation à l'arrivée sur la page
+onMounted(async () => {
+  const token = route.query.token;
+  if (token) {
+    await registerStore.validateToken(token);
+  }
+});
 </script>
 
 <style lang="scss" scoped>

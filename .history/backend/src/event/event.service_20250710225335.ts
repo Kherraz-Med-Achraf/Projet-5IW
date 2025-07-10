@@ -419,10 +419,18 @@ export class EventService {
 
   /** Confirmation Stripe */
   async confirmStripe(sessionId: string, requesterUserId: string) {
+    console.log('🔍 [confirmStripe] Début confirmation:', { sessionId, requesterUserId });
+    
     try {
       const session = await stripe.checkout.sessions.retrieve(sessionId);
+      console.log('✅ [confirmStripe] Session Stripe récupérée:', {
+        id: session.id,
+        payment_status: session.payment_status,
+        status: session.status
+      });
       
       if (session.payment_status !== 'paid') {
+        console.error('❌ [confirmStripe] Paiement non validé:', session.payment_status);
         throw new BadRequestException('Paiement non validé');
       }
       
@@ -432,19 +440,34 @@ export class EventService {
       });
       
       if (!reg) {
+        console.error('❌ [confirmStripe] Inscription introuvable pour sessionId:', sessionId);
         throw new NotFoundException('Inscription inconnue');
       }
       
+      console.log('✅ [confirmStripe] Inscription trouvée:', {
+        regId: reg.id,
+        parentUserId: reg.parentProfile.userId,
+        paymentStatus: reg.paymentStatus
+      });
+      
       if (reg.parentProfile.userId !== requesterUserId) {
+        console.error('❌ [confirmStripe] Accès refusé:', {
+          parentUserId: reg.parentProfile.userId,
+          requesterUserId
+        });
         throw new ForbiddenException('Accès refusé');
       }
       
       if (reg.paymentStatus !== PaymentStatus.PAID) {
+        console.log('🔄 [confirmStripe] Mise à jour statut paiement...');
         await this.prisma.eventRegistration.update({
           where: { id: reg.id },
           data: { paymentStatus: PaymentStatus.PAID },
         });
         await this._sendRegistrationMail(reg.id);
+        console.log('✅ [confirmStripe] Statut mis à jour et email envoyé');
+      } else {
+        console.log('ℹ️ [confirmStripe] Paiement déjà confirmé');
       }
 
       const kids = await this.prisma.eventRegistrationChild.findMany({
@@ -456,12 +479,21 @@ export class EventService {
         where: { id: reg.eventId },
       });
       
-      return {
+      const result = {
         eventTitle: event?.title || '',
         children: kids.map((k) => `${k.child.firstName} ${k.child.lastName}`),
       };
       
+      console.log('✅ [confirmStripe] Confirmation réussie:', result);
+      return result;
+      
     } catch (error) {
+      console.error('❌ [confirmStripe] Erreur:', {
+        message: error.message,
+        stack: error.stack,
+        sessionId,
+        requesterUserId
+      });
       throw error;
     }
   }

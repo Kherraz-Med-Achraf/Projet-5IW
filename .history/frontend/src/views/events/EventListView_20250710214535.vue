@@ -622,9 +622,6 @@ onMounted(async () => {
         align-items: center;
         justify-content: center;
         color: #9ca3af;
-        position: absolute;
-        top: 0;
-        left: 0;
 
         .material-icons {
           font-size: 3rem;

@@ -80,13 +80,7 @@
                 :aria-describedby="`event-status-${ev.id}`"
               >
                 <div class="event-image">
-                  <img 
-                    v-if="ev.imageUrl" 
-                    :src="getImageUrl(ev.imageUrl)" 
-                    :alt="ev.title"
-                    @error="handleImageError($event, ev)"
-                    @load="handleImageLoad($event, ev)"
-                  />
+                  <img v-if="ev.imageUrl" :src="API_BASE_URL + ev.imageUrl" :alt="ev.title" />
                   <div v-else class="image-placeholder">
                     <i class="material-icons">image</i>
                   </div>
@@ -421,42 +415,6 @@ function getPaymentMethodLabel(method: string): string {
   return labels[method as keyof typeof labels] || method;
 }
 
-// ✅ NOUVEAU : Gestion des images avec fallback
-function getImageUrl(imageUrl: string): string {
-  if (!imageUrl) return '';
-  
-  // Si l'URL est déjà complète, la retourner telle quelle
-  if (imageUrl.startsWith('http')) {
-    return imageUrl;
-  }
-  
-  // Sinon, construire l'URL complète
-  return `${API_BASE_URL}${imageUrl}`;
-}
-
-function handleImageError(event: Event, eventData: any): void {
-  const img = event.target as HTMLImageElement;
-  console.warn(`🖼️ Erreur de chargement d'image pour l'événement "${eventData.title}":`, eventData.imageUrl);
-  
-  // Masquer l'image et afficher le placeholder
-  img.style.display = 'none';
-  const placeholder = img.parentElement?.querySelector('.image-placeholder');
-  if (placeholder) {
-    (placeholder as HTMLElement).style.display = 'flex';
-  }
-}
-
-function handleImageLoad(event: Event, eventData: any): void {
-  const img = event.target as HTMLImageElement;
-  console.log(`✅ Image chargée avec succès pour l'événement "${eventData.title}"`);
-  
-  // S'assurer que le placeholder est masqué
-  const placeholder = img.parentElement?.querySelector('.image-placeholder');
-  if (placeholder) {
-    (placeholder as HTMLElement).style.display = 'none';
-  }
-}
-
 function isRegistrationDisabled(event: any): boolean {
   // Vérifier si l'événement est passé
   const eventDate = new Date(event.date);
@@ -622,9 +580,6 @@ onMounted(async () => {
         align-items: center;
         justify-content: center;
         color: #9ca3af;
-        position: absolute;
-        top: 0;
-        left: 0;
 
         .material-icons {
           font-size: 3rem;

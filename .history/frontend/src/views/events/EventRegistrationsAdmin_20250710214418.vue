@@ -110,27 +110,6 @@ async function cancelReg(r:any){
   await load()
 }
 
-// ✅ NOUVEAU : Fonctions de traduction des statuts
-function getPaymentStatusLabel(status: string): string {
-  const labels = {
-    'PENDING': 'En attente',
-    'PAID': 'Payé',
-    'FREE': 'Gratuit', 
-    'FAILED': 'Échec du paiement',
-    'CANCELLED': 'Annulé'
-  };
-  return labels[status as keyof typeof labels] || status;
-}
-
-function getPaymentMethodLabel(method: string): string {
-  const labels = {
-    'CHEQUE': 'Chèque',
-    'STRIPE': 'Carte bancaire',
-    'FREE': 'Gratuit'
-  };
-  return labels[method as keyof typeof labels] || method;
-}
-
 onMounted(load);
 </script>
 

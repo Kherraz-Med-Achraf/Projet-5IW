@@ -187,7 +187,7 @@
         <button
           class="register-step__add-btn"
           @click="handleAddEmergencyContact"
-          :disabled="registerStore.form.emergencyContacts.length >= 1"
+          :disabled="form.emergencyContacts.length >= 1"
           type="button"
         >
           + Ajouter un contact d'urgence
@@ -355,10 +355,14 @@ function validateForm() {
     errors.legalResponsibilityOther = "Précisez la responsabilité";
     valid = false;
   }
-  // Validation des contacts d'urgence. S'ils sont renseignés ils doivent être complets
+  // Validation des contacts d'urgence (maximum 1). S'ils sont renseignés ils doivent être complets
   errors.emergencyContacts = [];
+  if (f.emergencyContacts.length > 1) {
+    toast.error("Vous ne pouvez ajouter qu'un seul contact d'urgence");
+    valid = false;
+  }
 
-  if (f.emergencyContacts.length >= 0) {
+  if (f.emergencyContacts.length <= 1) {
     f.emergencyContacts.forEach((c, i) => {
       const contactErr = {};
 

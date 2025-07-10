@@ -424,17 +424,6 @@ function handleAddEmergencyContact() {
     toast.error("Vous ne pouvez ajouter qu'un seul contact d'urgence");
     return;
   }
-  
-  // Ajouter au form local ET au store
-  const newContact = {
-    firstName: "",
-    lastName: "",
-    relation: "",
-    relationOther: "",
-    phone: "",
-  };
-  
-  form.emergencyContacts.push(newContact);
   registerStore.addEmergencyContact();
 }
 </script>

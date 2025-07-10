@@ -118,28 +118,14 @@ services:
       - POSTGRES_HOST=postgres
       - POSTGRES_USER=myuser
       - POSTGRES_DB=mydb
-      - POSTGRES_PASSWORD_FILE=/run/secrets/pg_password
       - POSTGRES_PORT=5432
       # Variables pour MongoDB
       - MONGO_HOST=mongodb
       - MONGO_PORT=27017
       - MONGO_DB=mydb
       - MONGO_USER=myuser
-      - MONGO_PASSWORD_FILE=/run/secrets/mongo_root_password
-      # Variables pour JWT
-      - JWT_SECRET_FILE=/run/secrets/jwt_secret
-      # Variables pour Mailer (SendGrid uniquement)
-      # EMAIL_USER et EMAIL_PASS supprimés (Gmail bloqué)
-      # Variables pour OpenAI
-      - OPENAI_API_KEY_FILE=/run/secrets/openai_api_key
       # Variables pour YouSign
       - YOUSIGN_API_URL=https://api-sandbox.yousign.app/v3
-      - YOUSIGN_API_KEY_FILE=/run/secrets/yousign_api_key
-      # Variables pour Stripe
-      - STRIPE_SECRET_FILE=/run/secrets/stripe_secret
-      - STRIPE_WEBHOOK_SECRET_FILE=/run/secrets/stripe_webhook_secret
-      # Variables pour SendGrid
-      - SENDGRID_API_KEY=/run/secrets/sendgrid_api_key
     secrets:
       - pg_password
       - sentry_dsn

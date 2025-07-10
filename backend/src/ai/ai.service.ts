@@ -5,6 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import OpenAI from 'openai';
+import { readSecret } from '../utils/secret';
 
 @Injectable()
 export class AiService {
@@ -12,7 +13,7 @@ export class AiService {
 
   constructor() {
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY || require('fs').readFileSync('/run/secrets/openai_api_key', 'utf8').trim(),
+      apiKey: readSecret('/run/secrets/openai_api_key', 'OPENAI_API_KEY'),
     })
   }
 

@@ -23,7 +23,7 @@ export class MailService {
       this.logger.log(`📧 SENDGRID CONFIGURATION FOUND:`);
       this.logger.log(`   API Key: ✅ Configured (${this.sendgridApiKey ? this.sendgridApiKey.substring(0, 20) + '...' : 'null'})`);
       
-      this.transporter = nodemailer.createTransporter({
+      this.transporter = nodemailer.createTransport({
         host: 'smtp.sendgrid.net',
         port: 587,
         secure: false,

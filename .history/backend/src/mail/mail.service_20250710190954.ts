@@ -4,41 +4,52 @@ import { readSecret } from '../utils/secret';
 
 @Injectable()
 export class MailService {
+  private transporter;
   private readonly logger = new Logger(MailService.name);
-  private sendgridConfigured = false;
+  private sendgridApiKey: string | null = null;
 
   constructor() {
-    // Configuration SendGrid API (HTTP, pas SMTP - ports bloqués sur DigitalOcean)
+    // Configuration SendGrid UNIQUEMENT (100% gratuit, sans carte bancaire)
+    // Lire la clé depuis le secret Docker comme les autres services
     try {
-      this.logger.log(`🔍 SENDGRID API: Attempting to read secret...`);
+      this.logger.log(`🔍 SENDGRID DEBUG: Attempting to read secret...`);
       this.logger.log(`   Secret path: /run/secrets/sendgrid_api_key`);
       this.logger.log(`   Env var: SENDGRID_API_KEY`);
+      this.logger.log(`   Env var value: ${process.env.SENDGRID_API_KEY ? '✅ Found' : '❌ Not found'}`);
       
       // Lire directement depuis le fichier secret Docker
-      const apiKey = readSecret('/run/secrets/sendgrid_api_key', 'SENDGRID_API_KEY');
+      this.sendgridApiKey = readSecret('/run/secrets/sendgrid_api_key', 'SENDGRID_API_KEY');
       
-      this.logger.log(`📧 SENDGRID API CONFIGURATION FOUND:`);
-      this.logger.log(`   API Key: ✅ Configured (${apiKey ? apiKey.substring(0, 20) + '...' : 'null'})`);
+      this.logger.log(`📧 SENDGRID CONFIGURATION FOUND:`);
+      this.logger.log(`   API Key: ✅ Configured (${this.sendgridApiKey ? this.sendgridApiKey.substring(0, 20) + '...' : 'null'})`);
       
-      // Configurer SendGrid API
-      sgMail.setApiKey(apiKey);
-      this.sendgridConfigured = true;
-      
-      this.logger.log(`✅ SENDGRID API: Configuration successful`);
+      this.transporter = nodemailer.createTransport({
+        host: 'smtp.sendgrid.net',
+        port: 587,
+        secure: false,
+        auth: {
+          user: 'apikey', // Toujours "apikey" pour SendGrid
+          pass: this.sendgridApiKey,
+        },
+        connectionTimeout: 30000,
+        greetingTimeout: 15000,
+        socketTimeout: 30000,
+      });
       
     } catch (error) {
       this.logger.error('❌ SENDGRID API KEY MISSING - EMAIL SERVICE DISABLED');
       this.logger.error('   Secret path: /run/secrets/sendgrid_api_key');
       this.logger.error('   Env var: SENDGRID_API_KEY');
-      this.logger.error('   Note: Using HTTP API instead of SMTP (ports blocked on DigitalOcean)');
+      this.logger.error('   Gmail fallback DISABLED (ports bloqués en production)');
       this.logger.error('   Detailed error:', error.message);
       
-      this.sendgridConfigured = false;
+      // Pas de transporter = toutes les tentatives d'email échoueront
+      this.transporter = null;
     }
   }
 
   async sendMail(to: string, subject: string, html: string) {
-    if (!this.sendgridConfigured) {
+    if (!this.transporter) {
       const errorMsg = 'Email service not configured - SendGrid API key missing';
       this.logger.error(`❌ ${errorMsg}`);
       throw new Error(errorMsg);
@@ -46,32 +57,30 @@ export class MailService {
     
     const fromEmail = `École <noreply@educareschool.me>`;
       
-    this.logger.log(`📧 SENDGRID API: Starting email send process:`);
+    this.logger.log(`📧 SENDGRID: Starting email send process:`);
     this.logger.log(`   To: ${to}`);
     this.logger.log(`   Subject: ${subject}`);
     this.logger.log(`   From: ${fromEmail}`);
     
     try {
-      this.logger.log(`📧 SENDGRID API: Attempting to send email...`);
+      this.logger.log(`📧 SENDGRID: Attempting to send email...`);
       
-      const msg = {
-        to,
+      const info = await this.transporter.sendMail({
         from: fromEmail,
+        to,
         subject,
         html,
-      };
+      });
       
-      const response = await sgMail.send(msg);
-      
-      this.logger.log(`✅ SENDGRID API: Email sent successfully!`);
-      this.logger.log(`   Status code: ${response[0].statusCode}`);
-      this.logger.log(`   Message ID: ${response[0].headers['x-message-id']}`);
+      this.logger.log(`✅ SENDGRID: Email sent successfully!`);
+      this.logger.log(`   Message ID: ${info.messageId}`);
+      this.logger.log(`   Response: ${info.response}`);
       
     } catch (error) {
-      this.logger.error(`❌ SENDGRID API: Email send failed:`, error);
+      this.logger.error(`❌ SENDGRID: Email send failed:`, error);
       this.logger.error(`   Error code: ${error.code}`);
       this.logger.error(`   Error message: ${error.message}`);
-      this.logger.error(`   Error response: ${error.response?.body || 'No response body'}`);
+      this.logger.error(`   Error command: ${error.command}`);
       
       throw error;
     }

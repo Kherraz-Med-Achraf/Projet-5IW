@@ -638,19 +638,8 @@ export class PlanningService {
 
       for (const cn of childKeys) {
         const cov = coverage[dow][cn];
-        if (cov) { // Vérifier que coverage existe pour cet enfant
-          for (let slot = 0; slot < slotsNeeded; slot++) {
-            if (!cov[slot]) {
-              validationErrors.missingChildrenSlots.push({
-                child: childKeyToName.get(cn) || cn,
-                day: dayName,
-                timeSlot: timeSlotNames[slot],
-              });
-            }
-          }
-        } else {
-          // Si pas de coverage du tout pour cet enfant, ajouter tous les créneaux
-          for (let slot = 0; slot < slotsNeeded; slot++) {
+        for (let slot = 0; slot < slotsNeeded; slot++) {
+          if (!cov[slot]) {
             validationErrors.missingChildrenSlots.push({
               child: childKeyToName.get(cn) || cn,
               day: dayName,

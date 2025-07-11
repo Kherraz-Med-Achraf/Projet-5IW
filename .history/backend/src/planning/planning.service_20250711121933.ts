@@ -536,13 +536,12 @@ export class PlanningService {
             
             // cas spécial "tous"
             if (childrenNames.includes('tous')) {
-              childrenNames = Array.from(childKeys);
+              childrenNames = [...childKeys];
             }
             
             // validation enfants - collecte des erreurs au lieu de throw
             childrenNames.forEach((cn) => {
-              const normalizedChildName = normalizeName(cn);
-              if (!childKeys.has(normalizedChildName)) {
+              if (!childSet.has(cn)) {
                 validationErrors.unrecognizedChildren.push({
                   name: cn,
                   day: sheetName,
@@ -557,9 +556,8 @@ export class PlanningService {
 
           // mise à jour coverage pour ce créneau spécifique
           childrenNames.forEach((cn) => {
-            const normalizedChildName = normalizeName(cn);
-            if (childKeys.has(normalizedChildName)) { // Seulement si l'enfant existe
-              coverage[dow][normalizedChildName][idx - 1] = true; // idx-1 car les créneaux commencent à 1
+            if (childSet.has(cn)) { // Seulement si l'enfant existe
+              coverage[dow][cn][idx - 1] = true; // idx-1 car les créneaux commencent à 1
             }
           });
 
@@ -586,7 +584,7 @@ export class PlanningService {
           }
 
           // horaire précis - seulement si pas d'erreurs
-          if (staffId && childrenNames.every(cn => childKeys.has(normalizeName(cn)))) {
+          if (staffId && childrenNames.every(cn => childSet.has(cn))) {
             const [startStr, endStr] = times[idx];
             const startTime = this._toIsoLocal(
               await this.parseTime(semesterId, dow, startStr),
@@ -604,10 +602,11 @@ export class PlanningService {
               endTime,
               activity: act,
               children: dbChildren
-                .filter((c) => {
-                  const normalizedChildName = normalizeName(`${c.firstName} ${c.lastName}`);
-                  return childrenNames.some(cn => normalizeName(cn) === normalizedChildName);
-                })
+                .filter((c) =>
+                  childrenNames.includes(
+                    `${c.firstName} ${c.lastName}`.toLowerCase(),
+                  ),
+                )
                 .map((c) => ({
                   id: c.id,
                   firstName: c.firstName,
@@ -638,19 +637,8 @@ export class PlanningService {
 
       for (const cn of childKeys) {
         const cov = coverage[dow][cn];
-        if (cov) { // Vérifier que coverage existe pour cet enfant
-          for (let slot = 0; slot < slotsNeeded; slot++) {
-            if (!cov[slot]) {
-              validationErrors.missingChildrenSlots.push({
-                child: childKeyToName.get(cn) || cn,
-                day: dayName,
-                timeSlot: timeSlotNames[slot],
-              });
-            }
-          }
-        } else {
-          // Si pas de coverage du tout pour cet enfant, ajouter tous les créneaux
-          for (let slot = 0; slot < slotsNeeded; slot++) {
+        for (let slot = 0; slot < slotsNeeded; slot++) {
+          if (!cov[slot]) {
             validationErrors.missingChildrenSlots.push({
               child: childKeyToName.get(cn) || cn,
               day: dayName,

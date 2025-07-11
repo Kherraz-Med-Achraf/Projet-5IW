@@ -323,21 +323,6 @@ export class DocumentService {
             parentId: parentProfile.id,
           },
         },
-        // 🔧 FIX: Filtrer selon le statut de signature
-        OR: [
-          // Documents sans signature requise : toujours visibles
-          { requiresSignature: false },
-          // Documents avec signature requise : seulement si signés
-          {
-            requiresSignature: true,
-            signatures: {
-              some: {
-                parentId: parentProfile.id,
-                status: SignatureStatus.SIGNED,
-              },
-            },
-          },
-        ],
       };
     } else if (userRole === Role.DIRECTOR || userRole === Role.SERVICE_MANAGER) {
       // Directeur/Service Manager voient tous les documents publiés

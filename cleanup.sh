@@ -15,6 +15,19 @@ docker volume rm -f $(docker volume ls -q) || true
 echo "🚮 Prune des volumes inutilisés..."
 docker volume prune -f
 
+echo "🌐 Suppression des réseaux overlay associés à la stack..."
+# Liste tous les réseaux dont le nom commence par "${STACK_NAME}_" (ex. projet5iw_backend-net)
+docker network ls --filter "name=${STACK_NAME}_" --format '{{.ID}}' | while read -r net_id; do
+  if [[ -n "$net_id" ]]; then
+    echo "   ➡️  Suppression du réseau $net_id"
+    docker network rm "$net_id" || true
+  fi
+done
+
+# Supprimer également les réseaux overlay inutilisés (dangling)
+echo "🧹 Suppression des réseaux overlay inutilisés..."
+docker network ls --filter driver=overlay --filter dangling=true -q | xargs -r docker network rm || true
+
 echo "🚮 Prune des réseaux inutilisés..."
 docker network prune -f
 

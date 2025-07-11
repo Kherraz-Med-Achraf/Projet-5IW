@@ -240,118 +240,94 @@ export class DocumentService {
   async publishDocument(documentId: string, userId: string) {
     console.log(`🔍 DEBUG publishDocument START: documentId=${documentId}, userId=${userId}`)
     
-    try {
-      const document = await this.prisma.document.findUnique({
-        where: { id: documentId },
-        include: {
-          uploadedBy: true,
-          accesses: {
-            include: {
-              parent: {
-                include: {
-                  user: { select: { email: true } },
-                },
+    const document = await this.prisma.document.findUnique({
+      where: { id: documentId },
+      include: {
+        uploadedBy: true,
+        accesses: {
+          include: {
+            parent: {
+              include: {
+                user: { select: { email: true } },
               },
             },
           },
         },
-      });
+      },
+    });
 
-      console.log(`🔍 DEBUG document found:`, {
-        id: document?.id,
-        title: document?.title,
-        requiresSignature: document?.requiresSignature,
-        status: document?.status,
-        accessesCount: document?.accesses?.length
-      })
+    console.log(`🔍 DEBUG document found:`, {
+      id: document?.id,
+      title: document?.title,
+      requiresSignature: document?.requiresSignature,
+      status: document?.status,
+      accessesCount: document?.accesses?.length,
+    })
 
-      if (!document) {
-        throw new NotFoundException('Document non trouvé');
-      }
-
-      if (document.uploadedById !== userId) {
-        throw new ForbiddenException('Vous ne pouvez pas publier ce document');
-      }
-
-      if (document.status === 'PUBLISHED') {
-        throw new BadRequestException('Le document est déjà publié');
-      }
-
-      // Mettre à jour le statut du document
-      const updatedDocument = await this.prisma.document.update({
-        where: { id: documentId },
-        data: {
-          status: 'PUBLISHED',
-          publishedAt: new Date(),
-        },
-        include: {
-          uploadedBy: true,
-          accesses: {
-            include: {
-              parent: {
-                include: {
-                  user: { select: { email: true } },
-                },
-              },
-            },
-          },
-        },
-      });
-
-      console.log(`✅ Document published: ${updatedDocument.title}`)
-
-      // Envoyer les notifications par email
-      await this.sendDocumentNotifications(updatedDocument);
-
-      // 🔧 DEBUG: Vérifier si YouSign devrait se déclencher
-      console.log('🔍 DEBUG YouSign trigger check:')
-      console.log('- document.requiresSignature:', document.requiresSignature, typeof document.requiresSignature)
-      console.log('- Should trigger YouSign:', document.requiresSignature)
-      console.log('- Document accesses length:', document.accesses.length)
-      console.log('- Parent IDs to sign:', document.accesses.map(access => access.parentId))
-
-      // Si signature requise, initier les procédures Yousign
-      if (document.requiresSignature) {
-        console.log('✅ Conditions met, initiating YouSign signatures...')
-        try {
-          await this.initiateSignatures(documentId, 
-            document.accesses.map(access => access.parentId)
-          );
-          console.log('✅ YouSign signatures initiated successfully')
-        } catch (error) {
-          console.error('⚠️ Erreur initiation signatures (non-bloquant):', error.message);
-          
-          // 🔧 FALLBACK: Créer les signatures manuellement en cas d'échec YouSign
-          console.log('🔄 Creating fallback signature entries...')
-          try {
-            const signatureCreations = document.accesses.map(access =>
-              this.prisma.documentSignature.create({
-                data: {
-                  documentId: documentId,
-                  parentId: access.parentId,
-                  status: 'PENDING',
-                  createdAt: new Date(),
-                }
-              })
-            );
-            
-            await Promise.all(signatureCreations);
-            console.log(`✅ Created ${signatureCreations.length} fallback signature entries`)
-          } catch (fallbackError) {
-            console.error('❌ Erreur création signatures fallback:', fallbackError.message);
-          }
-        }
-      } else {
-        console.log('ℹ️  Document does not require signature, skipping YouSign')
-      }
-
-      return updatedDocument;
-      
-    } catch (error) {
-      console.error('❌ ERROR in publishDocument:', error)
-      console.error('Stack trace:', error.stack)
-      throw error;
+    if (!document) {
+      throw new NotFoundException('Document introuvable');
     }
+
+    if (document.uploadedById !== userId) {
+      throw new ForbiddenException('Vous ne pouvez publier que vos propres documents');
+    }
+
+    if (document.status !== DocumentStatus.DRAFT) {
+      throw new BadRequestException('Seuls les brouillons peuvent être publiés');
+    }
+
+    console.log(`🔍 DEBUG updating document status to PUBLISHED...`)
+
+    // Mettre à jour le statut
+    const updatedDocument = await this.prisma.document.update({
+      where: { id: documentId },
+      data: {
+        status: DocumentStatus.PUBLISHED,
+        publishedAt: new Date(),
+      },
+      include: {
+        accesses: {
+          include: {
+            parent: {
+              include: {
+                user: { select: { email: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Envoyer les notifications par email
+    await this.sendDocumentNotifications(updatedDocument);
+
+    // 🔧 DEBUG: Vérifier si YouSign devrait se déclencher
+    console.log('🔍 DEBUG YouSign trigger check:')
+    console.log('- document.requiresSignature:', document.requiresSignature, typeof document.requiresSignature)
+    console.log('- Should trigger YouSign:', document.requiresSignature)
+    console.log('- Document accesses length:', document.accesses.length)
+    console.log('- Parent IDs to sign:', document.accesses.map(access => access.parentId))
+
+    // Si signature requise, initier les procédures Yousign
+    if (document.requiresSignature) {
+      console.log('✅ Conditions met, initiating YouSign signatures...')
+      try {
+        await this.initiateSignatures(documentId, 
+          document.accesses.map(access => access.parentId)
+        );
+        console.log('✅ YouSign signatures initiated successfully')
+      } catch (error) {
+        console.error('⚠️ Erreur initiation signatures (non-bloquant):', error.message);
+        console.error('⚠️ Full error:', error);
+        // Continuer même si Yousign échoue
+      }
+    } else {
+      console.log('ℹ️ No signature required, skipping YouSign')
+    }
+
+    console.log(`📢 Document publié: ${document.title} (${document.id})`);
+    
+    return updatedDocument;
   }
 
   /**

@@ -220,15 +220,6 @@ export class DocumentService {
       },
     });
 
-    // 🔧 DEBUG: Vérifier que le document a été créé avec les bonnes valeurs
-    console.log('✅ Document créé avec les valeurs suivantes:')
-    console.log('- ID:', document.id)
-    console.log('- title:', document.title)
-    console.log('- requiresSignature:', document.requiresSignature, typeof document.requiresSignature)
-    console.log('- category:', document.category)
-    console.log('- status:', document.status)
-    console.log('- accesses count:', document.accesses.length)
-
     console.log(`📄 Document créé: ${document.title} (${document.id})`);
     
     return document;

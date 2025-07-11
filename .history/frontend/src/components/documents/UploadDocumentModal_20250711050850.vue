@@ -232,7 +232,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useDocumentStore } from '@/stores/documentStore'
 import { useParentStore } from '@/stores/parent'
 import { useAuthStore } from '@/stores/auth'
@@ -428,20 +428,6 @@ onMounted(async () => {
     loadingParents.value = false
   }
 })
-
-// 🔧 DEBUG: Watcher pour suivre les changements de la checkbox
-watch(
-  () => form.value.requiresSignature,
-  (newValue, oldValue) => {
-    console.log('🔍 DEBUG requiresSignature changed:', {
-      from: oldValue,
-      to: newValue,
-      type: typeof newValue,
-      timestamp: new Date().toISOString(),
-    })
-  },
-  { deep: true }
-)
 </script>
 
 <style scoped>

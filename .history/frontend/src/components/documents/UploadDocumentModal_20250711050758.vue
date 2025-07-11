@@ -76,7 +76,6 @@
         <div class="form-group">
           <label class="checkbox-label">
             <input
-              id="requiresSignature"
               v-model="form.requiresSignature"
               type="checkbox"
               class="checkbox-input"
@@ -87,10 +86,6 @@
           </label>
           <p class="help-text">
             Si cochée, les parents devront signer le document avant de pouvoir le télécharger
-          </p>
-          <!-- DEBUG: Afficher la valeur en temps réel -->
-          <p class="debug-info" style="color: #666; font-size: 0.8em;">
-            DEBUG: requiresSignature = {{ form.requiresSignature }}
           </p>
         </div>
 
@@ -232,7 +227,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useDocumentStore } from '@/stores/documentStore'
 import { useParentStore } from '@/stores/parent'
 import { useAuthStore } from '@/stores/auth'
@@ -428,20 +423,6 @@ onMounted(async () => {
     loadingParents.value = false
   }
 })
-
-// 🔧 DEBUG: Watcher pour suivre les changements de la checkbox
-watch(
-  () => form.value.requiresSignature,
-  (newValue, oldValue) => {
-    console.log('🔍 DEBUG requiresSignature changed:', {
-      from: oldValue,
-      to: newValue,
-      type: typeof newValue,
-      timestamp: new Date().toISOString(),
-    })
-  },
-  { deep: true }
-)
 </script>
 
 <style scoped>

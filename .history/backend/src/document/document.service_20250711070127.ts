@@ -41,13 +41,17 @@ export class DocumentService {
     // Initialiser la clé de chiffrement (32 bytes pour AES-256)
     const encryptionKeyString = process.env.ENCRYPTION_KEY || 'your-32-byte-secret-key-here-12345';
     
-    // Utiliser crypto.scrypt pour générer une clé de 32 bytes déterministe
-    const salt = 'document-encryption-salt-2024';
-    this.encryptionKey = crypto.scryptSync(encryptionKeyString, salt, 32);
-    
-    // Debug: vérifier la longueur de la clé
-    console.log('🔑 Encryption key length:', this.encryptionKey.length, 'bytes');
-    console.log('🔑 Key is Buffer:', Buffer.isBuffer(this.encryptionKey));
+    // S'assurer que la clé fait exactement 32 bytes
+    if (encryptionKeyString.length < 32) {
+      // Étendre la clé si trop courte
+      this.encryptionKey = Buffer.from(encryptionKeyString.padEnd(32, '0'), 'utf-8');
+    } else if (encryptionKeyString.length > 32) {
+      // Tronquer la clé si trop longue
+      this.encryptionKey = Buffer.from(encryptionKeyString.substring(0, 32), 'utf-8');
+    } else {
+      // Clé de la bonne longueur
+      this.encryptionKey = Buffer.from(encryptionKeyString, 'utf-8');
+    }
     
     // Définir le répertoire d'upload
     this.uploadDir = path.join(process.cwd(), 'uploads', 'documents');

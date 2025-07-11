@@ -45,6 +45,10 @@ export class DocumentService {
     const salt = 'document-encryption-salt-2024';
     this.encryptionKey = crypto.scryptSync(encryptionKeyString, salt, 32);
     
+    // Debug: vérifier la longueur de la clé
+    console.log('🔑 Encryption key length:', this.encryptionKey.length, 'bytes');
+    console.log('🔑 Key is Buffer:', Buffer.isBuffer(this.encryptionKey));
+    
     // Définir le répertoire d'upload
     this.uploadDir = path.join(process.cwd(), 'uploads', 'documents');
     
@@ -185,10 +189,7 @@ export class DocumentService {
         accesses: {
           include: {
             parent: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
+              include: {
                 user: { 
                   select: { 
                     email: true 

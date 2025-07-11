@@ -777,29 +777,10 @@ export class DocumentService {
       const filepath = path.join(this.uploadDir, document.filepath);
       const metaFilepath = `${filepath}.meta`;
       
-      // 🔧 DEBUG: Logging pour diagnostiquer le problème
-      console.log('📁 Upload directory:', this.uploadDir);
-      console.log('📄 Document filepath from DB:', document.filepath);
-      console.log('📍 Full filepath for reading:', filepath);
-      console.log('🔍 Meta filepath:', metaFilepath);
-      
-      try {
-        // Vérifier si les fichiers existent
-        await fs.access(filepath);
-        console.log('✅ Fichier principal trouvé');
-        await fs.access(metaFilepath);
-        console.log('✅ Fichier meta trouvé');
-      } catch (error) {
-        console.error('❌ Fichier(s) non trouvé(s):', error.message);
-        throw new Error(`Fichier non trouvé: ${error.message}`);
-      }
-      
       const [encryptedBuffer, metaData] = await Promise.all([
         fs.readFile(filepath),
         fs.readFile(metaFilepath, 'utf-8').then(data => JSON.parse(data)),
       ]);
-      
-      console.log('✅ Fichiers lus avec succès');
 
       // Déchiffrer le document
       const decryptedBuffer = await this.decryptFile(

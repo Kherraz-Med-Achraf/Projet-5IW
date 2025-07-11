@@ -104,9 +104,6 @@ export class InvitationService {
    * @param token
    */
   async validateToken(token: string) {
-    // 🔧 FIX: Nettoyer les invitations expirées avant la validation
-    await this.cleanupExpiredInvitations();
-    
     const invitation = await this.prisma.invitation.findUnique({
       where: { token },
     });
@@ -120,30 +117,6 @@ export class InvitationService {
       throw new BadRequestException("Ce lien d'invitation a expiré.");
     }
     return invitation;
-  }
-
-  /**
-   * Nettoyer les invitations expirées
-   */
-  async cleanupExpiredInvitations() {
-    try {
-      const deletedCount = await this.prisma.invitation.deleteMany({
-        where: {
-          expiresAt: {
-            lt: new Date(),
-          },
-        },
-      });
-      
-      if (deletedCount.count > 0) {
-        console.log(`🗑️ Suppression de ${deletedCount.count} invitation(s) expirée(s)`);
-      }
-      
-      return deletedCount.count;
-    } catch (error) {
-      console.error('❌ Erreur lors du nettoyage des invitations expirées:', error);
-      return 0;
-    }
   }
 
   /**

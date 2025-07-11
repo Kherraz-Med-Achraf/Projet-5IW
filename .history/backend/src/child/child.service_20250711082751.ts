@@ -258,30 +258,7 @@ export class ChildService {
   }
 
   async findOne(id: number): Promise<Child | null> {
-    return this.prisma.child.findUnique({
-      where: { id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            role: true,
-          },
-        },
-        parent: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            user: {
-              select: {
-                email: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    return this.prisma.child.findUnique({ where: { id } });
   }
 
   async update(id: number, dto: UpdateChildDto): Promise<Child> {

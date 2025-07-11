@@ -746,6 +746,8 @@ export class DocumentService {
                   id: true,
                   firstName: true,
                   lastName: true,
+                },
+                include: {
                   user: { select: { email: true } },
                 },
               },

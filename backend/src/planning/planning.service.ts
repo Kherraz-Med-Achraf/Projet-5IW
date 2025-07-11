@@ -351,10 +351,25 @@ export class PlanningService {
       return text
         .replace(/&quot;/g, '"')
         .replace(/&#x27;/g, "'")
+        .replace(/&#39;/g, "'")
         .replace(/&amp;/g, '&')
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
         .replace(/&nbsp;/g, ' ')
+        .replace(/&apos;/g, "'")
+        .trim();
+    };
+
+    // Fonction pour créer des messages simples sans apostrophes
+    const createSimpleMessage = (text: string): string => {
+      return text
+        .replace(/'/g, ' ')
+        .replace(/"/g, ' ')
+        .replace(/l'|L'/g, 'le ')
+        .replace(/d'|D'/g, 'de ')
+        .replace(/n'|N'/g, 'ne ')
+        .replace(/s'|S'/g, 'se ')
+        .replace(/\s+/g, ' ')
         .trim();
     };
 
@@ -518,7 +533,7 @@ export class PlanningService {
           if (!cell) {
             // Cellule vide - ajouter une erreur plus détaillée
             validationErrors.missingChildrenSlots.push({
-              child: `L'éducateur ${rawName} n'a pas d'activité programmée`,
+              child: `Educateur ${rawName} sans activite programmee`,
               day: sheetName,
               timeSlot: timeSlotNames[idx - 1],
             });
@@ -557,7 +572,7 @@ export class PlanningService {
                 childrenNames = [];
               } else {
                 validationErrors.missingChildrenSlots.push({
-                  child: `L'activité "${act}" de ${rawName} ne précise pas quels enfants y participent`,
+                  child: `Activite ${act} de ${rawName} sans enfants specifies`,
                   day: sheetName,
                   timeSlot: timeSlotNames[idx - 1],
                 });
@@ -704,45 +719,45 @@ export class PlanningService {
         validationErrors.missingChildrenSlots.length > 0 ||
         validationErrors.duplicateStaff.length > 0) {
       
-      let errorMessage = '❌ PROBLÈMES DÉTECTÉS DANS VOTRE FICHIER EXCEL\n\n';
+      let errorMessage = '❌ PROBLEMES DETECTES DANS VOTRE FICHIER EXCEL\n\n';
       
       if (validationErrors.missingStaff.length > 0) {
-        errorMessage += `👥 ÉDUCATEURS NON TROUVÉS (${validationErrors.missingStaff.length}):\n`;
-        errorMessage += 'Ces noms d\'éducateurs dans votre Excel ne correspondent pas à ceux enregistrés:\n\n';
+        errorMessage += `👥 EDUCATEURS NON TROUVES (${validationErrors.missingStaff.length}):\n`;
+        errorMessage += 'Ces noms dans votre Excel ne correspondent pas a ceux enregistres:\n\n';
         validationErrors.missingStaff.forEach(staff => {
-          errorMessage += `   • ${cleanMessage(staff)}\n`;
+          errorMessage += `   • ${createSimpleMessage(staff)}\n`;
         });
-        errorMessage += '\n💡 Vérifiez l\'orthographe exacte des noms dans votre base de données.\n\n';
+        errorMessage += '\n💡 Verifiez les noms dans votre base de donnees.\n\n';
       }
 
       if (validationErrors.unrecognizedChildren.length > 0) {
-        errorMessage += `👶 ENFANTS NON TROUVÉS (${validationErrors.unrecognizedChildren.length}):\n`;
-        errorMessage += 'Ces noms d\'enfants dans votre Excel ne correspondent pas à ceux enregistrés:\n\n';
+        errorMessage += `👶 ENFANTS NON TROUVES (${validationErrors.unrecognizedChildren.length}):\n`;
+        errorMessage += 'Ces noms dans votre Excel ne correspondent pas a ceux enregistres:\n\n';
         validationErrors.unrecognizedChildren.forEach(child => {
-          errorMessage += `   • "${cleanMessage(child.name)}" dans l'activité "${cleanMessage(child.activity)}"\n`;
-          errorMessage += `     📍 Emplacement: ${child.day} de ${child.timeSlot} (ligne ${child.line}, colonne ${child.column})\n\n`;
+          errorMessage += `   • ${createSimpleMessage(child.name)} dans activite ${createSimpleMessage(child.activity)}\n`;
+          errorMessage += `     📍 ${child.day} de ${child.timeSlot} (ligne ${child.line}, colonne ${child.column})\n\n`;
         });
-        errorMessage += '💡 Vérifiez l\'orthographe des prénoms et noms dans votre base de données.\n\n';
+        errorMessage += '💡 Verifiez les prenoms et noms dans votre base de donnees.\n\n';
       }
 
       if (validationErrors.duplicateStaff.length > 0) {
-        errorMessage += `⚠️ CONFLITS D'HORAIRES (${validationErrors.duplicateStaff.length}):\n`;
-        errorMessage += 'Ces éducateurs sont programmés pour plusieurs activités en même temps:\n\n';
+        errorMessage += `⚠️ CONFLITS HORAIRES (${validationErrors.duplicateStaff.length}):\n`;
+        errorMessage += 'Ces educateurs sont programmes pour plusieurs activites en meme temps:\n\n';
         validationErrors.duplicateStaff.forEach(conflict => {
-          errorMessage += `   • ${cleanMessage(conflict.staff)} le ${conflict.day} de ${conflict.timeSlot}\n`;
-          errorMessage += `     🔄 Activités en conflit: ${conflict.activities.map(a => cleanMessage(a)).join(' ET ')}\n\n`;
+          errorMessage += `   • ${createSimpleMessage(conflict.staff)} le ${conflict.day} de ${conflict.timeSlot}\n`;
+          errorMessage += `     🔄 Activites: ${conflict.activities.map(a => createSimpleMessage(a)).join(' ET ')}\n\n`;
         });
-        errorMessage += '💡 Un éducateur ne peut faire qu\'une seule activité à la fois.\n\n';
+        errorMessage += '💡 Un educateur ne peut faire une seule activite a la fois.\n\n';
       }
 
       if (validationErrors.missingChildrenSlots.length > 0) {
-        errorMessage += `📅 CRÉNEAUX INCOMPLETS (${validationErrors.missingChildrenSlots.length}):\n`;
-        errorMessage += 'Des créneaux horaires ne sont pas correctement remplis:\n\n';
+        errorMessage += `📅 CRENEAUX INCOMPLETS (${validationErrors.missingChildrenSlots.length}):\n`;
+        errorMessage += 'Des creneaux horaires ne sont pas correctement remplis:\n\n';
         
         // Grouper par type d'erreur pour une meilleure lisibilité
         const groupedMissing = new Map<string, Array<{day: string, timeSlot: string}>>();
         validationErrors.missingChildrenSlots.forEach(slot => {
-          const cleanChild = cleanMessage(slot.child);
+          const cleanChild = createSimpleMessage(slot.child);
           if (!groupedMissing.has(cleanChild)) {
             groupedMissing.set(cleanChild, []);
           }
@@ -753,24 +768,24 @@ export class PlanningService {
         });
 
         groupedMissing.forEach((slots, child) => {
-          if (child.includes('éducateur') || child.includes('activité')) {
+          if (child.includes('ducateur') || child.includes('ctivite')) {
             errorMessage += `   🔧 ${child}:\n`;
           } else {
-            errorMessage += `   👶 L'enfant ${child} n'a pas de créneau programmé:\n`;
+            errorMessage += `   👶 Enfant ${child} sans creneau programme:\n`;
           }
           slots.forEach(slot => {
             errorMessage += `      📍 ${slot.day} de ${slot.timeSlot}\n`;
           });
           errorMessage += '\n';
         });
-        errorMessage += '💡 Chaque enfant doit avoir une activité prévue pour chaque créneau horaire.\n\n';
+        errorMessage += '💡 Chaque enfant doit avoir une activite pour chaque creneau.\n\n';
       }
 
       errorMessage += '🛠️ COMMENT CORRIGER:\n';
       errorMessage += '1. Ouvrez votre fichier Excel\n';
-      errorMessage += '2. Vérifiez l\'orthographe des noms mentionnés ci-dessus\n';
-      errorMessage += '3. Assurez-vous que le format des cellules est: "Activité – Enfant1, Enfant2"\n';
-      errorMessage += '4. Sauvegardez et réessayez l\'import\n';
+      errorMessage += '2. Verifiez les noms mentionnes ci-dessus\n';
+      errorMessage += '3. Format des cellules: Activite - Enfant1, Enfant2\n';
+      errorMessage += '4. Sauvegardez et reessayez\n';
 
       throw new BadRequestException(errorMessage);
     }

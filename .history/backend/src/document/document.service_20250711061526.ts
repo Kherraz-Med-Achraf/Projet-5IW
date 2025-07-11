@@ -261,7 +261,7 @@ export class DocumentService {
   }
 
   /**
-   * Récupérer la liste des documents selon le rôle
+   * Récupérer les documents selon le rôle utilisateur
    */
   async getDocuments(
     userId: string,
@@ -301,24 +301,33 @@ export class DocumentService {
             parentId: parentProfile.id,
           },
         },
+        // 🔧 FIX: Filtrer selon le statut de signature
+        OR: [
+          // Documents sans signature requise : toujours visibles
+          { requiresSignature: false },
+          // Documents avec signature requise : seulement si signés
+          {
+            requiresSignature: true,
+            signatures: {
+              some: {
+                parentId: parentProfile.id,
+                status: SignatureStatus.SIGNED,
+              },
+            },
+          },
+        ],
       };
+    } else if (userRole === Role.DIRECTOR || userRole === Role.SERVICE_MANAGER) {
+      // Directeur/Service Manager voient tous les documents publiés
+      whereClause.status = DocumentStatus.PUBLISHED;
     } else {
-      throw new ForbiddenException('Accès non autorisé');
+      throw new ForbiddenException('Accès non autorisé aux documents');
     }
 
-    // Filtres communs
-    if (category) {
-      whereClause.category = category;
-    }
-
-    if (status) {
-      whereClause.status = status;
-    }
-
-    if (requiresSignature !== undefined) {
-      whereClause.requiresSignature = requiresSignature;
-    }
-
+    // Appliquer les filtres supplémentaires
+    if (category) whereClause.category = category;
+    if (status && userRole !== Role.PARENT) whereClause.status = status;
+    if (requiresSignature !== undefined) whereClause.requiresSignature = requiresSignature;
     if (search) {
       whereClause.OR = [
         { title: { contains: search, mode: 'insensitive' } },
@@ -326,49 +335,77 @@ export class DocumentService {
       ];
     }
 
-    // Construire les inclusions selon le rôle
-    const includeClause: any = {
-      uploadedBy: {
-        select: {
-          id: true,
-          email: true,
-          secretaryProfile: {
-            select: {
-              firstName: true,
-              lastName: true,
-            },
-          },
-        },
-      },
-      _count: {
-        select: {
-          accesses: true,
-        },
-      },
-    };
-
-    if (userRole === Role.PARENT) {
-      const parentProfile = await this.prisma.parentProfile.findUnique({
-        where: { userId },
-        select: { id: true },
-      });
-
-      includeClause.accesses = {
-        where: { parentId: parentProfile!.id },
-        select: {
-          canView: true,
-          canDownload: true,
-          viewedAt: true,
-          downloadedAt: true,
-        },
-      };
-    }
-
-    // Exécuter la requête
     const [documents, total] = await Promise.all([
       this.prisma.document.findMany({
         where: whereClause,
-        include: includeClause,
+        include: {
+          uploadedBy: {
+            select: {
+              id: true,
+              email: true,
+              secretaryProfile: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
+          accesses: userRole === Role.PARENT ? {
+            where: {
+              parent: { userId },
+            },
+            select: {
+              viewedAt: true,
+              downloadedAt: true,
+            },
+          } : userRole === Role.SECRETARY ? {
+            select: {
+              viewedAt: true,
+              downloadedAt: true,
+              canView: true,
+              canDownload: true,
+              parent: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  user: {
+                    select: {
+                      email: true,
+                    },
+                  },
+                },
+              },
+            },
+          } : false,
+          signatures: userRole === Role.PARENT ? {
+            where: {
+              parent: { userId },
+            },
+            select: {
+              status: true,
+              signedAt: true,
+            },
+          } : {
+            select: {
+              status: true,
+              signedAt: true,
+              parent: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
+          _count: {
+            select: {
+              accesses: true,
+              signatures: true,
+            },
+          },
+        },
         orderBy: { createdAt: 'desc' },
         skip: offset,
         take: limit,
@@ -376,15 +413,8 @@ export class DocumentService {
       this.prisma.document.count({ where: whereClause }),
     ]);
 
-    // Formatage des résultats
-    const formattedDocuments = documents.map(doc => ({
-      ...doc,
-      access: userRole === Role.PARENT ? doc.accesses?.[0] : undefined,
-      accesses: userRole === Role.SECRETARY ? doc.accesses : undefined,
-    }));
-
     return {
-      documents: formattedDocuments,
+      documents,
       pagination: {
         total,
         limit,
@@ -450,63 +480,44 @@ export class DocumentService {
    * Télécharger un document
    */
   async downloadDocument(documentId: string, userId: string, userRole: Role) {
-    // Vérifier l'accès au document
-    let document: any;
-
-    if (userRole === Role.SECRETARY) {
-      document = await this.prisma.document.findUnique({
-        where: { 
-          id: documentId,
-          uploadedById: userId,
-        },
-        include: {
-          accesses: {
-            include: {
-              parent: {
-                include: {
-                  user: { select: { email: true } },
-                },
+    const document = await this.prisma.document.findUnique({
+      where: { id: documentId },
+      include: {
+        accesses: {
+          include: {
+            parent: {
+              include: {
+                user: { select: { id: true } },
               },
             },
           },
         },
-      });
-    } else if (userRole === Role.PARENT) {
-      const parentProfile = await this.prisma.parentProfile.findUnique({
-        where: { userId },
-        select: { id: true },
-      });
-
-      if (!parentProfile) {
-        throw new NotFoundException('Profil parent introuvable');
-      }
-
-      document = await this.prisma.document.findFirst({
-        where: {
-          id: documentId,
-          status: DocumentStatus.PUBLISHED,
-          accesses: {
-            some: {
-              parentId: parentProfile.id,
-              canDownload: true,
-            },
-          },
-        },
-        include: {
-          accesses: {
-            where: { parentId: parentProfile.id },
-          },
-        },
-      });
-    } else {
-      throw new ForbiddenException('Accès non autorisé');
-    }
+      },
+    });
 
     if (!document) {
-      throw new NotFoundException('Document introuvable ou accès non autorisé');
+      throw new NotFoundException('Document introuvable');
     }
 
-    // Lire le fichier chiffré
+    // Vérifier les permissions
+    let canDownload = false;
+
+    if (userRole === Role.SECRETARY && document.uploadedById === userId) {
+      canDownload = true;
+    } else if (userRole === Role.PARENT) {
+      const access = document.accesses.find(a => a.parent.user?.id === userId);
+      // 🔧 FIX: Les parents peuvent télécharger s'ils ont accès, même si signature requise
+      // Ils doivent pouvoir voir le document pour le signer
+      canDownload = !!access;
+    } else if (userRole === Role.DIRECTOR || userRole === Role.SERVICE_MANAGER) {
+      canDownload = document.status === DocumentStatus.PUBLISHED;
+    }
+
+    if (!canDownload) {
+      throw new ForbiddenException('Vous n\'avez pas l\'autorisation de télécharger ce document');
+    }
+
+    // Lire le fichier chiffré et ses métadonnées
     const filepath = path.join(this.uploadDir, document.filepath);
     const metaFilepath = `${filepath}.meta`;
 
@@ -523,7 +534,7 @@ export class DocumentService {
         metaData.authTag,
       );
 
-      // Mettre à jour la date de téléchargement pour les parents
+      // Marquer comme téléchargé pour les parents
       if (userRole === Role.PARENT) {
         const parentProfile = await this.prisma.parentProfile.findUnique({
           where: { userId },
@@ -548,11 +559,9 @@ export class DocumentService {
         filename: document.filename,
         mimetype: document.mimetype,
       };
-
     } catch (error) {
-      throw new InternalServerErrorException(
-        'Erreur lors du téléchargement du document',
-      );
+      console.error('Erreur lors du téléchargement:', error);
+      throw new InternalServerErrorException('Erreur lors du téléchargement du document');
     }
   }
 
@@ -709,38 +718,17 @@ export class DocumentService {
   }
 
   /**
-   * Obtenir les détails d'un document
+   * Initier les signatures Yousign
    */
-  async getDocumentDetails(documentId: string, userId: string, userRole: Role) {
-    let document: any;
-
-    if (userRole === Role.SECRETARY) {
-      document = await this.prisma.document.findUnique({
-        where: { 
-          id: documentId,
-          uploadedById: userId,
-        },
+  private async initiateSignatures(documentId: string, parentIds: number[]) {
+    try {
+      // Récupérer le document et ses détails
+      const document = await this.prisma.document.findUnique({
+        where: { id: documentId },
         include: {
-          uploadedBy: {
-            select: {
-              id: true,
-              email: true,
-              secretaryProfile: {
-                select: {
-                  firstName: true,
-                  lastName: true,
-                },
-              },
-            },
-          },
           accesses: {
             include: {
               parent: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                },
                 include: {
                   user: { select: { email: true } },
                 },
@@ -749,7 +737,176 @@ export class DocumentService {
           },
         },
       });
-    } else if (userRole === Role.PARENT) {
+
+      if (!document) {
+        throw new NotFoundException('Document introuvable');
+      }
+
+      // Lire le document chiffré
+      const filepath = path.join(this.uploadDir, document.filepath);
+      const metaFilepath = `${filepath}.meta`;
+      
+      try {
+        // Vérifier si les fichiers existent
+        await fs.access(filepath);
+        await fs.access(metaFilepath);
+      } catch (error) {
+        console.error('❌ Fichier(s) non trouvé(s):', error.message);
+        throw new Error(`Fichier non trouvé: ${error.message}`);
+      }
+      
+      const [encryptedBuffer, metaData] = await Promise.all([
+        fs.readFile(filepath),
+        fs.readFile(metaFilepath, 'utf-8').then(data => JSON.parse(data)),
+      ]);
+
+      // Déchiffrer le document
+      const decryptedBuffer = await this.decryptFile(
+        encryptedBuffer,
+        metaData.iv,
+        metaData.authTag,
+      );
+
+      // Préparer les signataires
+      const signers = document.accesses
+        .filter(access => parentIds.includes(access.parentId))
+        .map(access => ({
+          firstName: access.parent.firstName,
+          lastName: access.parent.lastName,
+          email: access.parent.user.email,
+          phone: undefined, // Optionnel
+        }));
+
+      if (signers.length === 0) {
+        throw new BadRequestException('Aucun signataire valide trouvé');
+      }
+
+      // Créer l'URL de webhook
+      const webhookUrl = `${getFrontendBaseUrl()}/api/yousign/webhook`;
+
+      // Créer et activer la demande de signature YouSign
+      const signatureResponse = await this.youSignService.createAndActivateSignature(
+        decryptedBuffer,
+        document.filename,
+        signers,
+        {
+          documentId: document.id,
+          title: document.title,
+          category: document.category,
+        },
+        webhookUrl
+      );
+
+      // Mettre à jour le document avec l'ID YouSign
+      await this.prisma.document.update({
+        where: { id: documentId },
+        data: {
+          youSignRequestId: signatureResponse.id,
+        },
+      });
+
+      // Mettre à jour les signatures individuelles
+      const signatureUpdates = document.accesses
+        .filter(access => parentIds.includes(access.parentId))
+        .map(access => 
+          this.prisma.documentSignature.upsert({
+            where: {
+              documentId_parentId: {
+                documentId: document.id,
+                parentId: access.parentId,
+              },
+            },
+            update: {
+              yousignProcedureId: signatureResponse.id,
+              status: SignatureStatus.PENDING,
+            },
+            create: {
+              documentId: document.id,
+              parentId: access.parentId,
+              yousignProcedureId: signatureResponse.id,
+              status: SignatureStatus.PENDING,
+            },
+          })
+        );
+
+      await Promise.all(signatureUpdates);
+
+    } catch (error) {
+      console.error('❌ Failed to initiate YouSign signatures:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtenir le lien de signature YouSign pour un parent
+   */
+  async getYouSignSignatureLink(documentId: string, userId: string) {
+    try {
+      // Trouver le profil parent
+      const parentProfile = await this.prisma.parentProfile.findUnique({
+        where: { userId },
+        select: { id: true, firstName: true, lastName: true, user: { select: { email: true } } },
+      });
+
+      if (!parentProfile) {
+        throw new NotFoundException('Profil parent introuvable');
+      }
+
+      // Trouver le document et vérifier l'accès
+      const document = await this.prisma.document.findUnique({
+        where: { id: documentId },
+        include: {
+          accesses: {
+            where: { parentId: parentProfile.id },
+          },
+          signatures: {
+            where: { parentId: parentProfile.id },
+          },
+        },
+      });
+
+      if (!document) {
+        throw new NotFoundException('Document introuvable');
+      }
+
+      if (document.accesses.length === 0) {
+        throw new ForbiddenException('Vous n\'avez pas accès à ce document');
+      }
+
+      if (!document.requiresSignature) {
+        throw new BadRequestException('Ce document ne nécessite pas de signature');
+      }
+
+      if (!document.youSignRequestId) {
+        throw new BadRequestException('Aucune demande de signature YouSign associée');
+      }
+
+      // Vérifier le statut de la signature
+      const signature = document.signatures[0];
+      if (signature?.status === SignatureStatus.SIGNED) {
+        throw new BadRequestException('Document déjà signé');
+      }
+
+      // Obtenir le lien de signature depuis YouSign
+      const signatureLink = await this.youSignService.getSignatureLink(
+        document.youSignRequestId,
+        `signer-${parentProfile.id}`
+      );
+
+      return { signatureLink };
+
+    } catch (error) {
+      console.error('❌ Failed to get signature link:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Marquer un document comme consulté
+   */
+  async markDocumentAsViewed(documentId: string, userId: string) {
+    try {
+      // Trouver le profil parent
       const parentProfile = await this.prisma.parentProfile.findUnique({
         where: { userId },
         select: { id: true },
@@ -759,47 +916,210 @@ export class DocumentService {
         throw new NotFoundException('Profil parent introuvable');
       }
 
-      document = await this.prisma.document.findFirst({
+      // Mettre à jour l'accès au document
+      const updatedAccess = await this.prisma.documentAccess.updateMany({
         where: {
-          id: documentId,
-          status: DocumentStatus.PUBLISHED,
-          accesses: {
-            some: {
-              parentId: parentProfile.id,
+          documentId,
+          parentId: parentProfile.id,
+        },
+        data: {
+          viewedAt: new Date(),
+        },
+      });
+
+      if (updatedAccess.count === 0) {
+        throw new NotFoundException('Accès au document introuvable');
+      }
+
+      console.log(`👁️ Document ${documentId} marqué comme consulté par parent ${parentProfile.id}`);
+      
+      return { message: 'Document marqué comme consulté' };
+
+    } catch (error) {
+      console.error('❌ Failed to mark document as viewed:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Initier une signature pour un document spécifique (endpoint public)
+   */
+  async initiateSignature(
+    documentId: string,
+    dto: InitiateSignatureDto,
+    userId: string,
+  ) {
+    // Vérifier que le document existe et appartient au secrétaire
+    const document = await this.prisma.document.findUnique({
+      where: { id: documentId },
+      include: {
+        accesses: {
+          where: { parentId: { in: dto.parentIds } },
+          include: {
+            parent: {
+              include: {
+                user: { select: { email: true } },
+              },
             },
           },
         },
+      },
+    });
+
+    if (!document) {
+      throw new NotFoundException('Document introuvable');
+    }
+
+    if (document.uploadedById !== userId) {
+      throw new ForbiddenException('Vous ne pouvez initier une signature que pour vos propres documents');
+    }
+
+    if (!document.requiresSignature) {
+      throw new BadRequestException('Ce document ne nécessite pas de signature');
+    }
+
+    if (document.youSignRequestId) {
+      throw new BadRequestException('Une demande de signature a déjà été créée pour ce document');
+    }
+
+    // Vérifier que tous les parents ont accès au document
+    const accessibleParentIds = document.accesses.map(a => a.parentId);
+    const invalidParentIds = dto.parentIds.filter(id => !accessibleParentIds.includes(id));
+    
+    if (invalidParentIds.length > 0) {
+      throw new BadRequestException(`Les parents suivants n'ont pas accès au document: ${invalidParentIds.join(', ')}`);
+    }
+
+    // Initier les signatures
+    await this.initiateSignatures(documentId, dto.parentIds);
+
+    console.log(`🔏 Signature manuelle initiée pour le document ${documentId} par ${userId}`);
+    
+    return {
+      message: 'Signature initiée avec succès',
+      documentId,
+      parentIds: dto.parentIds,
+      youSignRequestId: document.youSignRequestId,
+    };
+  }
+
+  /**
+   * Obtenir les détails complets d'un document
+   */
+  async getDocumentDetails(documentId: string, userId: string, userRole: Role) {
+    let whereClause: any = { id: documentId };
+    let includeClause: any = {
+      uploadedBy: {
+        select: {
+          id: true,
+          email: true,
+          secretaryProfile: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+      },
+      accesses: {
         include: {
-          uploadedBy: {
+          parent: {
             select: {
               id: true,
-              email: true,
-              secretaryProfile: {
+              firstName: true,
+              lastName: true,
+              user: {
                 select: {
-                  firstName: true,
-                  lastName: true,
+                  id: true,
+                  email: true,
                 },
               },
             },
           },
-          accesses: {
-            where: { parentId: parentProfile.id },
+        },
+      },
+      signatures: {
+        include: {
+          parent: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
           },
         },
+      },
+      _count: {
+        select: {
+          accesses: true,
+          signatures: true,
+        },
+      },
+    };
+
+    // Vérifications de permission selon le rôle
+    if (userRole === Role.SECRETARY) {
+      // Secrétaire voit seulement ses propres documents
+      whereClause.uploadedById = userId;
+    } else if (userRole === Role.PARENT) {
+      // Parent voit seulement les documents qui lui sont assignés et publiés
+      const parentProfile = await this.prisma.parentProfile.findUnique({
+        where: { userId },
+        select: { id: true },
       });
+
+      if (!parentProfile) {
+        throw new NotFoundException('Profil parent introuvable');
+      }
+
+      whereClause = {
+        id: documentId,
+        status: DocumentStatus.PUBLISHED,
+        accesses: {
+          some: { parentId: parentProfile.id },
+        },
+      };
+
+      // Limiter les données pour les parents
+      includeClause.accesses = {
+        where: { parentId: parentProfile.id },
+        select: {
+          viewedAt: true,
+          downloadedAt: true,
+          canView: true,
+          canDownload: true,
+        },
+      };
+      includeClause.signatures = {
+        where: { parentId: parentProfile.id },
+        select: {
+          status: true,
+          signedAt: true,
+        },
+      };
+    } else if (userRole === Role.DIRECTOR || userRole === Role.SERVICE_MANAGER) {
+      // Directeur/Service Manager voient tous les documents publiés
+      whereClause.status = DocumentStatus.PUBLISHED;
     } else {
-      throw new ForbiddenException('Accès non autorisé');
+      throw new ForbiddenException('Accès non autorisé aux documents');
     }
+
+    const document = await this.prisma.document.findUnique({
+      where: whereClause,
+      include: includeClause,
+    });
 
     if (!document) {
       throw new NotFoundException('Document introuvable ou accès non autorisé');
     }
 
+    console.log(`📄 Détails document récupérés: ${document.title} (${document.id})`);
+    
     return document;
   }
 
   /**
-   * Ajouter l'accès à un document pour des parents
+   * Ajouter l'accès à un document pour des parents spécifiques (SECRETARY)
    */
   async addDocumentAccess(
     documentId: string,
@@ -808,57 +1128,52 @@ export class DocumentService {
   ) {
     // Vérifier que le document existe et appartient au secrétaire
     const document = await this.prisma.document.findUnique({
-      where: { 
-        id: documentId,
-        uploadedById: userId,
-      },
-      include: {
-        accesses: {
-          select: { parentId: true },
-        },
-      },
+      where: { id: documentId },
+      select: { id: true, uploadedById: true, status: true, title: true },
     });
 
     if (!document) {
-      throw new NotFoundException('Document introuvable ou accès non autorisé');
+      throw new NotFoundException('Document introuvable');
     }
 
-    // Vérifier que les parents existent
+    if (document.uploadedById !== userId) {
+      throw new ForbiddenException('Vous ne pouvez modifier que vos propres documents');
+    }
+
+    // Vérifier que tous les parents existent
     const parents = await this.prisma.parentProfile.findMany({
       where: { id: { in: parentIds } },
-      select: { id: true },
+      select: { id: true, firstName: true, lastName: true },
     });
 
     if (parents.length !== parentIds.length) {
       throw new BadRequestException('Un ou plusieurs parents sont introuvables');
     }
 
-    // Filtrer les parents qui n'ont pas encore accès
-    const existingAccessParentIds = document.accesses.map(a => a.parentId);
-    const newParentIds = parentIds.filter(id => !existingAccessParentIds.includes(id));
+    // Créer les accès (ignorer si déjà existants)
+    const accessesToCreate = parentIds.map(parentId => ({
+      documentId: document.id,
+      parentId,
+      canView: true,
+      canDownload: true, // 🔧 FIX: Toujours permettre le téléchargement si accès accordé
+    }));
 
-    if (newParentIds.length === 0) {
-      throw new BadRequestException('Tous les parents ont déjà accès au document');
-    }
-
-    // Ajouter les nouveaux accès
     await this.prisma.documentAccess.createMany({
-      data: newParentIds.map(parentId => ({
-        documentId,
-        parentId,
-        canView: true,
-        canDownload: true,
-      })),
+      data: accessesToCreate,
+      skipDuplicates: true,
     });
 
-    return { 
-      message: 'Accès ajouté avec succès',
-      addedCount: newParentIds.length,
+    console.log(`➕ Accès ajoutés au document ${document.title} pour ${parentIds.length} parent(s)`);
+
+    return {
+      message: 'Accès ajoutés avec succès',
+      addedParents: parents,
+      documentId: document.id,
     };
   }
 
   /**
-   * Supprimer l'accès à un document pour des parents
+   * Retirer l'accès à un document pour des parents spécifiques (SECRETARY)
    */
   async removeDocumentAccess(
     documentId: string,
@@ -867,27 +1182,40 @@ export class DocumentService {
   ) {
     // Vérifier que le document existe et appartient au secrétaire
     const document = await this.prisma.document.findUnique({
-      where: { 
-        id: documentId,
-        uploadedById: userId,
-      },
+      where: { id: documentId },
+      select: { id: true, uploadedById: true, title: true },
     });
 
     if (!document) {
-      throw new NotFoundException('Document introuvable ou accès non autorisé');
+      throw new NotFoundException('Document introuvable');
+    }
+
+    if (document.uploadedById !== userId) {
+      throw new ForbiddenException('Vous ne pouvez modifier que vos propres documents');
     }
 
     // Supprimer les accès
-    const result = await this.prisma.documentAccess.deleteMany({
+    const deletedAccesses = await this.prisma.documentAccess.deleteMany({
       where: {
-        documentId,
+        documentId: document.id,
         parentId: { in: parentIds },
       },
     });
 
-    return { 
-      message: 'Accès supprimé avec succès',
-      removedCount: result.count,
+    // Supprimer également les signatures associées si elles existent
+    await this.prisma.documentSignature.deleteMany({
+      where: {
+        documentId: document.id,
+        parentId: { in: parentIds },
+      },
+    });
+
+    console.log(`➖ Accès retirés du document ${document.title} pour ${deletedAccesses.count} parent(s)`);
+
+    return {
+      message: 'Accès retirés avec succès',
+      removedCount: deletedAccesses.count,
+      documentId: document.id,
     };
   }
 } 

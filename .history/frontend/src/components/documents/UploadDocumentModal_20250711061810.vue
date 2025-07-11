@@ -72,6 +72,25 @@
           </span>
         </div>
 
+        <!-- Signature requise (désactivée temporairement) -->
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input
+              id="requiresSignature"
+              v-model="form.requiresSignature"
+              type="checkbox"
+              class="checkbox-input"
+              disabled
+            />
+            <span class="checkbox-text">
+              Ce document nécessite une signature électronique (temporairement désactivé)
+            </span>
+          </label>
+          <p class="help-text">
+            Fonctionnalité de signature temporairement désactivée
+          </p>
+        </div>
+
         <!-- Sélection des parents -->
         <div class="form-group">
           <label class="form-label">
@@ -233,7 +252,7 @@ const form = ref({
   title: '',
   description: '',
   category: '',
-  requiresSignature: false, // Toujours false maintenant
+  requiresSignature: false,
   parentIds: [] as number[],
 })
 
@@ -348,29 +367,18 @@ const handleSubmit = async () => {
 
   try {
     const payload: CreateDocumentPayload = {
-      title: form.value.title,
-      description: form.value.description,
-      category: form.value.category,
-      requiresSignature: false, // Toujours false
+      title: form.value.title.trim(),
+      description: form.value.description.trim() || undefined,
+      category: form.value.category as any,
+      requiresSignature: form.value.requiresSignature,
       parentIds: form.value.parentIds,
       file: selectedFile.value!,
     }
 
-    await documentStore.createDocument(payload)
-    
-    // Réinitialiser le formulaire
-    form.value = {
-      title: '',
-      description: '',
-      category: '',
-      requiresSignature: false,
-      parentIds: [],
-    }
-    selectedFile.value = null
-    
-    emit('close')
+    const document = await documentStore.createDocument(payload)
+    emit('uploaded', document)
   } catch (error) {
-    console.error('Erreur lors de la création du document:', error)
+    console.error('Erreur création document:', error)
   }
 }
 
@@ -409,6 +417,20 @@ onMounted(async () => {
     loadingParents.value = false
   }
 })
+
+// 🔧 DEBUG: Watcher pour suivre les changements de la checkbox
+watch(
+  () => form.value.requiresSignature,
+  (newValue, oldValue) => {
+    // console.log('🔍 DEBUG requiresSignature changed:', {
+    //   from: oldValue,
+    //   to: newValue,
+    //   type: typeof newValue,
+    //   timestamp: new Date().toISOString(),
+    // })
+  },
+  { deep: true }
+)
 </script>
 
 <style scoped>

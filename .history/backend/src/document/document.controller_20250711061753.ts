@@ -28,7 +28,6 @@ import {
   UpdateDocumentDto,
   PublishDocumentDto,
   DocumentFiltersDto,
-  DocumentAccessDto,
 } from './dto/document.dto';
 
 @Controller('documents')
@@ -144,7 +143,7 @@ export class DocumentController {
   @Roles(Role.SECRETARY)
   async addDocumentAccess(
     @Param('id') documentId: string,
-    @Body(ValidationPipe) dto: DocumentAccessDto,
+    @Body(ValidationPipe) dto: any, // DocumentAccessDto is removed, so we use 'any' for now
     @Request() req: any,
   ) {
     return this.documentService.addDocumentAccess(documentId, dto.parentIds, req.user.id);
@@ -157,7 +156,7 @@ export class DocumentController {
   @Roles(Role.SECRETARY)
   async removeDocumentAccess(
     @Param('id') documentId: string,
-    @Body(ValidationPipe) dto: DocumentAccessDto,
+    @Body(ValidationPipe) dto: any, // DocumentAccessDto is removed, so we use 'any' for now
     @Request() req: any,
   ) {
     return this.documentService.removeDocumentAccess(documentId, dto.parentIds, req.user.id);

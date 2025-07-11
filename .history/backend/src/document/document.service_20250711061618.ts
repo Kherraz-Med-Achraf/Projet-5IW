@@ -799,7 +799,7 @@ export class DocumentService {
   }
 
   /**
-   * Ajouter l'accès à un document pour des parents
+   * Ajouter l'accès à un document pour des parents spécifiques (SECRETARY)
    */
   async addDocumentAccess(
     documentId: string,
@@ -808,57 +808,52 @@ export class DocumentService {
   ) {
     // Vérifier que le document existe et appartient au secrétaire
     const document = await this.prisma.document.findUnique({
-      where: { 
-        id: documentId,
-        uploadedById: userId,
-      },
-      include: {
-        accesses: {
-          select: { parentId: true },
-        },
-      },
+      where: { id: documentId },
+      select: { id: true, uploadedById: true, status: true, title: true },
     });
 
     if (!document) {
-      throw new NotFoundException('Document introuvable ou accès non autorisé');
+      throw new NotFoundException('Document introuvable');
     }
 
-    // Vérifier que les parents existent
+    if (document.uploadedById !== userId) {
+      throw new ForbiddenException('Vous ne pouvez modifier que vos propres documents');
+    }
+
+    // Vérifier que tous les parents existent
     const parents = await this.prisma.parentProfile.findMany({
       where: { id: { in: parentIds } },
-      select: { id: true },
+      select: { id: true, firstName: true, lastName: true },
     });
 
     if (parents.length !== parentIds.length) {
       throw new BadRequestException('Un ou plusieurs parents sont introuvables');
     }
 
-    // Filtrer les parents qui n'ont pas encore accès
-    const existingAccessParentIds = document.accesses.map(a => a.parentId);
-    const newParentIds = parentIds.filter(id => !existingAccessParentIds.includes(id));
+    // Créer les accès (ignorer si déjà existants)
+    const accessesToCreate = parentIds.map(parentId => ({
+      documentId: document.id,
+      parentId,
+      canView: true,
+      canDownload: true, // 🔧 FIX: Toujours permettre le téléchargement si accès accordé
+    }));
 
-    if (newParentIds.length === 0) {
-      throw new BadRequestException('Tous les parents ont déjà accès au document');
-    }
-
-    // Ajouter les nouveaux accès
     await this.prisma.documentAccess.createMany({
-      data: newParentIds.map(parentId => ({
-        documentId,
-        parentId,
-        canView: true,
-        canDownload: true,
-      })),
+      data: accessesToCreate,
+      skipDuplicates: true,
     });
 
-    return { 
-      message: 'Accès ajouté avec succès',
-      addedCount: newParentIds.length,
+    console.log(`➕ Accès ajoutés au document ${document.title} pour ${parentIds.length} parent(s)`);
+
+    return {
+      message: 'Accès ajoutés avec succès',
+      addedParents: parents,
+      documentId: document.id,
     };
   }
 
   /**
-   * Supprimer l'accès à un document pour des parents
+   * Retirer l'accès à un document pour des parents spécifiques (SECRETARY)
    */
   async removeDocumentAccess(
     documentId: string,
@@ -867,27 +862,40 @@ export class DocumentService {
   ) {
     // Vérifier que le document existe et appartient au secrétaire
     const document = await this.prisma.document.findUnique({
-      where: { 
-        id: documentId,
-        uploadedById: userId,
-      },
+      where: { id: documentId },
+      select: { id: true, uploadedById: true, title: true },
     });
 
     if (!document) {
-      throw new NotFoundException('Document introuvable ou accès non autorisé');
+      throw new NotFoundException('Document introuvable');
+    }
+
+    if (document.uploadedById !== userId) {
+      throw new ForbiddenException('Vous ne pouvez modifier que vos propres documents');
     }
 
     // Supprimer les accès
-    const result = await this.prisma.documentAccess.deleteMany({
+    const deletedAccesses = await this.prisma.documentAccess.deleteMany({
       where: {
-        documentId,
+        documentId: document.id,
         parentId: { in: parentIds },
       },
     });
 
-    return { 
-      message: 'Accès supprimé avec succès',
-      removedCount: result.count,
+    // Supprimer également les signatures associées si elles existent
+    await this.prisma.documentSignature.deleteMany({
+      where: {
+        documentId: document.id,
+        parentId: { in: parentIds },
+      },
+    });
+
+    console.log(`➖ Accès retirés du document ${document.title} pour ${deletedAccesses.count} parent(s)`);
+
+    return {
+      message: 'Accès retirés avec succès',
+      removedCount: deletedAccesses.count,
+      documentId: document.id,
     };
   }
 } 

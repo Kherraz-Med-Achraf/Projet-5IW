@@ -24,7 +24,6 @@ import {
   ApiParam,
   ApiQuery,
   ApiResponse,
-  ApiBody,
 } from '@nestjs/swagger';
 import { DocumentService } from './document.service';
 import {
@@ -64,7 +63,7 @@ export class DocumentController {
    */
   @Post()
   @Roles(Role.SECRETARY)
-  // @UseGuards(CsrfGuard) // 🔧 TEMPORAIRE : Retiré pour debug 401
+  @UseGuards(CsrfGuard)
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ 
@@ -78,11 +77,6 @@ export class DocumentController {
     @UploadedFile() file: Express.Multer.File,
     @Req() req: Request & { user: { id: string; role: Role } },
   ) {
-    console.log('🔍 [DEBUG] createDocument called with:', {
-      user: req.user,
-      dto,
-      file: file ? { name: file.originalname, size: file.size } : null
-    });
     return this.documentService.createDocument(dto, file, req.user.id);
   }
 
@@ -91,7 +85,7 @@ export class DocumentController {
    */
   @Post(':id/publish')
   @Roles(Role.SECRETARY)
-  // @UseGuards(CsrfGuard) // 🔧 TEMPORAIRE : Retiré pour debug 401
+  @UseGuards(CsrfGuard)
   @ApiOperation({ 
     summary: 'Publier un document',
     description: 'Publier un document en brouillon et envoyer les notifications'
@@ -104,10 +98,6 @@ export class DocumentController {
     @Param('id') documentId: string,
     @Req() req: Request & { user: { id: string; role: Role } },
   ) {
-    console.log('🔍 [DEBUG] publishDocument called with:', {
-      user: req.user,
-      documentId
-    });
     return this.documentService.publishDocument(documentId, req.user.id);
   }
 
@@ -183,71 +173,9 @@ export class DocumentController {
     @Param('id') documentId: string,
     @Req() req: Request & { user: { id: string; role: Role } },
   ) {
-    return this.documentService.getDocumentDetails(documentId, req.user.id, req.user.role);
-  }
-
-  /**
-   * 6. Ajouter l'accès à un document (SECRETARY)
-   */
-  @Post(':id/access')
-  @Roles(Role.SECRETARY)
-  @ApiOperation({ 
-    summary: 'Ajouter l\'accès à un document',
-    description: 'Donner accès à un document à des parents spécifiques'
-  })
-  @ApiParam({ name: 'id', description: 'ID du document' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        parentIds: {
-          type: 'array',
-          items: { type: 'number' },
-          description: 'IDs des parents à qui donner accès'
-        }
-      }
-    }
-  })
-  @ApiResponse({ status: 201, description: 'Accès ajoutés avec succès' })
-  @ApiResponse({ status: 403, description: 'Vous ne pouvez modifier que vos propres documents' })
-  async addDocumentAccess(
-    @Param('id') documentId: string,
-    @Body() body: { parentIds: number[] },
-    @Req() req: Request & { user: { id: string; role: Role } },
-  ) {
-    return this.documentService.addDocumentAccess(documentId, body.parentIds, req.user.id);
-  }
-
-  /**
-   * 7. Retirer l'accès à un document (SECRETARY)
-   */
-  @Delete(':id/access')
-  @Roles(Role.SECRETARY)
-  @ApiOperation({ 
-    summary: 'Retirer l\'accès à un document',
-    description: 'Retirer l\'accès à un document pour des parents spécifiques'
-  })
-  @ApiParam({ name: 'id', description: 'ID du document' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        parentIds: {
-          type: 'array',
-          items: { type: 'number' },
-          description: 'IDs des parents à qui retirer l\'accès'
-        }
-      }
-    }
-  })
-  @ApiResponse({ status: 200, description: 'Accès retirés avec succès' })
-  @ApiResponse({ status: 403, description: 'Vous ne pouvez modifier que vos propres documents' })
-  async removeDocumentAccess(
-    @Param('id') documentId: string,
-    @Body() body: { parentIds: number[] },
-    @Req() req: Request & { user: { id: string; role: Role } },
-  ) {
-    return this.documentService.removeDocumentAccess(documentId, body.parentIds, req.user.id);
+    // Cette méthode sera implémentée dans le service
+    // return this.documentService.getDocumentDetails(documentId, req.user.id, req.user.role);
+    return { message: 'Détails du document - à implémenter' };
   }
 
   /**
@@ -293,7 +221,7 @@ export class DocumentController {
    */
   @Patch(':id')
   @Roles(Role.SECRETARY)
-  // @UseGuards(CsrfGuard) // 🔧 TEMPORAIRE : Retiré pour debug 401
+  @UseGuards(CsrfGuard)
   @ApiOperation({ 
     summary: 'Mettre à jour un document',
     description: 'Modifier les informations d\'un document en brouillon'
@@ -316,7 +244,7 @@ export class DocumentController {
    */
   @Delete(':id')
   @Roles(Role.SECRETARY)
-  // @UseGuards(CsrfGuard) // 🔧 TEMPORAIRE : Retiré pour debug 401
+  @UseGuards(CsrfGuard)
   @ApiOperation({ 
     summary: 'Supprimer un document',
     description: 'Supprimer définitivement un document et ses fichiers'
@@ -336,21 +264,22 @@ export class DocumentController {
    */
   @Post(':id/signature')
   @Roles(Role.SECRETARY)
-  // @UseGuards(CsrfGuard) // 🔧 TEMPORAIRE : Retiré pour debug 401
+  @UseGuards(CsrfGuard)
   @ApiOperation({ 
     summary: 'Initier une signature électronique',
-    description: 'Créer une demande de signature YouSign pour un document'
+    description: 'Lancer le processus de signature Yousign pour un document'
   })
   @ApiParam({ name: 'id', description: 'ID du document' })
-  @ApiResponse({ status: 200, description: 'Signature initiée avec succès' })
-  @ApiResponse({ status: 404, description: 'Document introuvable' })
-  @ApiResponse({ status: 403, description: 'Vous ne pouvez initier une signature que pour vos propres documents' })
+  @ApiResponse({ status: 200, description: 'Signature initiée' })
+  @ApiResponse({ status: 400, description: 'Document ne nécessite pas de signature' })
   async initiateSignature(
     @Param('id') documentId: string,
     @Body() dto: InitiateSignatureDto,
     @Req() req: Request & { user: { id: string; role: Role } },
   ) {
-    return this.documentService.initiateSignature(documentId, dto, req.user.id);
+    // Cette méthode sera implémentée dans le service avec Yousign
+    // return this.documentService.initiateSignature(documentId, dto, req.user.id);
+    return { message: 'Initiation signature - à implémenter' };
   }
 
   /**

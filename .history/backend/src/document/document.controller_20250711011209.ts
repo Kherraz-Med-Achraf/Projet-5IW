@@ -24,7 +24,6 @@ import {
   ApiParam,
   ApiQuery,
   ApiResponse,
-  ApiBody,
 } from '@nestjs/swagger';
 import { DocumentService } from './document.service';
 import {
@@ -183,71 +182,9 @@ export class DocumentController {
     @Param('id') documentId: string,
     @Req() req: Request & { user: { id: string; role: Role } },
   ) {
-    return this.documentService.getDocumentDetails(documentId, req.user.id, req.user.role);
-  }
-
-  /**
-   * 6. Ajouter l'accès à un document (SECRETARY)
-   */
-  @Post(':id/access')
-  @Roles(Role.SECRETARY)
-  @ApiOperation({ 
-    summary: 'Ajouter l\'accès à un document',
-    description: 'Donner accès à un document à des parents spécifiques'
-  })
-  @ApiParam({ name: 'id', description: 'ID du document' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        parentIds: {
-          type: 'array',
-          items: { type: 'number' },
-          description: 'IDs des parents à qui donner accès'
-        }
-      }
-    }
-  })
-  @ApiResponse({ status: 201, description: 'Accès ajoutés avec succès' })
-  @ApiResponse({ status: 403, description: 'Vous ne pouvez modifier que vos propres documents' })
-  async addDocumentAccess(
-    @Param('id') documentId: string,
-    @Body() body: { parentIds: number[] },
-    @Req() req: Request & { user: { id: string; role: Role } },
-  ) {
-    return this.documentService.addDocumentAccess(documentId, body.parentIds, req.user.id);
-  }
-
-  /**
-   * 7. Retirer l'accès à un document (SECRETARY)
-   */
-  @Delete(':id/access')
-  @Roles(Role.SECRETARY)
-  @ApiOperation({ 
-    summary: 'Retirer l\'accès à un document',
-    description: 'Retirer l\'accès à un document pour des parents spécifiques'
-  })
-  @ApiParam({ name: 'id', description: 'ID du document' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        parentIds: {
-          type: 'array',
-          items: { type: 'number' },
-          description: 'IDs des parents à qui retirer l\'accès'
-        }
-      }
-    }
-  })
-  @ApiResponse({ status: 200, description: 'Accès retirés avec succès' })
-  @ApiResponse({ status: 403, description: 'Vous ne pouvez modifier que vos propres documents' })
-  async removeDocumentAccess(
-    @Param('id') documentId: string,
-    @Body() body: { parentIds: number[] },
-    @Req() req: Request & { user: { id: string; role: Role } },
-  ) {
-    return this.documentService.removeDocumentAccess(documentId, body.parentIds, req.user.id);
+    // Cette méthode sera implémentée dans le service
+    // return this.documentService.getDocumentDetails(documentId, req.user.id, req.user.role);
+    return { message: 'Détails du document - à implémenter' };
   }
 
   /**
@@ -350,7 +287,7 @@ export class DocumentController {
     @Body() dto: InitiateSignatureDto,
     @Req() req: Request & { user: { id: string; role: Role } },
   ) {
-    return this.documentService.initiateSignature(documentId, dto, req.user.id);
+    return this.documentService.initiateYouSignSignature(documentId, dto, req.user.id);
   }
 
   /**

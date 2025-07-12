@@ -2014,7 +2014,319 @@ onMounted(async () => {
   }
 }
 
-/* Styles spécifiques supprimés - utilisation du design unifié */
+/* Styles pour les autres rôles - Page d'accueil classique */
+.home-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ───── Hero Section ───── */
+.hero-section {
+  position: relative;
+  text-align: center;
+  margin-bottom: 3rem;
+  z-index: 2;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 1rem;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: fadeInUp 1s ease-out;
+
+  .wave {
+    display: inline-block;
+    animation: wave 2s infinite;
+    margin-right: 1rem;
+  }
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0;
+  animation: fadeInUp 1s ease-out 0.2s both;
+}
+
+.hero-decoration {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.floating-shape {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  animation: float 6s ease-in-out infinite;
+
+  &.shape-1 {
+    width: 80px;
+    height: 80px;
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+  }
+
+  &.shape-2 {
+    width: 120px;
+    height: 120px;
+    top: 60%;
+    right: 15%;
+    animation-delay: 2s;
+  }
+
+  &.shape-3 {
+    width: 60px;
+    height: 60px;
+    top: 10%;
+    right: 25%;
+    animation-delay: 4s;
+  }
+}
+
+/* ───── User Info Card ───── */
+.user-info-card {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  animation: slideInLeft 0.8s ease-out;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+  }
+}
+
+.user-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.user-details {
+  flex: 1;
+
+  h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2d3748;
+  }
+
+  .user-email {
+    margin: 0 0 0.75rem 0;
+    color: #64748b;
+    font-size: 1rem;
+  }
+}
+
+.user-role {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 25px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.role-admin {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+  &.role-director {
+    background: #fef3c7;
+    color: #d97706;
+  }
+  &.role-manager {
+    background: #ddd6fe;
+    color: #7c3aed;
+  }
+  &.role-secretary {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+  &.role-staff {
+    background: #dbeafe;
+    color: #2563eb;
+  }
+  &.role-parent {
+    background: #fce7f3;
+    color: #db2777;
+  }
+  &.role-default {
+    background: #f1f5f9;
+    color: #475569;
+  }
+}
+
+/* ───── Main Grid ───── */
+.main-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  animation: fadeIn 1s ease-out 0.4s both;
+}
+
+/* ───── Feature Cards ───── */
+.feature-card {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+  }
+
+  &.alert-card::before {
+    background: #f59e0b;
+  }
+  &.invitation-card::before {
+    background: #3b82f6;
+  }
+  &.dashboard-card::before {
+    background: #6366f1;
+  }
+  &.debug-card::before {
+    background: #8b5cf6;
+  }
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  i {
+    font-size: 2rem;
+    color: #667eea;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2d3748;
+  }
+}
+
+.card-content {
+  color: #4a5568;
+}
+
+/* ───── Animations ───── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(20deg);
+  }
+  75% {
+    transform: rotate(-20deg);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
 
 /* ───── Responsive ───── */
 @media (max-width: 768px) {
@@ -2059,19 +2371,41 @@ onMounted(async () => {
     padding: 2rem 1rem;
   }
 
-  /* Responsive pour les grilles d'outils admin */
-  .admin-tools-grid {
+  /* Responsive pour les autres rôles (vue classique) */
+  .home-container {
+    padding: 1rem;
+  }
+
+  .hero-title {
+    font-size: 2.5rem;
+  }
+
+  .main-grid {
     grid-template-columns: 1fr;
   }
 
-  .admin-tool-card {
+  .user-info-card {
     flex-direction: column;
     text-align: center;
     gap: 1rem;
   }
 
-  .tool-icon {
-    align-self: center;
+  .alert-input-group,
+  .invitation-form {
+    flex-direction: column;
+  }
+
+  .journal-alert-block {
+    .missing-journal-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+
+      .action-btn {
+        align-self: stretch;
+        justify-content: center;
+      }
+    }
   }
 }
 

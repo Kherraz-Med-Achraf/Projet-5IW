@@ -2059,19 +2059,41 @@ onMounted(async () => {
     padding: 2rem 1rem;
   }
 
-  /* Responsive pour les grilles d'outils admin */
-  .admin-tools-grid {
+  /* Responsive pour les autres rôles (vue classique) */
+  .home-container {
+    padding: 1rem;
+  }
+
+  .hero-title {
+    font-size: 2.5rem;
+  }
+
+  .main-grid {
     grid-template-columns: 1fr;
   }
 
-  .admin-tool-card {
+  .user-info-card {
     flex-direction: column;
     text-align: center;
     gap: 1rem;
   }
 
-  .tool-icon {
-    align-self: center;
+  .alert-input-group,
+  .invitation-form {
+    flex-direction: column;
+  }
+
+  .journal-alert-block {
+    .missing-journal-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+
+      .action-btn {
+        align-self: stretch;
+        justify-content: center;
+      }
+    }
   }
 }
 

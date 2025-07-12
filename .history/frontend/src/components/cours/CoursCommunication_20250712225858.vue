@@ -550,67 +550,14 @@ const scanningCreationIndex = ref(0)
 // Pictogrammes étendus pour la création
 const creationPictos = ref<Pictogramme[]>([
   ...pictogrammes.value,
-  // Connecteurs
   { id: 'et', word: 'et', icon: 'add', description: 'Connecteur d\'addition' },
   { id: 'mais', word: 'mais', icon: 'remove', description: 'Connecteur d\'opposition' },
-  { id: 'quand', word: 'quand', icon: 'schedule', description: 'Connecteur de temps' },
-  { id: 'si', word: 'si', icon: 'help_outline', description: 'Connecteur de condition' },
-  
-  // Actions
   { id: 'manger', word: 'manger', icon: 'restaurant', description: 'Action de se nourrir' },
   { id: 'lire', word: 'lire', icon: 'book', description: 'Action de lecture' },
   { id: 'parler', word: 'parler', icon: 'record_voice_over', description: 'Action de communication' },
-  { id: 'dormir', word: 'dormir', icon: 'bedtime', description: 'Action de repos' },
-  { id: 'ecouter', word: 'écouter', icon: 'hearing', description: 'Action d\'écoute' },
-  { id: 'regarder', word: 'regarder', icon: 'visibility', description: 'Action de vision' },
-  { id: 'dessiner', word: 'dessiner', icon: 'draw', description: 'Action artistique' },
-  { id: 'chanter', word: 'chanter', icon: 'music_note', description: 'Action musicale' },
-  { id: 'courir', word: 'courir', icon: 'directions_run', description: 'Action de course' },
-  { id: 'marcher', word: 'marcher', icon: 'directions_walk', description: 'Action de marche' },
-  
-  // États avec "j'ai"
-  { id: 'j_ai', word: 'j\'ai', icon: 'person_pin', description: 'Avoir quelque chose' },
-  { id: 'faim', word: 'faim', icon: 'lunch_dining', description: 'Sensation de besoin alimentaire' },
-  { id: 'soif', word: 'soif', icon: 'local_drink', description: 'Besoin de boire' },
-  { id: 'sommeil', word: 'sommeil', icon: 'bedtime', description: 'Besoin de dormir' },
-  { id: 'chaud', word: 'chaud', icon: 'whatshot', description: 'Sensation de chaleur' },
-  { id: 'froid', word: 'froid', icon: 'ac_unit', description: 'Sensation de froid' },
-  { id: 'mal', word: 'mal', icon: 'sick', description: 'Sensation de douleur' },
-  { id: 'peur', word: 'peur', icon: 'sentiment_very_dissatisfied', description: 'Émotion de peur' },
-  
-  // États avec "je suis"  
   { id: 'fatigue', word: 'fatigué', icon: 'bedtime', description: 'État de fatigue' },
   { id: 'content', word: 'content', icon: 'sentiment_satisfied', description: 'Émotion positive' },
-  { id: 'triste', word: 'triste', icon: 'sentiment_dissatisfied', description: 'Émotion négative' },
-  { id: 'en_colere', word: 'en colère', icon: 'sentiment_very_dissatisfied', description: 'Émotion de colère' },
-  { id: 'excite', word: 'excité', icon: 'sentiment_very_satisfied', description: 'Émotion d\'excitation' },
-  { id: 'calme', word: 'calme', icon: 'self_improvement', description: 'État de tranquillité' },
-  { id: 'malade', word: 'malade', icon: 'sick', description: 'État de maladie' },
-  { id: 'fatigue_fort', word: 'très fatigué', icon: 'hotel', description: 'État de grande fatigue' },
-  
-  // Objets/Lieux
-  { id: 'livre', word: 'livre', icon: 'menu_book', description: 'Objet de lecture' },
-  { id: 'musique', word: 'musique', icon: 'music_note', description: 'Art sonore' },
-  { id: 'jeu', word: 'jeu', icon: 'sports_esports', description: 'Activité ludique' },
-  { id: 'eau', word: 'eau', icon: 'water_drop', description: 'Liquide essentiel' },
-  { id: 'nourriture', word: 'nourriture', icon: 'fastfood', description: 'Aliment' },
-  { id: 'maison', word: 'maison', icon: 'home', description: 'Lieu d\'habitation' },
-  { id: 'ecole', word: 'école', icon: 'school', description: 'Lieu d\'apprentissage' },
-  { id: 'jardin', word: 'jardin', icon: 'park', description: 'Espace extérieur' },
-  
-  // Adjectifs
-  { id: 'grand', word: 'grand', icon: 'height', description: 'Qualité de taille' },
-  { id: 'petit', word: 'petit', icon: 'compress', description: 'Qualité de taille réduite' },
-  { id: 'beau', word: 'beau', icon: 'star', description: 'Qualité esthétique' },
-  { id: 'bon', word: 'bon', icon: 'thumb_up', description: 'Qualité positive' },
-  { id: 'difficile', word: 'difficile', icon: 'warning', description: 'Niveau de complexité' },
-  { id: 'facile', word: 'facile', icon: 'check_circle', description: 'Niveau de simplicité' },
-  
-  // Temps
-  { id: 'maintenant', word: 'maintenant', icon: 'schedule', description: 'Moment présent' },
-  { id: 'plus_tard', word: 'plus tard', icon: 'schedule_send', description: 'Moment futur' },
-  { id: 'hier', word: 'hier', icon: 'history', description: 'Moment passé' },
-  { id: 'demain', word: 'demain', icon: 'event', description: 'Moment futur proche' }
+  { id: 'faim', word: 'faim', icon: 'lunch_dining', description: 'Sensation de besoin alimentaire' }
 ])
 
 // Séquence cible

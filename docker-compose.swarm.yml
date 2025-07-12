@@ -31,8 +31,6 @@ secrets:
     external: true
   yousign_webhook_secret:
     external: true
-  vite_sentry_dsn:
-    external: true
 
 networks:
   frontend-net:
@@ -89,8 +87,6 @@ services:
     image: achraf97/projet5iw-frontend:prod
     environment:
       - VITE_NEST_API_URL=http://nest:3000
-    secrets:
-      - vite_sentry_dsn
     networks:
       - frontend-net
     deploy:

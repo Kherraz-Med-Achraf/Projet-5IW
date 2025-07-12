@@ -8,7 +8,6 @@ import App from "./App.vue";
 import router from "./router";
 
 import * as Sentry from "@sentry/vue";
-import { readSecret } from "./utils/secret";
 
 import Toast, { POSITION } from "vue-toastification";
 import "vue-toastification/dist/index.css";
@@ -35,7 +34,7 @@ const app = createApp(App);
 
 Sentry.init({
   app,
-  dsn: readSecret("/run/secrets/vite_sentry_dsn", "VITE_SENTRY_DSN"),
+  dsn: "https://40aef9646a16fa1e485eb1325039b6f0@o4509197120831488.ingest.de.sentry.io/4509655804674128",
   sendDefaultPii: true,
 });
 

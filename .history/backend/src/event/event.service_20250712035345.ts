@@ -66,7 +66,7 @@ export class EventService {
     const withCap = await Promise.all(
       events.map(async (ev) => {
         if (ev.capacity) {
-          const count = await this.prisma.eventRegistrationChild.count(
+          const count = await this.prisma.eventRegistration.count(
             this.getValidatedRegistrationsQuery(ev.id),
           );
           return {
@@ -350,11 +350,11 @@ export class EventService {
       if (evNow.isLocked) throw new BadRequestException('Événement complet');
 
       if (evNow.capacity) {
-        // Compte les places prises : paiements confirmés + chèques en attente (compte les enfants)
-        const count = await tx.eventRegistrationChild.count(
+        // Compte les places prises : paiements confirmés + chèques en attente
+        const count = await tx.eventRegistration.count(
           this.getValidatedRegistrationsQuery(eventId),
         );
-        if (count + dto.childIds.length > evNow.capacity) {
+        if (count + 1 > evNow.capacity) {
           throw new BadRequestException('Capacité maximale atteinte');
         }
       }
@@ -388,9 +388,9 @@ export class EventService {
       // ✅ CORRECTION: Ne verrouiller que si capacité atteinte, pas pour capacité illimitée
       if (evNow.capacity) {
         // Si événement avec capacité limitée, vérifier si on doit verrouiller
-        const countAfterInscription = await tx.eventRegistrationChild.count(
+        const countAfterInscription = await tx.eventRegistration.count(
           this.getValidatedRegistrationsQuery(eventId),
-        ) + dto.childIds.length;
+        ) + 1;
         
         // Verrouiller seulement si capacité atteinte ou dépassée
         if (countAfterInscription >= evNow.capacity) {

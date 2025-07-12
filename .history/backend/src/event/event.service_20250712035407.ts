@@ -388,9 +388,9 @@ export class EventService {
       // ✅ CORRECTION: Ne verrouiller que si capacité atteinte, pas pour capacité illimitée
       if (evNow.capacity) {
         // Si événement avec capacité limitée, vérifier si on doit verrouiller
-        const countAfterInscription = await tx.eventRegistrationChild.count(
+        const countAfterInscription = await tx.eventRegistration.count(
           this.getValidatedRegistrationsQuery(eventId),
-        ) + dto.childIds.length;
+        ) + 1;
         
         // Verrouiller seulement si capacité atteinte ou dépassée
         if (countAfterInscription >= evNow.capacity) {

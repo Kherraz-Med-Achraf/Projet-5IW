@@ -33,24 +33,22 @@ export class EventService {
     private readonly mail: MailService,
   ) {}
 
-  /** Helper pour compter les places réellement occupées (par enfant) */
+  /** Helper pour compter les places réellement occupées (par parent) */
   private getValidatedRegistrationsQuery(eventId: string) {
     return {
       where: {
-        registration: {
-          eventId,
-          OR: [
-            { paymentStatus: { in: [PaymentStatus.PAID, PaymentStatus.FREE] } }, // Paiements confirmés
-            {
-              paymentMethod: PaymentMethod.CHEQUE,
-              paymentStatus: PaymentStatus.PENDING,
-            }, // Chèques en attente (place réservée)
-            {
-              paymentMethod: PaymentMethod.STRIPE,
-              paymentStatus: PaymentStatus.PENDING,
-            }, // Paiements Stripe en attente (place réservée pendant le processus)
-          ],
-        },
+        eventId,
+        OR: [
+          { paymentStatus: { in: [PaymentStatus.PAID, PaymentStatus.FREE] } }, // Paiements confirmés
+          {
+            paymentMethod: PaymentMethod.CHEQUE,
+            paymentStatus: PaymentStatus.PENDING,
+          }, // Chèques en attente (place réservée)
+          {
+            paymentMethod: PaymentMethod.STRIPE,
+            paymentStatus: PaymentStatus.PENDING,
+          }, // Paiements Stripe en attente (place réservée pendant le processus)
+        ],
       },
     };
   }
@@ -66,7 +64,7 @@ export class EventService {
     const withCap = await Promise.all(
       events.map(async (ev) => {
         if (ev.capacity) {
-          const count = await this.prisma.eventRegistrationChild.count(
+          const count = await this.prisma.eventRegistration.count(
             this.getValidatedRegistrationsQuery(ev.id),
           );
           return {
@@ -350,7 +348,7 @@ export class EventService {
       if (evNow.isLocked) throw new BadRequestException('Événement complet');
 
       if (evNow.capacity) {
-        // Compte les places prises : paiements confirmés + chèques en attente (compte les enfants)
+        // Compte les places prises : paiements confirmés + chèques en attente
         const count = await tx.eventRegistrationChild.count(
           this.getValidatedRegistrationsQuery(eventId),
         );

@@ -420,23 +420,8 @@ export const useChatStore = defineStore("chat", () => {
       if (chat) {
         chat.lastMessage = u.lastMessage;
         chat.updatedAt = u.sentAt;
-        
-        // Incrémenter le compteur seulement si c'est un message d'un autre utilisateur
-        // et seulement si on n'a pas déjà traité ce message via newMessage
-        if (u.authorId !== auth.user?.id) {
-          // Vérifier si le message est déjà dans notre liste locale
-          const chatMessages = messages[u.chatId];
-          const messageExists = chatMessages && chatMessages.some(m => 
-            m.content === u.lastMessage && 
-            m.authorId === u.authorId && 
-            new Date(m.sentAt).getTime() === new Date(u.sentAt).getTime()
-          );
-          
-          // Si le message n'existe pas dans notre liste locale, c'est qu'on n'a pas reçu newMessage
-          if (!messageExists) {
-            chat.unreadCount = (chat.unreadCount || 0) + 1;
-          }
-        }
+        // Ne pas incrémenter le compteur ici car c'est déjà fait dans newMessage
+        // L'événement chatUpdated est un fallback pour les conversations non actives
 
         // Remonter en haut
         const idx = chats.value.findIndex((ch) => ch.id === u.chatId);

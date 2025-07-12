@@ -989,7 +989,6 @@ $background: #ffffff;
 
 .content {
   padding: 2rem;
-  background: white;
 }
 
 // Boutons de navigation

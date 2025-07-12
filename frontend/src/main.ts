@@ -7,6 +7,9 @@ import { createPinia } from "pinia";
 import App from "./App.vue";
 import router from "./router";
 
+import * as Sentry from "@sentry/vue";
+import { readSecret } from "./utils/secret";
+
 import Toast, { POSITION } from "vue-toastification";
 import "vue-toastification/dist/index.css";
 
@@ -30,6 +33,12 @@ const toastOptions = {
 
 const app = createApp(App);
 
+Sentry.init({
+  app,
+  dsn: readSecret("/run/secrets/vite_sentry_dsn", "VITE_SENTRY_DSN"),
+  sendDefaultPii: true,
+});
+
 // Configuration Pinia avec désactivation des logs en développement
 const pinia = createPinia();
 
@@ -38,7 +47,12 @@ if (import.meta.env.DEV) {
   const originalLog = console.log;
   console.log = (...args) => {
     // Filtrer les logs d'installation de stores Pinia
-    if (args.length > 0 && typeof args[0] === 'string' && args[0].includes('🍍') && args[0].includes('installed')) {
+    if (
+      args.length > 0 &&
+      typeof args[0] === "string" &&
+      args[0].includes("🍍") &&
+      args[0].includes("installed")
+    ) {
       return; // Ne pas afficher ces logs
     }
     originalLog.apply(console, args);

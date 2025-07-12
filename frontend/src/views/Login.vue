@@ -3,6 +3,15 @@
     <div class="login-top">
       <h1 class="logo">APAJH</h1>
       <h2>Veuillez entrer vos identifiants pour vous connecter.</h2>
+      <button
+        @click="
+          () => {
+            throw new Error('Erreur volontaire côté frontend');
+          }
+        "
+      >
+        Tester Sentry Front
+      </button>
     </div>
     <div class="login-container">
       <form @submit.prevent="onSubmit">
@@ -29,7 +38,10 @@
         <div class="modal-content">
           <div class="modal-header">
             <h2>Authentification à deux facteurs</h2>
-            <p>Veuillez entrer le code à 6 chiffres généré par votre application d'authentification</p>
+            <p>
+              Veuillez entrer le code à 6 chiffres généré par votre application
+              d'authentification
+            </p>
           </div>
           <form @submit.prevent="submitOtp" class="otp-form">
             <div class="form-group">
@@ -46,13 +58,25 @@
                 class="otp-input"
                 @input="formatOtpInput"
               />
-              <small class="form-hint">Entrez le code à 6 chiffres de votre application d'authentification</small>
+              <small class="form-hint"
+                >Entrez le code à 6 chiffres de votre application
+                d'authentification</small
+              >
             </div>
             <div class="form-actions">
-              <button type="button" @click="closeOtpModal" :disabled="auth.loading" class="btn-secondary">
+              <button
+                type="button"
+                @click="closeOtpModal"
+                :disabled="auth.loading"
+                class="btn-secondary"
+              >
                 Annuler
               </button>
-              <button type="submit" :disabled="auth.loading || otpCode.length !== 6" class="btn-primary">
+              <button
+                type="submit"
+                :disabled="auth.loading || otpCode.length !== 6"
+                class="btn-primary"
+              >
                 <span v-if="auth.loading">Vérification...</span>
                 <span v-else>Valider</span>
               </button>
@@ -90,7 +114,7 @@ async function onSubmit() {
     email: email.value,
     password: password.value,
   });
-  
+
   if (res.tempToken && !res.access_token) {
     auth.tempToken = res.tempToken;
     showOtpModal.value = true;
@@ -109,12 +133,12 @@ async function submitOtp() {
     toast.error("Veuillez saisir votre code OTP");
     return;
   }
-  
+
   const res = await auth.verifyOtp({
     tempToken: auth.tempToken!,
     otpCode: otpCode.value,
   });
-  
+
   if (res.access_token) {
     toast.success("Connexion réussie !");
     showOtpModal.value = false;
@@ -130,7 +154,7 @@ function closeOtpModal() {
 
 function formatOtpInput(event: Event) {
   const input = event.target as HTMLInputElement;
-  let value = input.value.replace(/\D/g, ''); // Ne garder que les chiffres
+  let value = input.value.replace(/\D/g, ""); // Ne garder que les chiffres
 
   if (value.length > 6) {
     value = value.slice(0, 6);
@@ -240,14 +264,14 @@ function formatOtpInput(event: Event) {
 
 .modal-header {
   margin-bottom: 1.5rem;
-  
+
   h2 {
     color: #111827;
     font-size: 1.25rem;
     font-weight: 600;
     margin: 0 0 0.5rem 0;
   }
-  
+
   p {
     color: #6b7280;
     font-size: 0.875rem;
@@ -321,17 +345,17 @@ function formatOtpInput(event: Event) {
   font-weight: 500;
   text-align: center;
   letter-spacing: 0.5rem;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   background-color: #f9fafb;
   transition: all 0.2s ease;
-  
+
   &:focus {
     border-color: $primary-color;
     outline: none;
     background-color: #fff;
     box-shadow: 0 0 0 3px rgba(68, 68, 172, 0.1);
   }
-  
+
   &::placeholder {
     letter-spacing: 0.5rem;
     color: #9ca3af;

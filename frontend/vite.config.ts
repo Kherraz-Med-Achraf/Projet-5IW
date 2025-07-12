@@ -10,8 +10,8 @@ export default defineConfig({
     vue(),
     // Désactiver les devtools en production pour éviter les logs de développement
     vueDevTools({
-      enabled: process.env.NODE_ENV === 'development'
-    })
+      enabled: process.env.NODE_ENV === "development",
+    }),
   ],
   resolve: {
     alias: {

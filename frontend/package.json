@@ -16,6 +16,8 @@
     "@fullcalendar/list": "^6.1.17",
     "@fullcalendar/timegrid": "^6.1.17",
     "@fullcalendar/vue3": "^6.1.17",
+    "@sentry/tracing": "^7.120.3",
+    "@sentry/vue": "^9.38.0",
     "gridjs": "^6.2.0",
     "gridjs-vue": "^5.0.4",
     "jspdf": "^3.0.1",

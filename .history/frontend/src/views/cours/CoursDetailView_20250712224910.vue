@@ -29,7 +29,6 @@
 import { useRoute, useRouter } from 'vue-router'
 import PageHeader from '@/components/PageHeader.vue'
 import CoursFrancais from '@/components/cours/CoursFrancais.vue'
-import CoursCommunication from '@/components/cours/CoursCommunication.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -42,7 +41,7 @@ function getMatiereTitle(matiere: string): string {
     math: 'Mathématiques',
     emotion: 'Émotion',
     wouf: 'Wouf',
-    communication: 'Communication'
+    waf: 'Waf'
   }
   return titles[matiere] || matiere
 }

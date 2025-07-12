@@ -42,7 +42,7 @@ function getMatiereTitle(matiere: string): string {
     math: 'Mathématiques',
     emotion: 'Émotion',
     wouf: 'Wouf',
-    communication: 'Communication'
+    waf: 'Waf'
   }
   return titles[matiere] || matiere
 }

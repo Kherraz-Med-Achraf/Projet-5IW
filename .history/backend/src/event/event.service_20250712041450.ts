@@ -66,24 +66,9 @@ export class EventService {
     const withCap = await Promise.all(
       events.map(async (ev) => {
         if (ev.capacity) {
-          const count = await this.prisma.eventRegistrationChild.count({
-            where: {
-              registration: {
-                eventId: ev.id,
-                OR: [
-                  { paymentStatus: { in: [PaymentStatus.PAID, PaymentStatus.FREE] } },
-                  {
-                    paymentMethod: PaymentMethod.CHEQUE,
-                    paymentStatus: PaymentStatus.PENDING,
-                  },
-                  {
-                    paymentMethod: PaymentMethod.STRIPE,
-                    paymentStatus: PaymentStatus.PENDING,
-                  },
-                ],
-              },
-            },
-          });
+          const count = await this.prisma.eventRegistrationChild.count(
+            this.getValidatedRegistrationsQuery(ev.id),
+          );
           return {
             ...ev,
             capacityLeft: Math.max(ev.capacity - count, 0),
@@ -418,24 +403,9 @@ export class EventService {
       // ✅ CORRECTION: Ne verrouiller que si capacité atteinte, pas pour capacité illimitée
       if (evNow.capacity) {
         // Si événement avec capacité limitée, vérifier si on doit verrouiller
-        const countAfterInscription = await tx.eventRegistrationChild.count({
-          where: {
-            registration: {
-              eventId,
-              OR: [
-                { paymentStatus: { in: [PaymentStatus.PAID, PaymentStatus.FREE] } },
-                {
-                  paymentMethod: PaymentMethod.CHEQUE,
-                  paymentStatus: PaymentStatus.PENDING,
-                },
-                {
-                  paymentMethod: PaymentMethod.STRIPE,
-                  paymentStatus: PaymentStatus.PENDING,
-                },
-              ],
-            },
-          },
-        }) + dto.childIds.length;
+        const countAfterInscription = await tx.eventRegistrationChild.count(
+          this.getValidatedRegistrationsQuery(eventId),
+        ) + dto.childIds.length;
         
         // Verrouiller seulement si capacité atteinte ou dépassée
         if (countAfterInscription >= evNow.capacity) {

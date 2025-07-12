@@ -66,24 +66,9 @@ export class EventService {
     const withCap = await Promise.all(
       events.map(async (ev) => {
         if (ev.capacity) {
-          const count = await this.prisma.eventRegistrationChild.count({
-            where: {
-              registration: {
-                eventId: ev.id,
-                OR: [
-                  { paymentStatus: { in: [PaymentStatus.PAID, PaymentStatus.FREE] } },
-                  {
-                    paymentMethod: PaymentMethod.CHEQUE,
-                    paymentStatus: PaymentStatus.PENDING,
-                  },
-                  {
-                    paymentMethod: PaymentMethod.STRIPE,
-                    paymentStatus: PaymentStatus.PENDING,
-                  },
-                ],
-              },
-            },
-          });
+          const count = await this.prisma.eventRegistrationChild.count(
+            this.getValidatedRegistrationsQuery(ev.id),
+          );
           return {
             ...ev,
             capacityLeft: Math.max(ev.capacity - count, 0),

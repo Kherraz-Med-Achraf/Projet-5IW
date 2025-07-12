@@ -613,10 +613,10 @@ watch(() => props.visible, (newVisible) => {
   border: 0;
 }
 
-.required::after {
-  content: " *";
+.required {
   color: var(--error-color);
   font-weight: 600;
+  margin-left: 0.25rem;
 }
 
 /* Modal */

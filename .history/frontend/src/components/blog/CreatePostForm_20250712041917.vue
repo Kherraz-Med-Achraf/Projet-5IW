@@ -116,9 +116,10 @@
 
             <!-- Description -->
             <div class="form-group">
-              <label for="description" class="form-label required">
+              <label for="description" class="form-label">
                 <i class="material-icons" aria-hidden="true">description</i>
                 Description
+                <span class="required" aria-label="obligatoire">*</span>
               </label>
               <div class="input-container">
                 <textarea
@@ -613,10 +614,10 @@ watch(() => props.visible, (newVisible) => {
   border: 0;
 }
 
-.required::after {
-  content: " *";
+.required {
   color: var(--error-color);
   font-weight: 600;
+  margin-left: 0.25rem;
 }
 
 /* Modal */

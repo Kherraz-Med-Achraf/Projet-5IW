@@ -66,24 +66,14 @@ export function initSocket(token: string) {
 
   socket.on('disconnect', (reason) => {
     console.log('[WebSocket] Disconnected:', reason);
-    
-    // Ne pas reconnecter automatiquement si :
-    // - Déconnexion volontaire du client
-    // - Problème d'authentification/sécurité côté serveur
-    const shouldNotReconnect = reason === 'io client disconnect' || 
-                               reason === 'io server disconnect' ||
-                               reason.includes('auth') ||
-                               reason.includes('security');
-    
-    if (!shouldNotReconnect) {
+    // Tentative de reconnexion automatique sauf si c'est volontaire
+    if (reason !== 'io client disconnect') {
       setTimeout(() => {
         if (!socket.connected) {
           console.log('[WebSocket] Attempting to reconnect...');
           socket.connect();
         }
-      }, 2000); // Augmenter le délai pour éviter le spam
-    } else {
-      console.log('[WebSocket] Reconnection disabled due to:', reason);
+      }, 1000);
     }
   });
 

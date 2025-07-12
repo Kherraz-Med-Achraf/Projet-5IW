@@ -166,24 +166,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     activity.lastAttempt = new Date();
 
     // Bloquer après 5 tentatives suspectes en 10 minutes
-    // Exception : pour les erreurs JWT normales, bloquer après 10 tentatives seulement
-    const maxAttempts = reason === 'JWT_ERROR' ? 10 : 5;
-    
-    if (activity.failedAttempts >= maxAttempts) {
+    if (activity.failedAttempts >= 5) {
       activity.blocked = true;
       console.error(
-        `[SECURITY] IP ${clientIp} bloquée pour activité suspecte (raison: ${reason}, tentatives: ${activity.failedAttempts})`,
+        `[SECURITY] IP ${clientIp} bloquée pour activité suspecte (raison: ${reason})`,
       );
 
-      // Débloquer plus rapidement pour les erreurs JWT (5 min vs 30 min)
-      const blockDuration = reason === 'JWT_ERROR' ? 5 * 60 * 1000 : 30 * 60 * 1000;
-      
+      // Débloquer automatiquement après 30 minutes
       setTimeout(
         () => {
           this.suspiciousActivity.delete(clientIp);
-          console.log(`[SECURITY] IP ${clientIp} débloquée automatiquement après ${blockDuration / 60000} minutes`);
+          console.log(`[SECURITY] IP ${clientIp} débloquée automatiquement`);
         },
-        blockDuration,
+        30 * 60 * 1000,
       );
     }
 

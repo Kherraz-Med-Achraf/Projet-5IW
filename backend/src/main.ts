@@ -1,4 +1,5 @@
 import './instrument';
+import * as Sentry from '@sentry/node';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
@@ -57,12 +58,12 @@ async function bootstrap() {
   );
 
   // Traque des requêtes + contexte pour Sentry
-  // @ts-ignore - Handlers n'est pas typé dans declarations
-  app.use((Sentry as any).Handlers.requestHandler());
+  // @ts-ignore - Handlers n'est pas typé dans les déclarations
+  app.use(Sentry.Handlers.requestHandler());
 
   // (les erreurs gérées par Nest repasseront par ce middleware global)
   // @ts-ignore
-  app.use((Sentry as any).Handlers.errorHandler());
+  app.use(Sentry.Handlers.errorHandler());
 
   // Middleware pour parser les cookies
   app.use(cookieParser());

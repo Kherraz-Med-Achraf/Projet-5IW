@@ -158,6 +158,12 @@ import { useToast } from 'vue-toastification';
 import BaseInput from '@/components/BaseInput.vue';
 import { API_BASE_URL } from '@/utils/api';
 
+// Meta pour cacher la navbar
+definePageMeta({
+  hideNavbar: true,
+  layout: false
+});
+
 const auth = useAuthStore();
 const router = useRouter();
 const toast = useToast();

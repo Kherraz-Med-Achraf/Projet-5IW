@@ -68,7 +68,7 @@ const showSidebar = computed(() => {
     </div>
 
     <!-- Widget de chat global -->
-    <ChatWidget v-if="route.name !== 'Chat' && auth.user?.role !== 'CHILD' && route.name !== 'ForcePasswordChange'" />
+    <ChatWidget v-if="route.name !== 'Chat' && auth.user?.role !== 'CHILD'" />
   </div>
 </template>
 

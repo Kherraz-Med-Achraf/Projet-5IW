@@ -57,14 +57,6 @@ async function bootstrap() {
     }),
   );
 
-  // Traque des requêtes + contexte pour Sentry
-  // @ts-ignore - Handlers n'est pas typé dans les déclarations
-  app.use(Sentry.Handlers.requestHandler());
-
-  // (les erreurs gérées par Nest repasseront par ce middleware global)
-  // @ts-ignore
-  app.use(Sentry.Handlers.errorHandler());
-
   // Middleware pour parser les cookies
   app.use(cookieParser());
 
@@ -185,6 +177,14 @@ async function bootstrap() {
   app.useStaticAssets(publicBlogFolder, {
     prefix: '/uploads/blog/',
   });
+
+  // Traque des requêtes + contexte pour Sentry
+  // @ts-ignore - Handlers n'est pas typé dans les déclarations
+  app.use(Sentry.Handlers.requestHandler());
+
+  // (les erreurs gérées par Nest repasseront par ce middleware global)
+  // @ts-ignore
+  app.use(Sentry.Handlers.errorHandler());
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

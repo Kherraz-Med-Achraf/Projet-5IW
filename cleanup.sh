@@ -5,8 +5,20 @@ STACK_NAME="projet5iw"
 
 echo "🛑 Suppression de la stack $STACK_NAME..."
 docker stack rm "$STACK_NAME"
+docker image prune -a -f
+docker container prune -f
+docker volume prune -f
+
+BUILDKIT_PRUNE_AGE="2h"
+
+echo "🧹 Prune du cache BuildKit (builder)…"
+# Nouvelle CLI (Docker ≥ 20.10)
+docker builder prune -a --filter "until=${BUILDKIT_PRUNE_AGE}" -f || true
+# Compatibilité Buildx (anciennes versions / multi-plateformes)
+docker buildx prune  -a --filter "until=${BUILDKIT_PRUNE_AGE}" -f || true
 
 echo "⏳ Attente de la suppression complète de la stack..."
+
 sleep 10
 
 echo "🗑 Suppression de tous les volumes Docker..."

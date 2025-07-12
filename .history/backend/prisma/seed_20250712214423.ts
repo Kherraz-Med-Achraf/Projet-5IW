@@ -618,7 +618,7 @@ async function main() {
   console.log('📚 Cours interactifs gérés côté frontend (pas de BDD)');
 
   console.log('🌱 Seed terminé avec succès !');
-  console.log(`📊 Résumé: 15 éducateurs, 25 parents, 30 enfants, ${journalsCreated} journaux`);
+  console.log(`📊 Résumé: 15 éducateurs, 25 parents, 30 enfants, ${journalsCreated} journaux, 5 cours interactifs`);
 }
 
 main()

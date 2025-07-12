@@ -194,7 +194,7 @@
                     class="quiz-option"
                     :class="getQuizOptionClass(option.value, quiz1Answer)"
                     @click="selectQuiz1Answer(option.value)"
-                    :disabled="quiz1Answer === 'mangées'"
+                    :disabled="quiz1Answer !== null"
                   >
                     {{ option.label }}
                   </button>
@@ -228,7 +228,7 @@
                     class="quiz-option"
                     :class="getQuizOptionClass(option.value, quiz2Answer)"
                     @click="selectQuiz2Answer(option.value)"
-                    :disabled="quiz2Answer === 'faits'"
+                    :disabled="quiz2Answer !== null"
                   >
                     {{ option.label }}
                   </button>

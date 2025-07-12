@@ -194,7 +194,7 @@
                     class="quiz-option"
                     :class="getQuizOptionClass(option.value, quiz1Answer)"
                     @click="selectQuiz1Answer(option.value)"
-                    :disabled="quiz1Answer === 'mangées'"
+                    :disabled="quiz1Answer !== null"
                   >
                     {{ option.label }}
                   </button>
@@ -203,15 +203,9 @@
                   <p v-if="quiz1Answer === 'mangées'" class="correct">
                     ✅ Parfait ! « Les pommes » (COD) est avant le verbe, donc on accorde : mangées
                   </p>
-                  <div v-else class="incorrect-feedback">
-                    <p class="incorrect">
-                      ❌ Pas tout à fait. Le COD « les pommes » est avant le verbe, il faut donc accorder.
-                    </p>
-                    <button @click="quiz1Answer = null" class="retry-btn">
-                      <i class="material-icons">refresh</i>
-                      Retenter
-                    </button>
-                  </div>
+                  <p v-else class="incorrect">
+                    ❌ Pas tout à fait. Le COD « les pommes » est avant le verbe, il faut donc accorder.
+                  </p>
                 </div>
               </div>
             </div>
@@ -228,7 +222,7 @@
                     class="quiz-option"
                     :class="getQuizOptionClass(option.value, quiz2Answer)"
                     @click="selectQuiz2Answer(option.value)"
-                    :disabled="quiz2Answer === 'faits'"
+                    :disabled="quiz2Answer !== null"
                   >
                     {{ option.label }}
                   </button>
@@ -237,15 +231,9 @@
                   <p v-if="quiz2Answer === 'faits'" class="correct">
                     ✅ Excellent ! « Les devoirs » (masculin pluriel) est avant le verbe, donc : faits
                   </p>
-                  <div v-else class="incorrect-feedback">
-                    <p class="incorrect">
-                      ❌ Réfléchis : « les devoirs » est masculin pluriel et placé avant le verbe.
-                    </p>
-                    <button @click="quiz2Answer = null" class="retry-btn">
-                      <i class="material-icons">refresh</i>
-                      Retenter
-                    </button>
-                  </div>
+                  <p v-else class="incorrect">
+                    ❌ Réfléchis : « les devoirs » est masculin pluriel et placé avant le verbe.
+                  </p>
                 </div>
               </div>
             </div>
@@ -268,15 +256,9 @@
                 <p v-if="typingAnswer.toLowerCase() === 'vues'" class="correct">
                   ✅ Bravo ! Tu as écrit « vues » correctement !
                 </p>
-                <div v-else-if="typingAnswer.length > 2" class="hint-feedback">
-                  <p class="hint">
-                    💡 Indice : « les images » est féminin pluriel et avant le verbe...
-                  </p>
-                  <button @click="typingAnswer = ''; typingFeedback = false" class="retry-btn small">
-                    <i class="material-icons">refresh</i>
-                    Recommencer
-                  </button>
-                </div>
+                <p v-else-if="typingAnswer.length > 2" class="hint">
+                  💡 Indice : « les images » est féminin pluriel et avant le verbe...
+                </p>
               </div>
             </div>
 
@@ -764,7 +746,7 @@ function getQuizOptionClass(option: string, answer: any) {
   if (option === answer) {
     return option === 'mangées' || option === 'faits' ? 'correct' : 'incorrect'
   }
-  return ''  // Ne plus désactiver les autres options pour permettre de retenter
+  return 'disabled'
 }
 
 function isQuizCompleted(quizNum: number) {
@@ -1406,48 +1388,6 @@ $background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     color: $danger-color;
     border-left: 4px solid $danger-color;
   }
-
-  .incorrect-feedback {
-    background: #fef2f2;
-    border: 2px solid $danger-color;
-    border-radius: 0.75rem;
-    padding: 1rem;
-
-    .incorrect {
-      background: transparent;
-      border: none;
-      margin-bottom: 1rem;
-    }
-  }
-}
-
-.retry-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 600;
-  
-  &:hover {
-    background: linear-gradient(135deg, #d97706, #b45309);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-  }
-
-  &.small {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-  }
-
-  i {
-    font-size: 1.25rem;
-  }
 }
 
 .typing-exercise {
@@ -1501,19 +1441,6 @@ $background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   .hint {
     background: #fffbeb;
     color: #f59e0b;
-  }
-
-  .hint-feedback {
-    background: #fffbeb;
-    border: 2px solid #f59e0b;
-    border-radius: 0.75rem;
-    padding: 1rem;
-
-    .hint {
-      background: transparent;
-      border: none;
-      margin-bottom: 1rem;
-    }
   }
 }
 

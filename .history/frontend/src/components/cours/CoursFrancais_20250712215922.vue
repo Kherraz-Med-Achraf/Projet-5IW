@@ -228,7 +228,7 @@
                     class="quiz-option"
                     :class="getQuizOptionClass(option.value, quiz2Answer)"
                     @click="selectQuiz2Answer(option.value)"
-                    :disabled="quiz2Answer === 'faits'"
+                    :disabled="quiz2Answer !== null"
                   >
                     {{ option.label }}
                   </button>

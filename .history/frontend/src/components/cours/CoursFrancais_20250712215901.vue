@@ -194,7 +194,7 @@
                     class="quiz-option"
                     :class="getQuizOptionClass(option.value, quiz1Answer)"
                     @click="selectQuiz1Answer(option.value)"
-                    :disabled="quiz1Answer === 'mangées'"
+                    :disabled="quiz1Answer !== null"
                   >
                     {{ option.label }}
                   </button>
@@ -228,7 +228,7 @@
                     class="quiz-option"
                     :class="getQuizOptionClass(option.value, quiz2Answer)"
                     @click="selectQuiz2Answer(option.value)"
-                    :disabled="quiz2Answer === 'faits'"
+                    :disabled="quiz2Answer !== null"
                   >
                     {{ option.label }}
                   </button>
@@ -1501,19 +1501,6 @@ $background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   .hint {
     background: #fffbeb;
     color: #f59e0b;
-  }
-
-  .hint-feedback {
-    background: #fffbeb;
-    border: 2px solid #f59e0b;
-    border-radius: 0.75rem;
-    padding: 1rem;
-
-    .hint {
-      background: transparent;
-      border: none;
-      margin-bottom: 1rem;
-    }
   }
 }
 

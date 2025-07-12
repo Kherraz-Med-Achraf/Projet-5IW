@@ -194,7 +194,7 @@
                     class="quiz-option"
                     :class="getQuizOptionClass(option.value, quiz1Answer)"
                     @click="selectQuiz1Answer(option.value)"
-                    :disabled="quiz1Answer === 'mangées'"
+                    :disabled="quiz1Answer !== null"
                   >
                     {{ option.label }}
                   </button>
@@ -228,7 +228,7 @@
                     class="quiz-option"
                     :class="getQuizOptionClass(option.value, quiz2Answer)"
                     @click="selectQuiz2Answer(option.value)"
-                    :disabled="quiz2Answer === 'faits'"
+                    :disabled="quiz2Answer !== null"
                   >
                     {{ option.label }}
                   </button>
@@ -1406,48 +1406,6 @@ $background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     color: $danger-color;
     border-left: 4px solid $danger-color;
   }
-
-  .incorrect-feedback {
-    background: #fef2f2;
-    border: 2px solid $danger-color;
-    border-radius: 0.75rem;
-    padding: 1rem;
-
-    .incorrect {
-      background: transparent;
-      border: none;
-      margin-bottom: 1rem;
-    }
-  }
-}
-
-.retry-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 600;
-  
-  &:hover {
-    background: linear-gradient(135deg, #d97706, #b45309);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-  }
-
-  &.small {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-  }
-
-  i {
-    font-size: 1.25rem;
-  }
 }
 
 .typing-exercise {
@@ -1501,19 +1459,6 @@ $background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   .hint {
     background: #fffbeb;
     color: #f59e0b;
-  }
-
-  .hint-feedback {
-    background: #fffbeb;
-    border: 2px solid #f59e0b;
-    border-radius: 0.75rem;
-    padding: 1rem;
-
-    .hint {
-      background: transparent;
-      border: none;
-      margin-bottom: 1rem;
-    }
   }
 }
 

@@ -32,11 +32,6 @@
     </div>
 
     <nav class="sidebar-nav" role="navigation" aria-label="Menu principal" id="sidebar-nav">
-      <!-- Instructions pour la navigation au clavier -->
-      <div class="keyboard-instructions sr-only" aria-live="polite">
-        Utilisez les flèches haut/bas pour naviguer dans le menu. Appuyez sur Entrée ou Espace pour sélectionner. Touches Début/Fin pour aller au premier/dernier élément.
-      </div>
-      
       <ul role="list">
         <li v-for="item in filteredMenuItems" :key="item.routeName" role="listitem">
           <button

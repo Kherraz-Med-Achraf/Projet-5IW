@@ -3,7 +3,6 @@
   <div v-if="isParentOrChild" class="profile-wrapper">
     <!-- Skip links pour navigation rapide -->
     <div class="skip-links">
-      <a href="#sidebar-nav" class="skip-link">Aller à la navigation</a>
       <a href="#main-content" class="skip-link">Aller au contenu principal</a>
       <a href="#blog-posts" class="skip-link">Aller aux articles</a>
     </div>
@@ -66,7 +65,6 @@
   <div v-else-if="auth.user?.role === 'STAFF'" class="profile-wrapper">
     <!-- Skip links pour navigation rapide -->
     <div class="skip-links">
-      <a href="#sidebar-nav" class="skip-link">Aller à la navigation</a>
       <a href="#main-content" class="skip-link">Aller au contenu principal</a>
       <a href="#presence-stats" class="skip-link"
         >Aller aux statistiques de présence</a

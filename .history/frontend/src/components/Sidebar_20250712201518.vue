@@ -32,11 +32,6 @@
     </div>
 
     <nav class="sidebar-nav" role="navigation" aria-label="Menu principal" id="sidebar-nav">
-      <!-- Instructions pour la navigation au clavier -->
-      <div class="keyboard-instructions sr-only" aria-live="polite">
-        Utilisez les flèches haut/bas pour naviguer dans le menu. Appuyez sur Entrée ou Espace pour sélectionner. Touches Début/Fin pour aller au premier/dernier élément.
-      </div>
-      
       <ul role="list">
         <li v-for="item in filteredMenuItems" :key="item.routeName" role="listitem">
           <button
@@ -512,17 +507,9 @@ function navigate(routeName: string) {
       font-size: inherit;
 
       &:focus {
-        outline: 3px solid #fbbf24;
+        outline: 3px solid #0ea5e9;
         outline-offset: 2px;
-        box-shadow: 0 0 0 2px #4444ac;
-        background: rgba(68, 68, 172, 0.1);
-      }
-
-      &:focus-visible {
-        outline: 3px solid #fbbf24;
-        outline-offset: 2px;
-        box-shadow: 0 0 0 2px #4444ac;
-        background: rgba(68, 68, 172, 0.1);
+        box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
       }
 
       &:hover:not(.logout-nav-item):not(:disabled):not(.active) {

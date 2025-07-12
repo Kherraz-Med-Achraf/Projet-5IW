@@ -2609,34 +2609,6 @@ onMounted(async () => {
   color: #6b7280;
 }
 
-/* Styles pour les autres rôles - Page d'accueil classique */
-.email-input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: all 0.2s ease;
-  color: #1f2937 !important; /* Couleur de texte noire explicite */
-  background: white;
-}
-
-.email-input::placeholder {
-  color: #9ca3af;
-}
-
-.email-input:focus {
-  outline: none;
-  border-color: #4444ac;
-  box-shadow: 0 0 0 3px rgba(68, 68, 172, 0.1);
-}
-
-.email-input:disabled {
-  background: #f9fafb;
-  color: #6b7280;
-  cursor: not-allowed;
-}
-
 .message {
   padding: 1rem;
   border-radius: 0.5rem;

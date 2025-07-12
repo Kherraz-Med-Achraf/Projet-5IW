@@ -596,11 +596,6 @@ async function exportYearReport() {
   background: white;
 }
 
-.form-select option {
-  color: #000000 !important;
-  background: white;
-}
-
 .form-select:focus {
   outline: none;
   border-color: #4444ac;

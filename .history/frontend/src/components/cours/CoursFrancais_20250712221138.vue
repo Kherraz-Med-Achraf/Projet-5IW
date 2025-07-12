@@ -627,7 +627,7 @@ const analysisSteps = [
 ]
 
 const keywords = [
-  { word: 'C-O-D', definition: 'Complément d\'Objet Direct' },
+  { word: 'COD', definition: 'Complément d\'Objet Direct' },
   { word: 'Position', definition: 'Avant ou après le verbe' },
   { word: 'Accord', definition: 'Ajouter -e, -s ou -es' }
 ]
@@ -803,7 +803,7 @@ function getEncouragement() {
   const encouragements = [
     "Tu maîtrises bien cette règle !",
     "Excellent travail sur l'accord !",
-                  "Tu as bien analysé la position du C-O-D !",
+    "Tu as bien analysé la position du COD !",
     "Bravo pour cette belle phrase !"
   ]
   return encouragements[Math.floor(Math.random() * encouragements.length)]

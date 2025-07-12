@@ -115,7 +115,7 @@
               <h3>📋 Règle importante :</h3>
               <p class="rule-text">
                 Le <strong>participe passé + avoir</strong> s'accorde <strong>seulement</strong> 
-                si le <strong>C-O-D</strong> est <strong>avant</strong> le verbe.
+                si le <strong>COD</strong> est <strong>avant</strong> le verbe.
               </p>
             </div>
 
@@ -201,11 +201,11 @@
                 </div>
                 <div v-if="quiz1Answer" class="quiz-feedback">
                   <p v-if="quiz1Answer === 'mangées'" class="correct">
-                    ✅ Parfait ! « Les pommes » (C-O-D) est avant le verbe, donc on accorde : mangées
+                    ✅ Parfait ! « Les pommes » (COD) est avant le verbe, donc on accorde : mangées
                   </p>
                   <div v-else class="incorrect-feedback">
                     <p class="incorrect">
-                      ❌ Pas tout à fait. Le C-O-D « les pommes » est avant le verbe, il faut donc accorder.
+                      ❌ Pas tout à fait. Le COD « les pommes » est avant le verbe, il faut donc accorder.
                     </p>
                     <button @click="quiz1Answer = null" class="retry-btn">
                       <i class="material-icons">refresh</i>
@@ -337,7 +337,7 @@
             <div class="creation-area">
               <h3>🎨 Crée ta propre phrase</h3>
               <p class="instruction">
-                Écris une phrase avec un C-O-D <strong>avant</strong> le verbe et accorde le participe passé !
+                Écris une phrase avec un COD <strong>avant</strong> le verbe et accorde le participe passé !
               </p>
               
               <div class="input-area">
@@ -440,7 +440,7 @@
                 </p>
                 <div class="analysis-breakdown">
                   <div class="cod-highlight">
-                    <span class="label">C-O-D :</span>
+                    <span class="label">COD :</span>
                     <span class="value">« Les chansons » (féminin pluriel)</span>
                   </div>
                   <div class="position-highlight">
@@ -596,8 +596,8 @@ const introOptions = [
 
 const procedureSteps = [
   { title: 'Identifier le verbe', description: 'Trouve le verbe avec l\'auxiliaire avoir (ici, « ai lu »)' },
-  { title: 'Repérer le C-O-D', description: 'Cherche le complément d\'objet direct (ici « les lettres »)' },
-  { title: 'Vérifier sa position', description: 'Le C-O-D est-il avant ou après le verbe ?' }
+  { title: 'Repérer le COD', description: 'Cherche le complément d\'objet direct (ici « les lettres »)' },
+  { title: 'Vérifier sa position', description: 'Le COD est-il avant ou après le verbe ?' }
 ]
 
 const examples = [
@@ -621,13 +621,13 @@ const quiz2Options = [
 
 const analysisSteps = [
   { icon: '🔍', text: 'Trouver le verbe avec avoir' },
-  { icon: '📍', text: 'Localiser le C-O-D' },
+  { icon: '📍', text: 'Localiser le COD' },
   { icon: '📏', text: 'Vérifier la position' },
   { icon: '✍️', text: 'Appliquer l\'accord' }
 ]
 
 const keywords = [
-  { word: 'C-O-D', definition: 'Complément d\'Objet Direct' },
+  { word: 'COD', definition: 'Complément d\'Objet Direct' },
   { word: 'Position', definition: 'Avant ou après le verbe' },
   { word: 'Accord', definition: 'Ajouter -e, -s ou -es' }
 ]
@@ -720,8 +720,8 @@ function playExample(exampleId: string) {
       const utterance = new SpeechSynthesisUtterance()
       
       const exampleTexts = {
-        'ex1': "J'ai cueilli la fleur. C-O-D après, donc cueilli",
-        'ex2': "La fleur que j'ai cueillie. C-O-D avant, donc cueillie"
+        'ex1': "J'ai cueilli la fleur. COD après, donc cueilli",
+        'ex2': "La fleur que j'ai cueillie. COD avant, donc cueillie"
       }
       
       utterance.text = exampleTexts[exampleId as keyof typeof exampleTexts] || exampleId
@@ -803,7 +803,7 @@ function getEncouragement() {
   const encouragements = [
     "Tu maîtrises bien cette règle !",
     "Excellent travail sur l'accord !",
-                  "Tu as bien analysé la position du C-O-D !",
+    "Tu as bien analysé la position du COD !",
     "Bravo pour cette belle phrase !"
   ]
   return encouragements[Math.floor(Math.random() * encouragements.length)]

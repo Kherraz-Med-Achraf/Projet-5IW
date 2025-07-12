@@ -803,7 +803,7 @@ function getEncouragement() {
   const encouragements = [
     "Tu maîtrises bien cette règle !",
     "Excellent travail sur l'accord !",
-                  "Tu as bien analysé la position du C-O-D !",
+    "Tu as bien analysé la position du COD !",
     "Bravo pour cette belle phrase !"
   ]
   return encouragements[Math.floor(Math.random() * encouragements.length)]

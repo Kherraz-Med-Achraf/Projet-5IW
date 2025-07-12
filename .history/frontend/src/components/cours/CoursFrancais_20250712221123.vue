@@ -440,7 +440,7 @@
                 </p>
                 <div class="analysis-breakdown">
                   <div class="cod-highlight">
-                    <span class="label">C-O-D :</span>
+                    <span class="label">COD :</span>
                     <span class="value">« Les chansons » (féminin pluriel)</span>
                   </div>
                   <div class="position-highlight">
@@ -621,13 +621,13 @@ const quiz2Options = [
 
 const analysisSteps = [
   { icon: '🔍', text: 'Trouver le verbe avec avoir' },
-  { icon: '📍', text: 'Localiser le C-O-D' },
+  { icon: '📍', text: 'Localiser le COD' },
   { icon: '📏', text: 'Vérifier la position' },
   { icon: '✍️', text: 'Appliquer l\'accord' }
 ]
 
 const keywords = [
-  { word: 'C-O-D', definition: 'Complément d\'Objet Direct' },
+  { word: 'COD', definition: 'Complément d\'Objet Direct' },
   { word: 'Position', definition: 'Avant ou après le verbe' },
   { word: 'Accord', definition: 'Ajouter -e, -s ou -es' }
 ]
@@ -803,7 +803,7 @@ function getEncouragement() {
   const encouragements = [
     "Tu maîtrises bien cette règle !",
     "Excellent travail sur l'accord !",
-                  "Tu as bien analysé la position du C-O-D !",
+    "Tu as bien analysé la position du COD !",
     "Bravo pour cette belle phrase !"
   ]
   return encouragements[Math.floor(Math.random() * encouragements.length)]

@@ -3,15 +3,6 @@
     <div class="login-top">
       <h1 class="logo">APAJH</h1>
       <h2>Veuillez entrer vos identifiants pour vous connecter.</h2>
-      <button
-        @click="
-          () => {
-            throw new Error('Erreur volontaire côté frontend');
-          }
-        "
-      >
-        Tester Sentry Front
-      </button>
     </div>
     <div class="login-container">
       <form @submit.prevent="onSubmit">

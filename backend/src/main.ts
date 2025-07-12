@@ -7,6 +7,7 @@ import * as express from 'express';
 import rateLimit from 'express-rate-limit';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
+
 import helmet from 'helmet';
 import { FRONTEND_BASE_URL } from './utils/frontend-url';
 
@@ -54,6 +55,14 @@ async function bootstrap() {
       crossOriginEmbedderPolicy: false,
     }),
   );
+
+  // Traque des requêtes + contexte pour Sentry
+  // @ts-ignore - Handlers n'est pas typé dans declarations
+  app.use((Sentry as any).Handlers.requestHandler());
+
+  // (les erreurs gérées par Nest repasseront par ce middleware global)
+  // @ts-ignore
+  app.use((Sentry as any).Handlers.errorHandler());
 
   // Middleware pour parser les cookies
   app.use(cookieParser());

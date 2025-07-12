@@ -274,8 +274,8 @@ function initGrid() {
         formatter: (cell) => `${cell} ans`
       },
       { 
-        id: 'email', 
-        name: 'Email (enfant)'
+        id: 'parentEmail', 
+        name: 'Email du parent'
       },
       { 
         id: 'parentName', 

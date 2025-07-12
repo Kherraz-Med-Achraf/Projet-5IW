@@ -298,7 +298,15 @@ const signDocument = async (document: Document) => {
   }
 }
 
+const handleViewPendingSignatures = () => {
+  // Filtrer pour afficher uniquement les documents en attente de signature
+  signatureFilter.value = true
+  applyFilters()
+}
 
+const handleSignatureBadgeClick = (count: number) => {
+  console.log(`Badge signatures cliqué: ${count} documents`)
+}
 
 // Utilitaires
 const getCategoryIcon = (category: string) => {

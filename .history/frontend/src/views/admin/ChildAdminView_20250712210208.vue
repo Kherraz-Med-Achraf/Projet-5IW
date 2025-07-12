@@ -183,7 +183,7 @@ async function fetchChildren() {
         firstName: c.firstName,
         lastName: c.lastName,
         age: calculateAge(c.birthDate),
-        email: c.user?.email || 'Non renseigné',
+        parentEmail: c.parent?.user?.email || 'Non renseigné',
         parentName: c.parent ? `${c.parent.firstName} ${c.parent.lastName}` : 'Non renseigné',
         createdAt: c.createdAt
       }));
@@ -274,8 +274,8 @@ function initGrid() {
         formatter: (cell) => `${cell} ans`
       },
       { 
-        id: 'email', 
-        name: 'Email (enfant)'
+        id: 'parentEmail', 
+        name: 'Email du parent'
       },
       { 
         id: 'parentName', 
@@ -309,7 +309,7 @@ function initGrid() {
       firstName: c.firstName,
       lastName: c.lastName,
       age: calculateAge(c.birthDate),
-      email: c.user?.email || 'Non renseigné',
+      parentEmail: c.parent?.user?.email || 'Non renseigné',
       parentName: c.parent ? `${c.parent.firstName} ${c.parent.lastName}` : 'Non renseigné',
       createdAt: c.createdAt
     })),

@@ -222,6 +222,7 @@ import { useDocumentStore } from '@/stores/documentStore'
 import { useNotificationStore } from '@/stores/notificationStore'
 import type { Document } from '@/stores/documentStore'
 import PageHeader from '@/components/PageHeader.vue'
+import PendingSignaturesBadge from '@/components/documents/PendingSignaturesBadge.vue'
 
 // Stores
 const documentStore = useDocumentStore()
@@ -298,7 +299,15 @@ const signDocument = async (document: Document) => {
   }
 }
 
+const handleViewPendingSignatures = () => {
+  // Filtrer pour afficher uniquement les documents en attente de signature
+  signatureFilter.value = true
+  applyFilters()
+}
 
+const handleSignatureBadgeClick = (count: number) => {
+  console.log(`Badge signatures cliqué: ${count} documents`)
+}
 
 // Utilitaires
 const getCategoryIcon = (category: string) => {

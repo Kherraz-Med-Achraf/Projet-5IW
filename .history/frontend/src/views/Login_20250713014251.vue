@@ -153,18 +153,6 @@ async function submitOtp() {
   });
 
   if (res.access_token) {
-    // ✅ VÉRIFIER SI LE MOT DE PASSE EST EXPIRÉ APRÈS OTP
-    if (res.passwordExpired) {
-      toast.warning("🔒 Votre mot de passe a expiré. Redirection vers la mise à jour...");
-      // Stocker le token d'accès pour permettre le changement de mot de passe
-      auth.setAuth(res.access_token, res.user);
-      showOtpModal.value = false;
-      setTimeout(() => {
-        router.push("/force-password-change");
-      }, 1500);
-      return;
-    }
-
     toast.success("Connexion réussie !");
     showOtpModal.value = false;
     router.push("/home");

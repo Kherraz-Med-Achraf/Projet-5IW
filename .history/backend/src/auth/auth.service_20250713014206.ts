@@ -297,12 +297,7 @@ export class AuthService {
           HttpStatus.UNAUTHORIZED,
         );
       }
-      
-      // Vérifier seulement le blocage, pas l'expiration
-      const now = new Date();
-      if (user.lockUntil && user.lockUntil > now) {
-        throw new HttpException(`Compte bloqué momentanément`, HttpStatus.LOCKED);
-      }
+      await this.checkLockAndExpiration(user);
 
       const otpPlain = decryptOtp(user.otpSecret!);
       const isOtpValid = speakeasy.totp.verify({
@@ -315,14 +310,12 @@ export class AuthService {
         throw new HttpException('Code OTP invalide', HttpStatus.UNAUTHORIZED);
       }
 
-      const isPasswordExpired = this.checkPasswordExpiration(user);
       const tokens = this.generateTokens(user.id, user.email, user.role);
       await this.storeHashedRefreshToken(user.id, tokens.refresh_token);
       return {
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
         user: this._publicUser(user),
-        passwordExpired: isPasswordExpired, // ✅ NOUVEAU FLAG
       };
     } catch {
       throw new HttpException(

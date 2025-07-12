@@ -177,6 +177,12 @@ export const useAuthStore = defineStore("auth", {
         });
         const data = await response.json();
         if (!response.ok) {
+          // Vérifier si c'est une expiration de mot de passe
+          if (data.message && data.message.includes("mot de passe a expiré")) {
+            // Stocker les credentials temporairement pour le changement forcé
+            sessionStorage.setItem('tempCredentials', JSON.stringify(credentials));
+            throw new PasswordExpiredError(data.message);
+          }
           throw new Error(data.message || "Erreur lors de la connexion");
         }
 
@@ -191,6 +197,13 @@ export const useAuthStore = defineStore("auth", {
         }
         return data;
       } catch (error: any) {
+        // Gérer spécifiquement l'expiration de mot de passe
+        if (error instanceof PasswordExpiredError) {
+          this.error = error.message;
+          // Ne pas afficher de notification d'erreur, on va rediriger
+          throw error;
+        }
+        
         this.error = error.message || "Erreur lors de la connexion";
         notification.showNotification(this.error, "error");
         return {};

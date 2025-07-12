@@ -228,12 +228,7 @@ export class AuthService {
       );
     }
 
-    // Vérifier seulement le blocage, pas l'expiration
-    const now = new Date();
-    if (user.lockUntil && user.lockUntil > now) {
-      throw new HttpException(`Compte bloqué momentanément`, HttpStatus.LOCKED);
-    }
-
+    await this.checkLockAndExpiration(user);
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) {
       await this.recordFailedLogin(user);
@@ -251,12 +246,7 @@ export class AuthService {
           { sub: user.id, email: user.email },
           { secret: ACCESS_TOKEN_SECRET, expiresIn: '5m' },
         );
-        const isPasswordExpired = this.checkPasswordExpiration(user);
-        return { 
-          tempToken: temp, 
-          message: 'OTP requis',
-          passwordExpired: isPasswordExpired,
-        };
+        return { tempToken: temp, message: 'OTP requis' };
       }
       // on vérifie le code OTP
       const isOtpValid = speakeasy.totp.verify({
@@ -272,14 +262,12 @@ export class AuthService {
     }
 
     await this.resetFailedLogin(user);
-    const isPasswordExpired = this.checkPasswordExpiration(user);
     const tokens = this.generateTokens(user.id, user.email, user.role);
     await this.storeHashedRefreshToken(user.id, tokens.refresh_token);
     return {
       access_token: tokens.access_token,
       refresh_token: tokens.refresh_token,
       user: this._publicUser(user),
-      passwordExpired: isPasswordExpired, // ✅ NOUVEAU FLAG
     };
   }
 
@@ -297,12 +285,7 @@ export class AuthService {
           HttpStatus.UNAUTHORIZED,
         );
       }
-      
-      // Vérifier seulement le blocage, pas l'expiration
-      const now = new Date();
-      if (user.lockUntil && user.lockUntil > now) {
-        throw new HttpException(`Compte bloqué momentanément`, HttpStatus.LOCKED);
-      }
+      await this.checkLockAndExpiration(user);
 
       const otpPlain = decryptOtp(user.otpSecret!);
       const isOtpValid = speakeasy.totp.verify({
@@ -315,14 +298,12 @@ export class AuthService {
         throw new HttpException('Code OTP invalide', HttpStatus.UNAUTHORIZED);
       }
 
-      const isPasswordExpired = this.checkPasswordExpiration(user);
       const tokens = this.generateTokens(user.id, user.email, user.role);
       await this.storeHashedRefreshToken(user.id, tokens.refresh_token);
       return {
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
         user: this._publicUser(user),
-        passwordExpired: isPasswordExpired, // ✅ NOUVEAU FLAG
       };
     } catch {
       throw new HttpException(

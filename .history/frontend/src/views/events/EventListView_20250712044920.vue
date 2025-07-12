@@ -391,7 +391,7 @@ function formatPrice(priceCt: number): string {
 }
 
 function getCapacityLeft(event: any): number {
-  if (!event.capacity || event.capacity >= 100) return Infinity;
+  if (!event.capacity) return Infinity;
   // ✅ CORRIGÉ : Utiliser capacityLeft fourni par le backend
   return event.capacityLeft ?? event.capacity;
 }

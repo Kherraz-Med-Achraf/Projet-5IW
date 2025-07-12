@@ -1,7 +1,7 @@
 // src/stores/chatStore.ts
 import { defineStore } from "pinia";
 import { ref, reactive } from "vue";
-import { socket, initSocket, setAutoRejoinCallback, isSocketConnected, forceReconnect as socketForceReconnect } from "@/plugins/socket";
+import { socket, initSocket, setAutoRejoinCallback, isSocketConnected } from "@/plugins/socket";
 import router from "@/router";
 import { useAuthStore } from "./auth";
 import { secureJsonCall, API_BASE_URL } from "@/utils/api";
@@ -498,7 +498,7 @@ export const useChatStore = defineStore("chat", () => {
     }
 
     // si socket déjà connecté
-    if (isSocketConnected()) {
+    if (socket.connected) {
       joinAllChats();
     } else {
       socket.on("connect", joinAllChats);
@@ -514,7 +514,10 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   function forceReconnect() {
-    socketForceReconnect();
+    if (socket) {
+      socket.disconnect();
+      socket.connect();
+    }
   }
 
   // Fallback pour s'assurer que les conversations sont à jour

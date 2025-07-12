@@ -398,14 +398,13 @@ async function onSubmit(): Promise<void> {
 
   const fd = new FormData();
   Object.entries(form).forEach(([k, v]) => {
-    // ✅ CORRECTION: Gérer explicitement le cas de capacity undefined (illimité = 100)
+    // ✅ CORRECTION: Gérer explicitement le cas de capacity undefined (illimité)
     if (k === 'capacity') {
-      // Si capacity est undefined, null, ou une chaîne vide, on ne l'ajoute pas au FormData
-      // Le backend mettra alors 100 par défaut (affiché comme "illimité")
-      if (v !== undefined && v !== null && v !== "" && !isNaN(Number(v)) && Number(v) > 0) {
+      // Si capacity est undefined, null, ou une chaîne vide, on ne l'ajoute pas
+      // Cela indique une capacité illimitée
+      if (v !== undefined && v !== null && v !== "" && !isNaN(Number(v))) {
         fd.append(k, String(v));
       }
-      // Sinon on ne l'ajoute pas, et le backend mettra 100 par défaut
     } else {
       // Pour les autres champs, comportement normal
       if (v !== undefined && v !== "") {

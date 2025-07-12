@@ -498,7 +498,7 @@ export const useChatStore = defineStore("chat", () => {
     }
 
     // si socket déjà connecté
-    if (isSocketConnected()) {
+    if (socket.connected) {
       joinAllChats();
     } else {
       socket.on("connect", joinAllChats);

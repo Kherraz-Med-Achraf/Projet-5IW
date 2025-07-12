@@ -498,7 +498,7 @@ export const useChatStore = defineStore("chat", () => {
     }
 
     // si socket déjà connecté
-    if (isSocketConnected()) {
+    if (socket.connected) {
       joinAllChats();
     } else {
       socket.on("connect", joinAllChats);
@@ -514,7 +514,10 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   function forceReconnect() {
-    socketForceReconnect();
+    if (socket) {
+      socket.disconnect();
+      socket.connect();
+    }
   }
 
   // Fallback pour s'assurer que les conversations sont à jour

@@ -1,7 +1,7 @@
 // src/stores/chatStore.ts
 import { defineStore } from "pinia";
 import { ref, reactive } from "vue";
-import { socket, initSocket, setAutoRejoinCallback, isSocketConnected, forceReconnect as socketForceReconnect } from "@/plugins/socket";
+import { socket, initSocket, setAutoRejoinCallback } from "@/plugins/socket";
 import router from "@/router";
 import { useAuthStore } from "./auth";
 import { secureJsonCall, API_BASE_URL } from "@/utils/api";
@@ -187,32 +187,9 @@ export const useChatStore = defineStore("chat", () => {
   function send(chatId: string, content: string) {
     if (!chatId || !content.trim()) return;
 
-    const trimmed = content.trim();
-    
-    // Vérifier la connexion WebSocket avant d'envoyer
-    if (!isSocketConnected()) {
-      console.warn("WebSocket déconnecté, tentative de reconnexion");
-      socket?.connect();
-      
-      // Attendre un court moment pour la reconnexion
-      setTimeout(() => {
-        if (isSocketConnected()) {
-          send(chatId, content);
-        } else {
-          console.error("Impossible de se reconnecter au WebSocket");
-          const notification = (
-            import("./notificationStore")
-          ).then(module => module.useNotificationStore?.()?.showNotification(
-            "Connexion perdue, message non envoyé",
-            "error"
-          ));
-        }
-      }, 1000);
-      return;
-    }
-
     // Optimistic UI: ajoute localement le message
-    const tempId = `tmp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const trimmed = content.trim();
+    const tempId = `tmp_${Date.now()}`;
     const nowIso = new Date().toISOString();
     
     if (!messages[chatId]) messages[chatId] = [];
@@ -246,17 +223,18 @@ export const useChatStore = defineStore("chat", () => {
     setTimeout(() => {
       const msgList = messages[chatId];
       if (msgList) {
-        const tempIdx = msgList.findIndex((m) => m.id === tempId);
-        if (tempIdx !== -1) {
-          console.warn("Message temporaire non confirmé, suppression et rafraîchissement");
-          // Supprimer le message temporaire
-          msgList.splice(tempIdx, 1);
-          // Rafraîchir depuis l'API
+        const idx = msgList.findIndex((m) => m.id === tempId);
+        if (idx !== -1) {
+          // Vérifier si WebSocket est déconnecté
+          if (!socket?.connected) {
+            socket?.connect();
+          }
+          // En cas d'échec WebSocket, rafraîchir les messages depuis l'API
           fetchMessages(chatId);
-          fetchChats();
+          fetchChats(); // Rafraîchir aussi la liste des conversations
         }
       }
-    }, 5000); // 5 secondes
+    }, 8000); // 8 secondes pour laisser plus de temps
   }
 
   function editMessage(chatId: string, msgId: string, content: string) {
@@ -498,7 +476,7 @@ export const useChatStore = defineStore("chat", () => {
     }
 
     // si socket déjà connecté
-    if (isSocketConnected()) {
+    if (socket.connected) {
       joinAllChats();
     } else {
       socket.on("connect", joinAllChats);
@@ -514,7 +492,10 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   function forceReconnect() {
-    socketForceReconnect();
+    if (socket) {
+      socket.disconnect();
+      socket.connect();
+    }
   }
 
   // Fallback pour s'assurer que les conversations sont à jour
@@ -525,7 +506,7 @@ export const useChatStore = defineStore("chat", () => {
   // Vérifier l'état de la connexion WebSocket
   function getSocketStatus() {
     return {
-      connected: isSocketConnected(),
+      connected: socket?.connected || false,
       id: socket?.id || null,
       transport: socket?.io?.engine?.transport?.name || null,
     };

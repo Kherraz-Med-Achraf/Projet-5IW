@@ -12,18 +12,6 @@ export function setAutoRejoinCallback(callback: () => void) {
   autoRejoinChats = callback;
 }
 
-export function isSocketConnected(): boolean {
-  return socket?.connected || false;
-}
-
-export function forceReconnect() {
-  if (socket) {
-    console.log('[WebSocket] Forcing reconnection...');
-    socket.disconnect();
-    socket.connect();
-  }
-}
-
 export function initSocket(token: string) {
   // Utiliser la même configuration d'URL que pour les appels API REST
   const socketUrl = API_BASE_URL + '/chat';
@@ -40,7 +28,6 @@ export function initSocket(token: string) {
 
   // Gestion des événements de connexion
   socket.on('connect', () => {
-    console.log('[WebSocket] Connected successfully');
     // Rejoindre automatiquement toutes les conversations après reconnexion
     autoRejoinChats();
   });

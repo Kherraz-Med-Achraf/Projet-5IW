@@ -364,7 +364,7 @@ export class EventService {
       if (!evNow) throw new NotFoundException('Événement introuvable');
       if (evNow.isLocked) throw new BadRequestException('Événement complet');
 
-      if (evNow.capacity && evNow.capacity < 100) {
+      if (evNow.capacity) {
         // Compte les places prises : paiements confirmés + chèques en attente (compte les enfants)
         const count = await tx.eventRegistrationChild.count({
           where: {
@@ -416,7 +416,7 @@ export class EventService {
 
       // Verrouille l'événement dès la première inscription (plus modifiable par admin)
       // ✅ CORRECTION: Ne verrouiller que si capacité atteinte, pas pour capacité illimitée
-      if (evNow.capacity && evNow.capacity < 100) {
+      if (evNow.capacity) {
         // Si événement avec capacité limitée, vérifier si on doit verrouiller
         const countAfterInscription = await tx.eventRegistrationChild.count({
           where: {
@@ -445,7 +445,7 @@ export class EventService {
           });
         }
       }
-      // ✅ Pour capacité illimitée (capacity >= 100), on ne verrouille jamais automatiquement
+      // ✅ Pour capacité illimitée (capacity = null), on ne verrouille jamais automatiquement
 
       return reg;
     });

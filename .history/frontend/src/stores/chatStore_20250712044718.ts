@@ -1,7 +1,7 @@
 // src/stores/chatStore.ts
 import { defineStore } from "pinia";
 import { ref, reactive } from "vue";
-import { socket, initSocket, setAutoRejoinCallback, isSocketConnected, forceReconnect as socketForceReconnect } from "@/plugins/socket";
+import { socket, initSocket, setAutoRejoinCallback, isSocketConnected } from "@/plugins/socket";
 import router from "@/router";
 import { useAuthStore } from "./auth";
 import { secureJsonCall, API_BASE_URL } from "@/utils/api";
@@ -190,13 +190,13 @@ export const useChatStore = defineStore("chat", () => {
     const trimmed = content.trim();
     
     // Vérifier la connexion WebSocket avant d'envoyer
-    if (!isSocketConnected()) {
+    if (!socket?.connected) {
       console.warn("WebSocket déconnecté, tentative de reconnexion");
       socket?.connect();
       
       // Attendre un court moment pour la reconnexion
       setTimeout(() => {
-        if (isSocketConnected()) {
+        if (socket?.connected) {
           send(chatId, content);
         } else {
           console.error("Impossible de se reconnecter au WebSocket");
@@ -498,7 +498,7 @@ export const useChatStore = defineStore("chat", () => {
     }
 
     // si socket déjà connecté
-    if (isSocketConnected()) {
+    if (socket.connected) {
       joinAllChats();
     } else {
       socket.on("connect", joinAllChats);
@@ -514,7 +514,10 @@ export const useChatStore = defineStore("chat", () => {
   }
 
   function forceReconnect() {
-    socketForceReconnect();
+    if (socket) {
+      socket.disconnect();
+      socket.connect();
+    }
   }
 
   // Fallback pour s'assurer que les conversations sont à jour
@@ -525,7 +528,7 @@ export const useChatStore = defineStore("chat", () => {
   // Vérifier l'état de la connexion WebSocket
   function getSocketStatus() {
     return {
-      connected: isSocketConnected(),
+      connected: socket?.connected || false,
       id: socket?.id || null,
       transport: socket?.io?.engine?.transport?.name || null,
     };

@@ -115,13 +115,9 @@
                         <span>{{ formatPrice(ev.priceCt) }}</span>
                       </div>
 
-                      <div v-if="ev.capacity && ev.capacity < 100" class="detail-item">
+                      <div v-if="ev.capacity" class="detail-item">
                         <i class="material-icons">people</i>
                         <span>{{ getCapacityText(ev) }}</span>
-                      </div>
-                      <div v-else-if="ev.capacity >= 100" class="detail-item">
-                        <i class="material-icons">people</i>
-                        <span>Nombre de places illimité</span>
                       </div>
                     </div>
 
@@ -391,7 +387,7 @@ function formatPrice(priceCt: number): string {
 }
 
 function getCapacityLeft(event: any): number {
-  if (!event.capacity || event.capacity >= 100) return Infinity;
+  if (!event.capacity) return Infinity;
   // ✅ CORRIGÉ : Utiliser capacityLeft fourni par le backend
   return event.capacityLeft ?? event.capacity;
 }

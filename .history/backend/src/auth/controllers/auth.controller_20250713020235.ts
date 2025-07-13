@@ -209,13 +209,6 @@ export class AuthController {
     return this.authService.resetPassword(dto.prid, dto.token, dto.newPassword);
   }
 
-  /* ──────────────── CHANGE PASSWORD ──────────────── */
-  @Post('change-password')
-  @UseGuards(JwtAuthGuard, CsrfGuard)
-  async changePassword(@Req() req: any, @Body() dto: ChangePasswordDto) {
-    return this.authService.changePassword(req.user.id, dto.currentPassword, dto.newPassword);
-  }
-
   /* ──────────────── ENABLE / DISABLE OTP ──────────────── */
   @Post('enable-otp')
   @UseGuards(JwtAuthGuard, CsrfGuard)

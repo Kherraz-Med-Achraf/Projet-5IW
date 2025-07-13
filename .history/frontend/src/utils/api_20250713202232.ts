@@ -100,15 +100,6 @@ export async function setupSecureHeaders(
     }
   }
 
-  // Content-Type pour les requêtes JSON (sauf si FormData ou déjà défini)
-  if (
-    options.body &&
-    typeof options.body === "string" &&
-    !headers.get("Content-Type")
-  ) {
-    headers.set("Content-Type", "application/json");
-  }
-
   // Headers de sécurité standard
   headers.set("X-Requested-With", "XMLHttpRequest");
 

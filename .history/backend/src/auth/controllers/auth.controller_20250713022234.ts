@@ -23,7 +23,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { InvitationService } from '../../invitation/invitation.service';
 import { Public } from '../../common/decorators/public.decorator';
-import { CsrfGuard } from '../../common/guards/csrf.guard';
+import { CsrfGuard, CsrfExempt } from '../../common/guards/csrf.guard';
 import { randomToken } from '../../utils/random-token';
 
 @Controller('auth')
@@ -226,7 +226,8 @@ export class AuthController {
 
   /* ──────────────── CHANGE PASSWORD ──────────────── */
   @Post('change-password')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, CsrfGuard)
+  @CsrfExempt()()
   async changePassword(@Req() req: any, @Body() dto: ChangePasswordDto) {
     return this.authService.changePassword(req.user.id, dto.currentPassword, dto.newPassword);
   }

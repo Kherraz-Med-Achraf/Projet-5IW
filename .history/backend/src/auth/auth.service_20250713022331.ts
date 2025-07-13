@@ -1193,17 +1193,7 @@ export class AuthService {
     const expirationDate = new Date(
       user.passwordChangedAt.getTime() + PASSWORD_EXPIRATION_DAYS * 24 * 60 * 60 * 1000,
     );
-    
-    const isExpired = user.forcePasswordReset || expirationDate < now;
-    
-    console.log(`[PASSWORD_EXPIRATION] Vérification pour ${user.email}:`);
-    console.log(`  - passwordChangedAt: ${user.passwordChangedAt?.toISOString()}`);
-    console.log(`  - expirationDate: ${expirationDate.toISOString()}`);
-    console.log(`  - now: ${now.toISOString()}`);
-    console.log(`  - forcePasswordReset: ${user.forcePasswordReset}`);
-    console.log(`  - isExpired: ${isExpired}`);
-    
-    return isExpired;
+    return user.forcePasswordReset || expirationDate < now;
   }
 
   /* ─────────────────────────────────────────── REFRESH TOKEN IMPROVEMENTS */

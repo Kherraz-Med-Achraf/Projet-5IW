@@ -23,7 +23,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { InvitationService } from '../../invitation/invitation.service';
 import { Public } from '../../common/decorators/public.decorator';
-import { CsrfGuard } from '../../common/guards/csrf.guard';
+import { CsrfGuard, CsrfExempt } from '../../common/guards/csrf.guard';
 import { randomToken } from '../../utils/random-token';
 
 @Controller('auth')

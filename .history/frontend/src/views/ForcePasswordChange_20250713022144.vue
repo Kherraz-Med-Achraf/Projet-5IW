@@ -312,12 +312,8 @@ async function handleSubmit() {
     const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${auth.token}`,
+      'x-csrf-token': csrfToken,
     };
-    
-    // N'ajouter le header CSRF que s'il est présent
-    if (csrfToken) {
-      headers['x-csrf-token'] = csrfToken;
-    }
 
     const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
       method: 'POST',

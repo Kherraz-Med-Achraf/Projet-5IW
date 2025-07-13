@@ -300,21 +300,13 @@ async function handleSubmit() {
     };
 
     const csrfToken = getCsrfTokenFromCookies();
-    
-    // Debug: vérifier la présence du token CSRF
-    console.log('Token CSRF trouvé:', csrfToken ? 'Oui' : 'Non');
-    
-    if (!csrfToken) {
-      toast.error('Token de sécurité manquant. Veuillez vous reconnecter.');
-      router.push('/login');
-      return;
-    }
-
     const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${auth.token}`,
-      'x-csrf-token': csrfToken,
     };
+    if (csrfToken) {
+      headers['x-csrf-token'] = csrfToken;
+    }
 
     const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
       method: 'POST',

@@ -425,7 +425,7 @@ router.beforeEach(async (to, from, next) => {
     // Si token d'invitation présent, permettre l'accès même si l'utilisateur semble authentifié
     // (peut être un ancien token invalide ou l'utilisateur veut créer un nouveau compte)
     if (auth.isAuthenticated) {
-              console.log('🔄 Utilisateur semble authentifié mais a une invitation - permettre l\'accès');
+      console.log('🔄 Utilisateur semble authentifié mais a un token d\'invitation - permettre l\'accès');
       // Optionnel : nettoyer l'ancien token pour éviter les conflits
       localStorage.removeItem('token');
       localStorage.removeItem('user');

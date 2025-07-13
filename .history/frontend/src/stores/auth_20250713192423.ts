@@ -101,7 +101,7 @@ export const useAuthStore = defineStore("auth", {
         }
       } catch (error: any) {
         // Erreur réseau - ne pas nettoyer automatiquement car ça peut être temporaire
-        console.warn('Erreur réseau lors de la vérification du token');
+        console.warn('Erreur réseau lors de la vérification du token:', error);
         
         // Si c'est une erreur de timeout ou de réseau, garder le token pour le moment
         if (error?.name === 'AbortError' || error?.message?.includes('network')) {
@@ -277,7 +277,7 @@ export const useAuthStore = defineStore("auth", {
             const csrfData = await csrfResponse.json();
             csrfToken = csrfData.csrf_token;
           } catch (error) {
-            console.warn("Impossible de récupérer le token CSRF");
+            console.warn("Impossible de récupérer le token CSRF:", error);
           }
         }
 
@@ -480,7 +480,7 @@ export const useAuthStore = defineStore("auth", {
         notification.showNotification("Token rafraîchi", "success");
         return true;
       } catch (error: any) {
-        console.error("Erreur refresh token");
+        console.error("Erreur refresh token:", error.message);
         this.isManualLogout = false; // ✅ NOUVEAU : Marquer comme déconnexion automatique
         await this.logout();
         // ✅ NOUVEAU : Seulement afficher le toast si ce n'est pas une déconnexion volontaire

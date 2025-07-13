@@ -25,7 +25,7 @@ import { readSecret } from '../utils/secret';
 
 const PASSWORD_EXPIRATION_DAYS = 60;
 const MAX_FAILED_ATTEMPTS = 3;
-const LOCK_DURATION_MS = 30 * 60 * 1000; // 30 minutes de blocage après 3 tentatives
+const LOCK_DURATION_MS = 5 * 60 * 1000; // 5 min après la démo remettre a 1h
 
 // Exiger la présence de clés JWT distinctes (env var > Docker secret file)
 const ACCESS_TOKEN_SECRET = readSecret('/run/secrets/access_token_secret', 'ACCESS_TOKEN_SECRET');

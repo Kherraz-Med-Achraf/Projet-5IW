@@ -67,7 +67,7 @@ function readSecret(filePath: string, envVarName: string): string {
       password: readSecret('/run/secrets/pg_password', 'POSTGRES_PASSWORD'),
       database: process.env.POSTGRES_DB || 'mydb',
       autoLoadEntities: true,
-      synchronize: false, // 🔒 SÉCURITÉ: Désactivé en production pour éviter les modifications automatiques dangereuses
+      synchronize: true,
       retryAttempts: 30,
       retryDelay: 5000,
     }),

@@ -100,12 +100,12 @@ async function bootstrap() {
     }),
   );
 
-  // Rate limiter pour /auth/refresh
+  // Rate limiter plus permissif pour /auth/refresh
   app.use(
     '/auth/refresh',
     rateLimit({
       windowMs: 60_000,
-      max: 10, // 10 requêtes/min (sécurité renforcée)
+      max: 20, // 20 requêtes/min (au lieu de 5)
       message: 'Trop de requêtes refresh, réessayez dans 1 minute.',
     }),
   );

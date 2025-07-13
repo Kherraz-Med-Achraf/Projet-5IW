@@ -7,20 +7,15 @@ faker.seed(123456);
 
 const prisma = new PrismaClient();
 const HASH_ROUNDS = 10;
-
-// Mots de passe complexes pour chaque rôle
-const PASSWORDS = {
-  ADMIN: 'Admin2024!Secure#',
-  DIRECTOR: 'Director2024!Manage#',
-  SERVICE_MANAGER_1: 'ServiceMgr2024!Team#',
-  SERVICE_MANAGER_2: 'ServiceMgr2024!Lead#',
-  SECRETARY: 'Secretary2024!Admin#',
-  STAFF: 'Staff2024!Edu#',
-  PARENT: 'Parent2024!Family#',
-};
+const DEFAULT_PWD = 'Test1234!!!!';
+// Sel statique pour produire un hash constant
+const STATIC_SALT = '$2b$10$C6UzMDM.H6dfI/f/IKcEe.';
+const DEFAULT_HASHED_PWD = bcrypt.hashSync(DEFAULT_PWD, STATIC_SALT);
 
 async function hash(pwd: string) {
-  return bcrypt.hash(pwd, HASH_ROUNDS);
+  // Retourne toujours le même hash pour DEFAULT_PWD
+  if (pwd === DEFAULT_PWD) return DEFAULT_HASHED_PWD;
+  return bcrypt.hash(pwd, STATIC_SALT);
 }
 
 /* Helpers ----------------------------------------------------------------- */
@@ -89,7 +84,7 @@ async function main() {
   const admin = await prisma.user.create({
     data: {
       email: 'admin@example.com',
-      password: await hash(PASSWORDS.ADMIN),
+      password: await hash(DEFAULT_PWD),
       role: 'ADMIN',
       emailVerified: true,
     },
@@ -103,7 +98,7 @@ async function main() {
   const directorUser = await prisma.user.create({
     data: {
       email: directorMail,
-      password: await hash(PASSWORDS.DIRECTOR),
+      password: await hash(DEFAULT_PWD),
       role: 'DIRECTOR',
       emailVerified: true,
     },
@@ -134,11 +129,10 @@ async function main() {
   
   for (let i = 0; i < smMails.length; i++) {
     const mail = smMails[i];
-    const password = i === 0 ? PASSWORDS.SERVICE_MANAGER_1 : PASSWORDS.SERVICE_MANAGER_2;
     const usr = await prisma.user.create({
       data: {
         email: mail,
-        password: await hash(password),
+        password: await hash(DEFAULT_PWD),
         role: 'SERVICE_MANAGER',
         emailVerified: true,
       },
@@ -156,7 +150,7 @@ async function main() {
         profileImage: null,
       },
     });
-    console.log('✅ Service-manager créé avec succès');
+    console.log('✅ Service-manager créé →', usr.email);
   }
 
   /* ---------------------------------------------------------------------- */
@@ -166,7 +160,7 @@ async function main() {
   const secretaryUser = await prisma.user.create({
     data: {
       email: secMail,
-      password: await hash(PASSWORDS.SECRETARY),
+      password: await hash(DEFAULT_PWD),
       role: 'SECRETARY',
       emailVerified: true,
     },
@@ -184,7 +178,7 @@ async function main() {
       profileImage: null,
     },
   });
-  console.log('✅ Secretary créé avec succès');
+  console.log('✅ Secretary créé →', secretaryUser.email);
 
   /* ---------------------------------------------------------------------- */
   /* 5. STAFF (15 au total)                                                 */
@@ -248,7 +242,7 @@ async function main() {
       const usr = await prisma.user.create({
         data: {
           email,
-          password: await hash(PASSWORDS.STAFF),
+          password: await hash(DEFAULT_PWD),
           role: 'STAFF',
           emailVerified: true,
         },
@@ -353,7 +347,7 @@ async function main() {
     const usr = await prisma.user.create({
       data: {
         email,
-        password: await hash(PASSWORDS.PARENT),
+        password: await hash(DEFAULT_PWD),
         role: 'PARENT',
         emailVerified: true,
       },
@@ -410,7 +404,7 @@ async function main() {
     },
   });
 
-  console.log('✅ Parent20 modifié avec mot de passe EXPIRÉ (65 jours)');
+  console.log('✅ Parent20 modifié avec mot de passe EXPIRÉ → parent20@example.com / Test1234!!!! (expiré depuis 65 jours)');
 
   // Années scolaires et semestres
   const academicYears = [

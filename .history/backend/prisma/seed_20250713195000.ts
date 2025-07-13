@@ -134,11 +134,10 @@ async function main() {
   
   for (let i = 0; i < smMails.length; i++) {
     const mail = smMails[i];
-    const password = i === 0 ? PASSWORDS.SERVICE_MANAGER_1 : PASSWORDS.SERVICE_MANAGER_2;
     const usr = await prisma.user.create({
       data: {
         email: mail,
-        password: await hash(password),
+        password: await hash(PASSWORDS.SERVICE_MANAGER_1),
         role: 'SERVICE_MANAGER',
         emailVerified: true,
       },

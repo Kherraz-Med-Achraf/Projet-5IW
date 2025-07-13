@@ -125,7 +125,7 @@ export class AuthService {
       const encryptedToken: EncryptedData = JSON.parse(encryptedData);
       return await CryptoService.decrypt(encryptedToken);
     } catch (error) {
-      console.error('Erreur lors du déchiffrement du token');
+      console.error('Erreur lors du déchiffrement du token:', error);
       this.clearAuth();
       return null;
     }

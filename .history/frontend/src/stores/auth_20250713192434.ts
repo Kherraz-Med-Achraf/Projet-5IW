@@ -480,7 +480,7 @@ export const useAuthStore = defineStore("auth", {
         notification.showNotification("Token rafraîchi", "success");
         return true;
       } catch (error: any) {
-        console.error("Erreur refresh token");
+        console.error("Erreur refresh token:", error.message);
         this.isManualLogout = false; // ✅ NOUVEAU : Marquer comme déconnexion automatique
         await this.logout();
         // ✅ NOUVEAU : Seulement afficher le toast si ce n'est pas une déconnexion volontaire

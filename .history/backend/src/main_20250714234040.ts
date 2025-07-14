@@ -150,16 +150,6 @@ async function bootstrap() {
     }),
   );
 
-  // Rate limiter pour le planning
-  app.use(
-    '/planning',
-    rateLimit({
-      windowMs: 60_000,
-      max: 50, // 50 requêtes/min
-      message: 'Trop de requêtes sur le planning.',
-    }),
-  );
-
   // Rate limiter pour les imports Excel
   app.use(
     '/planning/semesters/:semesterId/upload',

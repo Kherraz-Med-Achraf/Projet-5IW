@@ -1,0 +1,39 @@
+# ALTERNATIVE DOCKER COMPOSE - SENDGRID AVEC VARIABLE D'ENVIRONNEMENT
+# ==================================================================
+# 
+# Si le secret Docker ne fonctionne pas, utilisez cette version
+# qui utilise une variable d'environnement directement.
+#
+# UTILISATION:
+# 1. Copiez ce fichier vers docker-compose.swarm.yml
+# 2. Redéployez: docker stack deploy -c docker-compose.swarm.yml projet5iw-deploy
+#
+# Cette version remplace:
+#   - SENDGRID_API_KEY_FILE=/run/secrets/sendgrid_api_key
+#   - secrets: sendgrid_api_key
+# Par:
+#   - SENDGRID_API_KEY=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
+#
+# SECTION À MODIFIER DANS LE FICHIER ORIGINAL:
+# ============================================
+
+# Dans la section 'backend' -> 'environment', remplacer:
+# - SENDGRID_API_KEY_FILE=/run/secrets/sendgrid_api_key
+# Par:
+# - SENDGRID_API_KEY=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
+
+# Dans la section 'backend' -> 'secrets', supprimer:
+# - sendgrid_api_key
+
+# AVANTAGES:
+# - Plus simple et plus direct
+# - Pas de problème de montage de secrets
+# - Fonctionne immédiatement
+# - Même niveau de sécurité (variable d'environnement)
+
+# INCONVÉNIENTS:
+# - La clé est visible dans la configuration Docker
+# - Moins "propre" que les secrets Docker
+
+# RECOMMANDATION:
+# Utilisez cette version si les secrets Docker ne fonctionnent pas. 

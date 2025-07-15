@@ -36,8 +36,16 @@ services:
       - POSTGRES_USER=myuser
       - POSTGRES_PASSWORD=mypassword
       - POSTGRES_DB=mydb
+      # Variables pour MongoDB
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_DB=mydb
+      - MONGO_USER=myuser
+      - MONGO_PASSWORD=mypassword
     depends_on:
       - postgres
+      - mongodb
+    command: npm run start:dev # ← démarre Nest SANS exécuter le seed
 
   ########################################## POSTGRES #####################################################
   postgres:
@@ -51,5 +59,20 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  ########################################## MONGODB ######################################################
+  mongodb:
+    image: mongo:7-jammy
+    container_name: mongodb-dev
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: myuser
+      MONGO_INITDB_ROOT_PASSWORD: mypassword
+      MONGO_INITDB_DATABASE: mydb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
 volumes:
   postgres_data:
+  mongodb_data:

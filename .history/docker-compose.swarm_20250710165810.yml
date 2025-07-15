@@ -1,0 +1,351 @@
+version: "3.9"
+
+secrets:
+  pg_password:
+    external: true
+  sentry_dsn:
+    external: true
+  mongo_root_password:
+    external: true
+  pgadmin_password:
+    external: true
+  jwt_secret:
+    external: true
+  email_pass:
+    external: true
+  openai_api_key:
+    external: true
+  yousign_api_key:
+    external: true
+  stripe_secret:
+    external: true
+  stripe_webhook_secret:
+    external: true
+  access_token_secret:
+    external: true
+  refresh_token_secret:
+    external: true
+  otp_enc_key:
+    external: true
+  file_encryption_key:
+    external: true
+  sendgrid_api_key:
+    external: true
+
+networks:
+  frontend-net:
+    driver: overlay
+  backend-net:
+    driver: overlay
+
+services:
+  ########################################## TRAEFIK ##########################################
+  traefik:
+    image: traefik:v2.9
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
+    command:
+      - "--api.dashboard=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.exposedByDefault=false"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=mkherraz1@myges.fr"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /opt/traefik/letsencrypt:/letsencrypt
+    networks:
+      - frontend-net
+      - backend-net
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager # Traefik doit être sur le manager pour interroger l'API Swarm
+      update_config:
+        parallelism: 1 # 1 conteneur à la fois
+        delay: 5s # attente de 5 s entre chaque mise à jour
+        failure_action: rollback
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.educareschool.me`)"
+        - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+        - "traefik.http.routers.traefik-dashboard.tls.certresolver=myresolver"
+        - "traefik.http.routers.traefik-dashboard.service=api@internal"
+        # port factice nécessaire pour le service interne api@internal
+        - "traefik.http.services.api.loadbalancer.server.port=9999"
+        - "traefik.http.routers.traefik-dashboard.middlewares=auth-traefik"
+        - "traefik.http.middlewares.auth-traefik.basicauth.users=admin:$$apr1$$vKml6Wvz$$G7Wchk2U2numP/43WdGZh."
+
+  ########################################## FRONTEND (Vue) ##########################################
+  frontend:
+    image: achraf97/projet5iw-frontend:prod
+    environment:
+      - VITE_NEST_API_URL=http://nest:3000
+    networks:
+      - frontend-net
+    deploy:
+      replicas: 3
+      resources:
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.frontend.rule=Host(`educareschool.me`)"
+        - "traefik.http.routers.frontend.entrypoints=websecure"
+        - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+        - "traefik.http.services.frontend.loadbalancer.server.port=80"
+        - "traefik.http.routers.frontend-http.rule=Host(`educareschool.me`)"
+        - "traefik.http.routers.frontend-http.entrypoints=web"
+        - "traefik.http.routers.frontend-http.middlewares=redirect-to-https"
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+
+  ########################################## BACKEND (Nest) ##########################################
+  nest:
+    image: achraf97/projet5iw-nest:prod
+    environment:
+      # Variables pour Postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USER=myuser
+      - POSTGRES_DB=mydb
+      - POSTGRES_PASSWORD_FILE=/run/secrets/pg_password
+      - POSTGRES_PORT=5432
+      # Variables pour MongoDB
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_DB=mydb
+      - MONGO_USER=myuser
+      - MONGO_PASSWORD_FILE=/run/secrets/mongo_root_password
+      # Variables pour JWT
+      - JWT_SECRET_FILE=/run/secrets/jwt_secret
+      # Variables pour Mailer
+      - EMAIL_USER=aapajhtest@gmail.com
+      - EMAIL_PASS_FILE=/run/secrets/email_pass
+      # Variables pour OpenAI
+      - OPENAI_API_KEY_FILE=/run/secrets/openai_api_key
+      # Variables pour YouSign
+      - YOUSIGN_API_URL=https://api-sandbox.yousign.app/v3
+      - YOUSIGN_API_KEY_FILE=/run/secrets/yousign_api_key
+      # Variables pour Stripe
+      - STRIPE_SECRET_FILE=/run/secrets/stripe_secret
+      - STRIPE_WEBHOOK_SECRET_FILE=/run/secrets/stripe_webhook_secret
+      # Variables pour SendGrid (fallback si secret indisponible)
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY:-}
+    secrets:
+      - pg_password
+      - sentry_dsn
+      - mongo_root_password
+      - jwt_secret
+      - email_pass
+      - openai_api_key
+      - yousign_api_key
+      - stripe_secret
+      - stripe_webhook_secret
+      - access_token_secret
+      - refresh_token_secret
+      - otp_enc_key
+      - file_encryption_key
+      - sendgrid_api_key
+    networks:
+      - backend-net
+    deploy:
+      replicas: 2
+      resources:
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+      labels:
+        - "traefik.enable=true"
+        # Router HTTPS principal
+        - "traefik.http.routers.nest.rule=Host(`api.educareschool.me`)"
+        - "traefik.http.routers.nest.entrypoints=websecure"
+        - "traefik.http.routers.nest.tls.certresolver=myresolver"
+        # Port du service
+        - "traefik.http.services.nest.loadbalancer.server.port=3000"
+        # Configuration WebSocket simple
+        - "traefik.http.services.nest.loadbalancer.passhostheader=true"
+        - "traefik.http.services.nest.loadbalancer.sticky=true"
+        # Redirection HTTP vers HTTPS
+        - "traefik.http.routers.nest-http.rule=Host(`api.educareschool.me`)"
+        - "traefik.http.routers.nest-http.entrypoints=web"
+        - "traefik.http.routers.nest-http.middlewares=redirect-to-https"
+      update_config:
+        parallelism: 1
+        delay: 10s
+        monitor: 30s
+        max_failure_ratio: 0.2
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep '[d]ist/src/main.js' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  ########################################## POSTGRES ##########################################
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=myuser
+      - POSTGRES_DB=mydb
+      # ici on indique au entrypoint Postgres de lire le mot de passe
+      - POSTGRES_PASSWORD_FILE=/run/secrets/pg_password
+    secrets:
+      - pg_password
+    networks:
+      - backend-net
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      update_config:
+        parallelism: 1
+        delay: 10s
+        monitor: 30s # attend 30s après démarrage pour vérifier l'état
+        max_failure_ratio: 0 # tout échec = rollback
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ########################################## MONGODB ##########################################
+  mongodb:
+    image: mongo:7-jammy
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=myuser
+      - MONGO_INITDB_DATABASE=mydb
+      - MONGO_INITDB_ROOT_PASSWORD_FILE=/run/secrets/mongo_root_password
+    secrets:
+      - mongo_root_password
+    networks:
+      - backend-net
+    volumes:
+      - mongodb_data:/data/db
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      update_config:
+        parallelism: 1
+        delay: 10s
+        monitor: 30s
+        max_failure_ratio: 0
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand({ping: 1})' --quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ############################################# Obeservabilité #############################################
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    networks:
+      - frontend-net
+    volumes:
+      - kuma_data:/app/data
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+          - node.role == manager
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        # HTTP → HTTPS
+        - "traefik.http.routers.kuma-http.rule=Host(`kuma.educareschool.me`)"
+        - "traefik.http.routers.kuma-http.entrypoints=web"
+        - "traefik.http.routers.kuma-http.middlewares=redirect-to-https"
+        # HTTPS router
+        - "traefik.http.routers.kuma.rule=Host(`kuma.educareschool.me`)"
+        - "traefik.http.routers.kuma.entrypoints=websecure"
+        - "traefik.http.routers.kuma.tls.certresolver=myresolver"
+        # Dit à Traefik sur quel port du container il doit router
+        - "traefik.http.services.kuma.loadbalancer.server.port=3001"
+      restart_policy:
+        condition: on-failure
+
+  ########################################## PGADMIN ##########################################
+  pgadmin:
+    image: dpage/pgadmin4:8
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@educareschool.me
+      - PGADMIN_DEFAULT_PASSWORD_FILE=/run/secrets/pgadmin_password
+    secrets:
+      - pgadmin_password
+    networks:
+      - backend-net
+      - frontend-net
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.educareschool.me`)"
+        - "traefik.http.routers.pgadmin.entrypoints=websecure"
+        - "traefik.http.routers.pgadmin.tls.certresolver=myresolver"
+        # Basic-auth supplémentaire (nom d'utilisateur : admin)
+        - "traefik.http.routers.pgadmin.middlewares=auth-pgadmin"
+        - "traefik.http.middlewares.auth-pgadmin.basicauth.users=admin:$$apr1$$vKml6Wvz$$G7Wchk2U2numP/43WdGZh."
+        - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
+        # Redirection HTTP vers HTTPS
+        - "traefik.http.routers.pgadmin-http.rule=Host(`pgadmin.educareschool.me`)"
+        - "traefik.http.routers.pgadmin-http.entrypoints=web"
+        - "traefik.http.routers.pgadmin-http.middlewares=redirect-to-https"
+
+  ########################################## MONGODB UI (MongoClient) ##########################################
+  mongoclient:
+    image: mongoclient/mongoclient:4.0.1
+    environment:
+      - PORT=3000
+    secrets:
+      - mongo_root_password
+    networks:
+      - backend-net
+      - frontend-net
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.mongo.rule=Host(`mongo.educareschool.me`)"
+        - "traefik.http.routers.mongo.entrypoints=websecure"
+        - "traefik.http.routers.mongo.tls.certresolver=myresolver"
+        - "traefik.http.routers.mongo.middlewares=auth-mongo"
+        - "traefik.http.middlewares.auth-mongo.basicauth.users=admin:$$apr1$$vKml6Wvz$$G7Wchk2U2numP/43WdGZh."
+        - "traefik.http.services.mongo.loadbalancer.server.port=3000"
+        - "traefik.http.routers.mongo-http.rule=Host(`mongo.educareschool.me`)"
+        - "traefik.http.routers.mongo-http.entrypoints=web"
+        - "traefik.http.routers.mongo-http.middlewares=redirect-to-https"
+
+volumes:
+  postgres_data:
+  kuma_data:
+  mongodb_data:

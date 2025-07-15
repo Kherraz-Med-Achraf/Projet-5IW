@@ -1,5 +1,7 @@
-FROM node:20 AS install
+FROM node:20-alpine AS install
 WORKDIR /app
+
+RUN apk add --no-cache python3 make g++  
 
 COPY package*.json ./
 COPY prisma ./prisma
@@ -16,19 +18,31 @@ FROM install AS build
 COPY . .
 RUN npm run build
 
+# Compile le fichier de seed TS en JS dans prisma/seed.js
+RUN npx tsc --project tsconfig.seed.json
+
 FROM node:20-alpine AS production
 WORKDIR /app
 
-# On copie le code compilé et les modules produits
-COPY --from=build /app/dist ./dist
-COPY --from=install /app/node_modules ./node_modules
+RUN apk add --no-cache postgresql-client
 
+## On copie le code compilé et modules
+COPY --from=build /app/dist        ./dist
+COPY --from=install /app/node_modules ./node_modules
+# On ne copie que schema.prisma + seed.js (issu de tsconfig.seed.json)
+COPY --from=build /app/prisma/schema.prisma      ./prisma/schema.prisma
+COPY --from=build /app/dist-prisma/seed.js       ./prisma/seed.js
+
+COPY --from=build /app/prisma/migrations     ./prisma/migrations
+
+
+COPY --from=install /app/package*.json  ./
 # Variables et port
 ENV NODE_ENV=production
 EXPOSE 3000
 
 
-
-# Lancement direct du code compilé
-CMD ["node", "dist/main.js"]
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod +x entrypoint.sh
+CMD ["./entrypoint.sh"]
 

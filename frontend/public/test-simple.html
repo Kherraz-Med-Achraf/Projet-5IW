@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Simple Backend</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; }
+        .error { background-color: #f8d7da; }
+        button { padding: 10px 20px; margin: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Test Simple Backend</h1>
+    <p>Tests de communication avec le backend</p>
+    
+    <button onclick="testCSRF()">Test 1: GET CSRF Token</button>
+    <button onclick="testLogin()">Test 2: POST Login</button>
+    <button onclick="testLoginWithCors()">Test 3: POST Login avec CORS</button>
+    <button onclick="testLoginBasic()">Test 4: POST Login Minimal</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        function addResult(title, success, data) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'result ' + (success ? 'success' : 'error');
+            div.innerHTML = `<strong>${title}:</strong><br><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            results.appendChild(div);
+        }
+        
+        async function testCSRF() {
+            try {
+                const response = await fetch('http://localhost:3000/auth/csrf', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                addResult('GET CSRF Token', response.ok, { status: response.status, data });
+            } catch (error) {
+                addResult('GET CSRF Token', false, { error: error.message });
+            }
+        }
+        
+        async function testLogin() {
+            try {
+                // Récupérer CSRF
+                const csrfResponse = await fetch('http://localhost:3000/auth/csrf', {
+                    credentials: 'include'
+                });
+                const csrfData = await csrfResponse.json();
+                
+                // Tentative de login
+                const response = await fetch('http://localhost:3000/auth/initiate-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfData.csrf_token,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'admin@example.com',
+                        password: 'MonMotDePasse123!'
+                    })
+                });
+                
+                const data = await response.json();
+                addResult('POST Login Standard', response.ok, { status: response.status, data });
+            } catch (error) {
+                addResult('POST Login Standard', false, { error: error.message });
+            }
+        }
+        
+        async function testLoginWithCors() {
+            try {
+                // Récupérer CSRF
+                const csrfResponse = await fetch('http://localhost:3000/auth/csrf', {
+                    credentials: 'include'
+                });
+                const csrfData = await csrfResponse.json();
+                
+                // Tentative de login avec mode CORS
+                const response = await fetch('http://localhost:3000/auth/initiate-login', {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfData.csrf_token,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Origin': 'http://localhost:5173'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'admin@example.com',
+                        password: 'MonMotDePasse123!'
+                    })
+                });
+                
+                const data = await response.json();
+                addResult('POST Login avec CORS', response.ok, { status: response.status, data });
+            } catch (error) {
+                addResult('POST Login avec CORS', false, { error: error.message });
+            }
+        }
+        
+        async function testLoginBasic() {
+            try {
+                // Récupérer CSRF
+                const csrfResponse = await fetch('http://localhost:3000/auth/csrf');
+                const csrfData = await csrfResponse.json();
+                
+                // Tentative de login minimal
+                const response = await fetch('http://localhost:3000/auth/initiate-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfData.csrf_token
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@example.com',
+                        password: 'MonMotDePasse123!'
+                    })
+                });
+                
+                const data = await response.json();
+                addResult('POST Login Minimal', response.ok, { status: response.status, data });
+            } catch (error) {
+                addResult('POST Login Minimal', false, { error: error.message });
+            }
+        }
+    </script>
+</body>
+</html> 

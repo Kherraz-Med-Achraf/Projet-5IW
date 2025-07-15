@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Chrome - CORRIGÉ</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #cce7ff; color: #004085; border: 1px solid #b3d7ff; }
+        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button { padding: 10px 20px; margin: 10px 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .fixed-banner { background: #28a745; color: white; padding: 15px; margin-bottom: 20px; border-radius: 5px; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="fixed-banner">
+            🔧 VERSION CORRIGÉE - Test synchronisation cookies Chrome
+        </div>
+        
+        <h1>🔍 Test Chrome - Backend IME (CORRIGÉ)</h1>
+        
+        <div class="test-section">
+            <h2>🚀 Test avec synchronisation manuelle des cookies</h2>
+            <button onclick="testCorrected()">🧪 Test Correction Chrome</button>
+            <button onclick="clearResults()">🗑️ Effacer résultats</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Résultats</h2>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        
+        function logResult(message, type = 'info') {
+            const resultDiv = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            resultDiv.appendChild(div);
+            resultDiv.scrollTop = resultDiv.scrollHeight;
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        async function testCorrected() {
+            clearResults();
+            logResult('🚀 Test avec correction synchronisation cookies...', 'info');
+            
+            try {
+                // Étape 1: Récupérer le token CSRF avec synchronisation manuelle
+                logResult('=== ÉTAPE 1: Récupération CSRF avec sync manuelle ===', 'info');
+                const csrfResponse = await fetch(`${API_BASE}/auth/csrf`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                
+                if (!csrfResponse.ok) {
+                    logResult(`❌ Erreur récupération CSRF: ${csrfResponse.status}`, 'error');
+                    return;
+                }
+                
+                const csrfData = await csrfResponse.json();
+                const csrfToken = csrfData.csrf_token;
+                logResult(`✅ Token CSRF récupéré: ${csrfToken}`, 'success');
+                
+                // SYNCHRONISATION MANUELLE du cookie (comme dans la correction)
+                document.cookie = `csrf_token=${csrfToken}; path=/; SameSite=Strict; max-age=${2 * 24 * 60 * 60}`;
+                logResult('✅ Cookie CSRF synchronisé manuellement', 'success');
+                
+                // Vérifier que le cookie est bien défini
+                const cookieValue = document.cookie.split(';').find(row => row.trim().startsWith('csrf_token='));
+                if (cookieValue) {
+                    const cookieToken = cookieValue.split('=')[1];
+                    logResult(`✅ Cookie vérifié: ${cookieToken}`, 'success');
+                    
+                    if (cookieToken === csrfToken) {
+                        logResult('✅ Token header et cookie IDENTIQUES', 'success');
+                    } else {
+                        logResult('⚠️ Token header et cookie DIFFÉRENTS', 'warning');
+                        logResult(`Header: ${csrfToken}`, 'warning');
+                        logResult(`Cookie: ${cookieToken}`, 'warning');
+                    }
+                } else {
+                    logResult('❌ Cookie csrf_token non trouvé', 'error');
+                }
+                
+                // Pause pour laisser le cookie se propager
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Étape 2: Test de connexion avec le token synchronisé
+                logResult('=== ÉTAPE 2: Test connexion avec tokens synchronisés ===', 'info');
+                const loginResponse = await fetch(`${API_BASE}/auth/initiate-login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken,
+                        'Origin': window.location.origin,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'admin@example.com',
+                        password: 'MonMotDePasse123!'
+                    })
+                });
+                
+                logResult(`Status: ${loginResponse.status}`, loginResponse.ok ? 'success' : 'error');
+                
+                if (loginResponse.ok) {
+                    const loginData = await loginResponse.json();
+                    logResult('🎉 CONNEXION RÉUSSIE !', 'success');
+                    logResult(`Access token reçu: ${loginData.access_token ? 'OUI' : 'NON'}`, 'success');
+                    logResult(`User: ${loginData.user?.email} (${loginData.user?.role})`, 'success');
+                } else {
+                    const errorText = await loginResponse.text();
+                    logResult(`❌ Connexion échouée: ${loginResponse.status}`, 'error');
+                    logResult(`Erreur: ${errorText}`, 'error');
+                }
+                
+            } catch (error) {
+                logResult(`❌ Erreur générale: ${error.message}`, 'error');
+                logResult(`Stack: ${error.stack}`, 'error');
+            }
+            
+            logResult('✅ Test terminé!', 'info');
+        }
+        
+        // Message initial
+        logResult('🔧 Page de test corrigée chargée. Cliquez sur "Test Correction Chrome" pour tester.', 'info');
+    </script>
+</body>
+</html> 

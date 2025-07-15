@@ -12,7 +12,10 @@ export class OtpController {
   @Get('generate-otp')
   async generateOtp(@Req() req: any) {
     const user = req.user;
-    const secret = speakeasy.generateSecret({ length: 20, name: `MonApp (${user.email})` });
+    const secret = speakeasy.generateSecret({
+      length: 20,
+      name: `MonApp (${user.email})`,
+    });
     await this.authService.setUserOtpSecret(user.id, secret.base32);
     const qrCodeDataUrl = await qrcode.toDataURL(secret.otpauth_url);
     return { secret: secret.base32, qrCodeDataUrl };
